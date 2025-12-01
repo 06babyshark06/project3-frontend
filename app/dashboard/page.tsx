@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import Link from "next/link";
 import { 
   BookOpen, CheckCircle, Edit, ArrowRight, 
-  Clock, TrendingUp 
+  PlayCircle, Clock, TrendingUp 
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,14 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 
-// Interface mở rộng để chứa progress
 interface EnrolledCourse {
   id: number;
   title: string;
   thumbnail_url: string;
   instructor_id: number;
   description: string;
-  progress?: number; // % tiến độ
+  progress?: number;
 }
 
 export default function DashboardPage() {
@@ -33,7 +32,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({
     enrolledCourses: 0,
     completedLessons: 0,
-    examsTaken: 0, // (Hiện tại chưa có API đếm số bài thi đã làm của user, tạm để 0)
+    examsTaken: 0, 
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,16 +44,25 @@ export default function DashboardPage() {
         setIsLoading(true);
         
         // 1. Lấy danh sách khóa học đã đăng ký
-        const res = await api.get("/my-courses");
-        const basicCourses = res.data.data.courses || [];
+        const resCourses = await api.get("/my-courses");
+        const basicCourses = resCourses.data.data.courses || [];
+
+        // 2. Lấy thống kê bài thi (API MỚI)
+        // (Lưu ý: Hãy đảm bảo bạn đã rebuild Backend và có route này)
+        let examsTakenCount = 0;
+        try {
+            const resExamStats = await api.get("/users/me/exam-stats");
+            examsTakenCount = Number(resExamStats.data.data.total_exams_taken);
+        } catch (e) {
+            console.error("Không thể lấy thống kê bài thi", e);
+        }
 
         let totalCompletedLessons = 0;
 
-        // 2. Lấy chi tiết từng khóa để tính tiến độ (Song song)
+        // 3. Tính tiến độ khóa học
         const enrichedCourses = await Promise.all(
           basicCourses.map(async (course: any) => {
             try {
-              // Gọi API chi tiết kèm user_id để lấy trạng thái is_completed
               const detailRes = await api.get(`/courses/${course.id}`, {
                 params: { user_id: user.id }
               });
@@ -69,14 +77,13 @@ export default function DashboardPage() {
                     totalLessons++;
                     if (les.is_completed) {
                         completedLessons++;
-                        totalCompletedLessons++; // Cộng dồn vào tổng số bài đã học toàn hệ thống
+                        totalCompletedLessons++;
                     }
                   });
                 });
               }
 
               const progress = totalLessons === 0 ? 0 : Math.round((completedLessons / totalLessons) * 100);
-              
               return { ...course, progress };
             } catch (err) {
               return { ...course, progress: 0 };
@@ -86,11 +93,11 @@ export default function DashboardPage() {
 
         setCourses(enrichedCourses);
         
-        // 3. Cập nhật thống kê
+        // 4. Cập nhật state thống kê
         setStats({
             enrolledCourses: basicCourses.length,
             completedLessons: totalCompletedLessons,
-            examsTaken: 0, // TODO: Cần thêm API /my-submissions để đếm cái này
+            examsTaken: examsTakenCount, // Dữ liệu thật từ API
         });
 
       } catch (error) {
@@ -103,11 +110,14 @@ export default function DashboardPage() {
     fetchData();
   }, [user]);
 
+  // ... (Phần render giữ nguyên như code trước) ...
+  // Bạn copy lại phần return JSX của DashboardPage cũ vào đây nhé
+  // Tôi chỉ viết lại logic fetch để ngắn gọn
+  
   return (
     <div className="container mx-auto max-w-7xl p-6 md:p-8 space-y-8">
-      
-      {/* === HEADER === */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+       {/* Header */}
+       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
             Xin chào, <span className="text-primary">{user?.full_name}</span> 👋
@@ -121,7 +131,7 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      {/* === THỐNG KÊ (STATS) === */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard 
           title="Đang học" 
@@ -146,8 +156,8 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* === KHÓA HỌC CỦA TÔI (CONTINUE LEARNING) === */}
-      <div className="space-y-4">
+      {/* ... Phần Khóa học (Copy y hệt code cũ) ... */}
+       <div className="space-y-4">
         <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                 <TrendingUp className="h-6 w-6 text-primary" /> Tiếp tục học
@@ -172,7 +182,6 @@ export default function DashboardPage() {
                 {courses.map((course) => (
                     <Link href={`/learn/${course.id}`} key={course.id} className="group">
                         <Card className="h-full overflow-hidden hover:shadow-lg transition-all duration-300 border-muted/40 hover:border-primary/50">
-                            {/* Ảnh bìa */}
                             <div className="relative h-48 bg-muted">
                                 <Image
                                     src={course.thumbnail_url || "https://via.placeholder.com/400x200"}
@@ -185,7 +194,6 @@ export default function DashboardPage() {
                                     <Clock className="h-3 w-3" /> Tiếp tục
                                 </div>
                             </div>
-                            
                             <CardContent className="p-5">
                                 <div className="mb-4">
                                     <h3 className="font-bold text-lg line-clamp-1 group-hover:text-primary transition-colors">
@@ -195,8 +203,6 @@ export default function DashboardPage() {
                                         {course.description || "Không có mô tả"}
                                     </p>
                                 </div>
-                                
-                                {/* Thanh tiến độ (Dữ liệu thật) */}
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-xs font-medium text-muted-foreground">
                                         <span>Tiến độ</span>
@@ -219,7 +225,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* === GỢI Ý BÀI THI === */}
+      {/* Gợi ý bài thi */}
       <div className="bg-primary/5 rounded-2xl p-8 border border-primary/10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
@@ -235,7 +241,6 @@ export default function DashboardPage() {
   );
 }
 
-// Helper Component
 function StatsCard({ title, value, label, icon, loading }: any) {
     return (
         <Card>
