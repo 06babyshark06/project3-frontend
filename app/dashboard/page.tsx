@@ -9,7 +9,7 @@ import {
   PlayCircle, Clock, TrendingUp 
 } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -43,18 +43,23 @@ export default function DashboardPage() {
       try {
         setIsLoading(true);
         
-        // 1. Lấy danh sách khóa học đã đăng ký
+        // 1. Lấy danh sách khóa học
         const resCourses = await api.get("/my-courses");
-        const basicCourses = resCourses.data.data.courses || [];
+        const basicCourses = resCourses.data?.data?.courses || [];
 
-        // 2. Lấy thống kê bài thi (API MỚI)
-        // (Lưu ý: Hãy đảm bảo bạn đã rebuild Backend và có route này)
+        // 2. Lấy thống kê bài thi (FIX LỖI NaN)
         let examsTakenCount = 0;
         try {
             const resExamStats = await api.get("/users/me/exam-stats");
-            examsTakenCount = Number(resExamStats.data.data.total_exams_taken);
+            // Dùng toán tử ?? 0 để fallback nếu null/undefined
+            const rawCount = resExamStats.data?.data?.total_exams_taken;
+            examsTakenCount = Number(rawCount ?? 0);
+            
+            // Kiểm tra lần cuối nếu vẫn ra NaN
+            if (isNaN(examsTakenCount)) examsTakenCount = 0;
         } catch (e) {
-            console.error("Không thể lấy thống kê bài thi", e);
+            console.warn("Chưa có dữ liệu bài thi hoặc lỗi API", e);
+            examsTakenCount = 0;
         }
 
         let totalCompletedLessons = 0;
@@ -66,7 +71,7 @@ export default function DashboardPage() {
               const detailRes = await api.get(`/courses/${course.id}`, {
                 params: { user_id: user.id }
               });
-              const { sections } = detailRes.data.data;
+              const sections = detailRes.data?.data?.sections;
 
               let totalLessons = 0;
               let completedLessons = 0;
@@ -84,7 +89,7 @@ export default function DashboardPage() {
               }
 
               const progress = totalLessons === 0 ? 0 : Math.round((completedLessons / totalLessons) * 100);
-              return { ...course, progress };
+              return { ...course, progress: isNaN(progress) ? 0 : progress };
             } catch (err) {
               return { ...course, progress: 0 };
             }
@@ -93,11 +98,11 @@ export default function DashboardPage() {
 
         setCourses(enrichedCourses);
         
-        // 4. Cập nhật state thống kê
+        // 4. Cập nhật state
         setStats({
-            enrolledCourses: basicCourses.length,
-            completedLessons: totalCompletedLessons,
-            examsTaken: examsTakenCount, // Dữ liệu thật từ API
+            enrolledCourses: basicCourses.length || 0,
+            completedLessons: totalCompletedLessons || 0,
+            examsTaken: examsTakenCount,
         });
 
       } catch (error) {
@@ -110,10 +115,21 @@ export default function DashboardPage() {
     fetchData();
   }, [user]);
 
-  // ... (Phần render giữ nguyên như code trước) ...
-  // Bạn copy lại phần return JSX của DashboardPage cũ vào đây nhé
-  // Tôi chỉ viết lại logic fetch để ngắn gọn
+  // ... (Phần Render UI bên dưới giữ nguyên không đổi) ...
+  // Bạn copy lại phần return JSX của code cũ vào đây
   
+  if (isLoading) {
+    return (
+      <div className="container mx-auto max-w-7xl p-6 md:p-8">
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+         </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto max-w-7xl p-6 md:p-8 space-y-8">
        {/* Header */}
@@ -156,7 +172,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* ... Phần Khóa học (Copy y hệt code cũ) ... */}
+      {/* Khóa học của tôi */}
        <div className="space-y-4">
         <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
@@ -167,17 +183,7 @@ export default function DashboardPage() {
             </Link>
         </div>
 
-        {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                    <div key={i} className="space-y-3">
-                        <Skeleton className="h-48 w-full rounded-xl" />
-                        <Skeleton className="h-4 w-2/3" />
-                        <Skeleton className="h-4 w-1/2" />
-                    </div>
-                ))}
-            </div>
-        ) : courses.length > 0 ? (
+        {courses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {courses.map((course) => (
                     <Link href={`/learn/${course.id}`} key={course.id} className="group">
@@ -254,7 +260,7 @@ function StatsCard({ title, value, label, icon, loading }: any) {
                 {loading ? (
                     <Skeleton className="h-10 w-20 mb-1" />
                 ) : (
-                    <div className="text-4xl font-bold text-foreground">{value}</div>
+                    <div className="text-4xl font-bold text-foreground">{value || 0}</div>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">{label}</p>
             </CardContent>
