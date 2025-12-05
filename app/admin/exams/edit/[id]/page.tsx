@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { AddQuestionDialog } from "@/components/AddQuestionDialog";
+import { ExcelImportDialog } from "@/components/ExcelImportDialog";
 import { toast } from "sonner";
 import { 
   Loader2, ArrowLeft, Trash2, Clock, Pencil, PlusCircle,

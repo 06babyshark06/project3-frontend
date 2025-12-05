@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { 
-  Loader2, Clock, CheckCircle, AlertTriangle, 
-  ChevronLeft, ChevronRight, Circle, CheckCircle2, Square, CheckSquare 
+import {
+  Loader2, Clock, CheckCircle, AlertTriangle,
+  ChevronLeft, ChevronRight, Circle, CheckCircle2, Square, CheckSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,20 +54,21 @@ const formatTime = (seconds: number) => {
 export default function ExamTakingPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth(); 
+  const { user } = useAuth();
   const examId = params.id as string;
 
   const [exam, setExam] = useState<ExamData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  
+
   // [CẬP NHẬT STATE]: Lưu mảng ID các đáp án đã chọn
   // Key: QuestionID, Value: Array of ChoiceID
-  const [userAnswers, setUserAnswers] = useState<Record<number, number[]>>({}); 
-  
+  const [userAnswers, setUserAnswers] = useState<Record<number, number[]>>({});
+
   const [timeLeft, setTimeLeft] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [violationCount, setViolationCount] = useState(0);
 
   // 1. Fetch Đề Thi
   useEffect(() => {
@@ -75,13 +76,13 @@ export default function ExamTakingPage() {
       try {
         const response = await api.get(`/exams/${examId}`);
         const data = response.data.data;
-        
+
         if (!data.questions) {
-            data.questions = [];
+          data.questions = [];
         }
-        
+
         setExam(data);
-        setTimeLeft(data.duration_minutes * 60); 
+        setTimeLeft(data.duration_minutes * 60);
       } catch (error) {
         toast.error("Không thể tải đề thi.");
         router.push("/dashboard");
@@ -97,7 +98,7 @@ export default function ExamTakingPage() {
     if (!exam || !exam.questions || exam.questions.length === 0 || isSubmitting) return;
 
     if (timeLeft <= 0) {
-      handleSubmit(true); 
+      handleSubmit(true);
       return;
     }
 
@@ -112,27 +113,27 @@ export default function ExamTakingPage() {
   const handleSelectAnswer = (question: Question, choiceId: number) => {
     setUserAnswers((prev) => {
       const currentSelected = prev[question.id] || [];
-      
+
       if (question.question_type === "multiple_choice") {
         // Logic Checkbox (Toggle)
         if (currentSelected.includes(choiceId)) {
           // Nếu đã chọn -> Bỏ chọn
-          return { 
-            ...prev, 
-            [question.id]: currentSelected.filter((id) => id !== choiceId) 
+          return {
+            ...prev,
+            [question.id]: currentSelected.filter((id) => id !== choiceId)
           };
         } else {
           // Nếu chưa chọn -> Thêm vào
-          return { 
-            ...prev, 
-            [question.id]: [...currentSelected, choiceId] 
+          return {
+            ...prev,
+            [question.id]: [...currentSelected, choiceId]
           };
         }
       } else {
         // Logic Radio (Single Choice): Thay thế luôn
-        return { 
-          ...prev, 
-          [question.id]: [choiceId] 
+        return {
+          ...prev,
+          [question.id]: [choiceId]
         };
       }
     });
@@ -145,7 +146,7 @@ export default function ExamTakingPage() {
 
     // Làm phẳng (Flatten) object userAnswers thành mảng API yêu cầu
     // API mong đợi nhiều dòng cho 1 câu hỏi nếu chọn nhiều đáp án
-    const formattedAnswers = Object.entries(userAnswers).flatMap(([qId, cIds]) => 
+    const formattedAnswers = Object.entries(userAnswers).flatMap(([qId, cIds]) =>
       cIds.map((cId) => ({
         question_id: Number(qId),
         chosen_choice_id: Number(cId),
@@ -155,11 +156,11 @@ export default function ExamTakingPage() {
     try {
       const response = await api.post("/exams/submit", {
         exam_id: Number(examId),
-        user_id: user?.id, 
+        user_id: user?.id,
         answers: formattedAnswers,
       });
 
-      const result = response.data.data; 
+      const result = response.data.data;
 
       if (autoSubmit) {
         toast.warning("Hết giờ! Hệ thống đã tự động nộp bài.");
@@ -174,6 +175,44 @@ export default function ExamTakingPage() {
       setIsSubmitting(false);
     }
   }, [exam, userAnswers, isSubmitting, examId, user, router]);
+
+  useEffect(() => {
+    if (!exam || isSubmitting) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.hidden) {
+        const newCount = violationCount + 1;
+        setViolationCount(newCount);
+
+        toast.error(`CẢNH BÁO: Bạn đã rời khỏi màn hình thi! (${newCount}/3)`, {
+          description: "Hành vi này đã được ghi lại. Quá 3 lần bài thi sẽ bị hủy."
+        });
+
+        try {
+          await api.post("/exams/log-violation", {
+            exam_id: Number(examId),
+            violation_type: "tab_switch",
+          });
+        } catch (err) {
+          console.error("Log violation failed");
+        }
+
+        if (newCount >= 3) {
+          handleSubmit(true);
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+    document.addEventListener("contextmenu", handleContextMenu);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("contextmenu", handleContextMenu);
+    };
+  }, [exam, isSubmitting, violationCount, examId, handleSubmit]);
 
   // --- Render UI ---
   if (isLoading) {
@@ -193,7 +232,7 @@ export default function ExamTakingPage() {
         <h1 className="text-2xl font-bold mb-2">{exam.title}</h1>
         <p className="text-muted-foreground mb-6">Bài thi này chưa có câu hỏi nào.</p>
         <Button onClick={() => router.push("/dashboard")}>
-            <ChevronLeft className="mr-2 h-4 w-4" /> Quay về Dashboard
+          <ChevronLeft className="mr-2 h-4 w-4" /> Quay về Dashboard
         </Button>
       </div>
     );
@@ -209,7 +248,7 @@ export default function ExamTakingPage() {
       {/* HEADER */}
       <header className="h-16 border-b px-6 flex items-center justify-between bg-card z-10 shadow-sm">
         <h1 className="text-xl font-bold truncate max-w-[60%]">{exam.title}</h1>
-        
+
         <div className={`flex items-center gap-2 font-mono text-xl font-bold px-4 py-2 rounded-md ${timeLeft < 300 ? 'bg-red-100 text-red-600' : 'bg-secondary'}`}>
           <Clock className="h-5 w-5" />
           {formatTime(timeLeft)}
@@ -217,7 +256,7 @@ export default function ExamTakingPage() {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        
+
         {/* MAIN CONTENT */}
         <main className="flex-1 overflow-y-auto p-6 md:p-12 flex justify-center">
           <div className="w-full max-w-3xl">
@@ -228,47 +267,47 @@ export default function ExamTakingPage() {
                     Câu hỏi {currentQuestionIndex + 1} / {exam.questions.length}
                   </span>
                   {currentQuestion.question_type === 'multiple_choice' && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                         Nhiều đáp án
-                      </Badge>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                      Nhiều đáp án
+                    </Badge>
                   )}
                 </div>
                 <CardTitle className="text-2xl font-medium leading-relaxed">
                   {currentQuestion.content}
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent className="pt-8 flex-1">
                 {/* Thay thế RadioGroup bằng Custom UI để hỗ trợ cả 2 loại */}
                 <div className="space-y-3">
                   {currentQuestion.choices && currentQuestion.choices.map((choice) => {
                     const isSelected = userAnswers[currentQuestion.id]?.includes(choice.id);
-                    
+
                     return (
-                        <div 
-                            key={choice.id} 
-                            onClick={() => handleSelectAnswer(currentQuestion, choice.id)}
-                            className={`
+                      <div
+                        key={choice.id}
+                        onClick={() => handleSelectAnswer(currentQuestion, choice.id)}
+                        className={`
                                 flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-all
-                                ${isSelected 
-                                    ? "border-primary bg-primary/5 shadow-sm" 
-                                    : "border-border hover:bg-muted/50"
-                                }
+                                ${isSelected
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border hover:bg-muted/50"
+                          }
                             `}
-                        >
-                            <div className="mt-0.5 shrink-0 text-primary">
-                                {currentQuestion.question_type === 'single_choice' ? (
-                                    // Icon Tròn cho Single
-                                    isSelected ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5 text-muted-foreground" />
-                                ) : (
-                                    // Icon Vuông cho Multiple
-                                    isSelected ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5 text-muted-foreground" />
-                                )}
-                            </div>
-                            <span className={`text-lg leading-relaxed ${isSelected ? "font-medium text-primary" : "font-normal"}`}>
-                                {choice.content}
-                            </span>
+                      >
+                        <div className="mt-0.5 shrink-0 text-primary">
+                          {currentQuestion.question_type === 'single_choice' ? (
+                            // Icon Tròn cho Single
+                            isSelected ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5 text-muted-foreground" />
+                          ) : (
+                            // Icon Vuông cho Multiple
+                            isSelected ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5 text-muted-foreground" />
+                          )}
                         </div>
+                        <span className={`text-lg leading-relaxed ${isSelected ? "font-medium text-primary" : "font-normal"}`}>
+                          {choice.content}
+                        </span>
+                      </div>
                     );
                   })}
                 </div>
@@ -338,7 +377,7 @@ export default function ExamTakingPage() {
                 // Kiểm tra xem câu hỏi này đã có câu trả lời nào chưa
                 const hasAnswer = userAnswers[q.id] && userAnswers[q.id].length > 0;
                 const isCurrent = currentQuestionIndex === idx;
-                
+
                 return (
                   <button
                     key={q.id}
@@ -355,7 +394,7 @@ export default function ExamTakingPage() {
               })}
             </div>
           </ScrollArea>
-          
+
           <div className="p-6 border-t bg-muted/20">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <div className="w-4 h-4 bg-primary rounded-sm"></div> Đã làm
@@ -372,12 +411,12 @@ export default function ExamTakingPage() {
 
 // Helper Progress Component (nếu chưa có)
 function Progress({ value, className }: { value: number, className?: string }) {
-    return (
-        <div className={`w-full bg-secondary rounded-full overflow-hidden ${className}`}>
-            <div 
-                className="bg-primary h-full transition-all duration-500" 
-                style={{ width: `${value}%` }} 
-            />
-        </div>
-    )
+  return (
+    <div className={`w-full bg-secondary rounded-full overflow-hidden ${className}`}>
+      <div
+        className="bg-primary h-full transition-all duration-500"
+        style={{ width: `${value}%` }}
+      />
+    </div>
+  )
 }
