@@ -391,8 +391,8 @@ export default function EditExamPage() {
                                 q.difficulty === "easy"
                                   ? "bg-green-100 text-green-700 dark:bg-green-950"
                                   : q.difficulty === "medium"
-                                  ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950"
-                                  : "bg-red-100 text-red-700 dark:bg-red-950"
+                                    ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950"
+                                    : "bg-red-100 text-red-700 dark:bg-red-950"
                               }
                             >
                               {q.difficulty === "easy" ? "Dễ" : q.difficulty === "medium" ? "TB" : "Khó"}
@@ -435,14 +435,16 @@ export default function EditExamPage() {
           if (!open) setEditingQuestion(null);
         }}
         onSuccess={fetchExam}
-        editingQuestion={editingQuestion}
+        questionToEdit={editingQuestion}
         examId={Number(examId)}
+        topicId={exam?.topic_id || 0}
       />
 
       <ExcelImportDialog
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
-        onSuccess={fetchExam}
+        onImportSuccess={fetchExam}
+        topicId={exam?.topic_id}
         examId={Number(examId)}
       />
 

@@ -452,13 +452,16 @@ export default function QuestionBankPage() {
           if (!open) setEditingQuestion(null);
         }}
         onSuccess={fetchQuestions}
-        editingQuestion={editingQuestion}
+        questionToEdit={editingQuestion}
+        examId={0}
+        topicId={Number(selectedTopic) || 0}
       />
 
       <ExcelImportDialog
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
-        onSuccess={fetchQuestions}
+        onImportSuccess={fetchQuestions}
+        topicId={Number(selectedTopic)}
       />
 
       {/* DELETE CONFIRMATION */}
@@ -505,11 +508,10 @@ export default function QuestionBankPage() {
                   {questionToView.choices?.map((choice) => (
                     <div
                       key={choice.id}
-                      className={`p-3 border rounded-lg ${
-                        choice.is_correct
-                          ? "bg-green-50 dark:bg-green-950 border-green-500"
-                          : "bg-muted/30"
-                      }`}
+                      className={`p-3 border rounded-lg ${choice.is_correct
+                        ? "bg-green-50 dark:bg-green-950 border-green-500"
+                        : "bg-muted/30"
+                        }`}
                     >
                       <p className="text-sm">{choice.content}</p>
                       {choice.is_correct && (
