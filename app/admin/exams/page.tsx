@@ -104,7 +104,7 @@ export default function InstructorExamsPage() {
         </div>
         
         <Button asChild>
-          <Link href="/admin/exams/new">
+          <Link href="/admin/exams/create">
             <PlusCircle className="mr-2 h-4 w-4" /> Tạo bài thi mới
           </Link>
         </Button>
@@ -122,7 +122,7 @@ export default function InstructorExamsPage() {
               {publishedExams.length > 0 ? <ExamTable data={publishedExams} /> : 
                 <div className="text-center py-12">
                   <p className="text-muted-foreground mb-4">Bạn chưa xuất bản bài thi nào.</p>
-                  <Button variant="outline" asChild><Link href="/admin/exams/new">Tạo ngay</Link></Button>
+                  <Button variant="outline" asChild><Link href="/admin/exams/create">Tạo ngay</Link></Button>
                 </div>
               }
             </CardContent>

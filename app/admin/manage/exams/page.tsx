@@ -90,7 +90,7 @@ export default function ManageAllExamsPage() {
         </div>
         
         <Button asChild>
-          <Link href="/admin/exams/new">
+          <Link href="/admin/exams/create">
             <PlusCircle className="mr-2 h-4 w-4" /> Tạo bài thi mới
           </Link>
         </Button>

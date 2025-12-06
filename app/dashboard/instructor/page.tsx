@@ -118,7 +118,7 @@ export default function InstructorDashboardPage() {
               <Link href="/admin/courses/new">Tạo Khóa Học Mới</Link>
             </Button>
             <Button asChild variant="secondary" className="w-full">
-              <Link href="/admin/exams/new">Tạo Bài Thi Mới</Link>
+              <Link href="/admin/exams/create">Tạo Bài Thi Mới</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link href="/admin/questions">
