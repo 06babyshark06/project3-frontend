@@ -7,11 +7,11 @@ import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Users, BookCopy, Edit, Loader2, ShieldAlert } from "lucide-react";
+import { Users, BookCopy, Edit, Loader2, ShieldAlert, FileQuestion } from "lucide-react";
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
-  
+
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalCourses: 0,
@@ -88,43 +88,48 @@ export default function AdminDashboardPage() {
       <div className="grid gap-8 md:grid-cols-2">
         {/* Khu vực Giảng viên (Tạo nội dung) */}
         <div>
-            <h2 className="text-2xl font-bold mb-4">Dành cho Giảng viên</h2>
-            <div className="flex flex-wrap gap-4">
-                <Button asChild size="lg">
-                    <Link href="/admin/courses/new">Tạo Khóa Học Mới</Link>
-                </Button>
-                <Button asChild size="lg" variant="secondary">
-                    <Link href="/admin/exams/new">Tạo Bài Thi Mới</Link>
-                </Button>
-                
-                <Button asChild size="lg" variant="outline">
-                    <Link href="/admin/courses">Khóa Học Của Tôi</Link>
-                </Button>
+          <h2 className="text-2xl font-bold mb-4">Dành cho Giảng viên</h2>
+          <div className="flex flex-wrap gap-4">
+            <Button asChild size="lg">
+              <Link href="/admin/courses/new">Tạo Khóa Học Mới</Link>
+            </Button>
+            <Button asChild size="lg" variant="secondary">
+              <Link href="/admin/exams/new">Tạo Bài Thi Mới</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/admin/questions">
+                <FileQuestion className="mr-2 h-4 w-4" /> Ngân hàng Câu hỏi
+              </Link>
+            </Button>
 
-                <Button asChild size="lg" variant="outline">
-                    <Link href="/admin/exams">Bài Thi Của Tôi</Link>
-                </Button>
-            </div>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/admin/courses">Khóa Học Của Tôi</Link>
+            </Button>
+
+            <Button asChild size="lg" variant="outline">
+              <Link href="/admin/exams">Bài Thi Của Tôi</Link>
+            </Button>
+          </div>
         </div>
 
         {/* Khu vực Admin (Quản lý toàn hệ thống) */}
         {user?.role === 'admin' && (
-            <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-destructive">
-                    <ShieldAlert className="w-6 h-6" /> Khu vực Admin
-                </h2>
-                <div className="flex flex-wrap gap-4">
-                    <Button asChild size="lg" variant="destructive">
-                        <Link href="/admin/users">Quản Lý User</Link>
-                    </Button>
-                    <Button asChild size="lg" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
-                        <Link href="/admin/manage/courses">Quản Lý Tất Cả Khóa Học</Link>
-                    </Button>
-                    <Button asChild size="lg" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
-                        <Link href="/admin/manage/exams">Quản Lý Tất Cả Bài Thi</Link>
-                    </Button>
-                </div>
+          <div>
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-destructive">
+              <ShieldAlert className="w-6 h-6" /> Khu vực Admin
+            </h2>
+            <div className="flex flex-wrap gap-4">
+              <Button asChild size="lg" variant="destructive">
+                <Link href="/admin/users">Quản Lý User</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
+                <Link href="/admin/manage/courses">Quản Lý Tất Cả Khóa Học</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
+                <Link href="/admin/manage/exams">Quản Lý Tất Cả Bài Thi</Link>
+              </Button>
             </div>
+          </div>
         )}
       </div>
     </div>

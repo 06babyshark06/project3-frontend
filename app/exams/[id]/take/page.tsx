@@ -214,6 +214,13 @@ export default function ExamTakingPage() {
     };
   }, [exam, isSubmitting, violationCount, examId, handleSubmit]);
 
+  useEffect(() => {
+  if (timeLeft <= 0 && !isSubmitting) {
+    toast.warning("⏰ Hết giờ! Đang tự động nộp bài...", { duration: 5000 });
+    handleSubmit(true);
+  }
+}, [timeLeft]);
+
   // --- Render UI ---
   if (isLoading) {
     return (
