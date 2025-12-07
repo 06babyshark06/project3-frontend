@@ -8,7 +8,8 @@ import { ExcelImportDialog } from "@/components/ExcelImportDialog";
 import { toast } from "sonner";
 import {
   Loader2, ArrowLeft, Trash2, Clock, Pencil, PlusCircle,
-  FileQuestion, BarChart3
+  FileQuestion, BarChart3,
+  Library
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,11 +20,13 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import { QuestionBankSelector } from "@/components/QuestionBankSelector";
 
 interface ExamSettings {
   duration_minutes: number;
@@ -44,17 +47,24 @@ interface Exam {
   questions: any[];
 }
 
+interface Topic {
+  id: number;
+  name: string;
+}
+
 export default function EditExamPage() {
   const router = useRouter();
   const params = useParams();
   const examId = params.id as string;
 
   const [exam, setExam] = useState<Exam | null>(null);
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // ===== FORM INFO STATE =====
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [topicId, setTopicId] = useState<string>("");
   const [duration, setDuration] = useState(60);
 
   // ===== SETTINGS STATE =====
@@ -69,10 +79,43 @@ export default function EditExamPage() {
   // ===== DIALOG STATE =====
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isBankSelectorOpen, setIsBankSelectorOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
   const [questionToDelete, setQuestionToDelete] = useState<number | null>(null);
 
   // ===== 1. FETCH EXAM =====
+  useEffect(() => {
+    const initData = async () => {
+      try {
+        // Load Topics
+        const topicsRes = await api.get("/topics");
+        setTopics(topicsRes.data.data.topics || []);
+
+        // Load Exam
+        if (examId) {
+          const res = await api.get(`/exams/${examId}`);
+          const data = res.data.data;
+          setExam(data);
+
+          setTitle(data.title);
+          setDescription(data.description || "");
+          setTopicId(data.topic_id?.toString() || ""); // Set topic
+          setDuration(data.settings?.duration_minutes || 60);
+          setPassword(data.settings?.password || "");
+          setShuffleQuestions(data.settings?.shuffle_questions || false);
+          setMaxAttempts(data.settings?.max_attempts || 1);
+          setRequiresApproval(data.settings?.requires_approval || false);
+          setShowResultImmediately(data.settings?.show_result_immediately || true);
+        }
+      } catch (error) {
+        toast.error("Lỗi tải dữ liệu");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    initData();
+  }, [examId]);
+
   const fetchExam = async () => {
     try {
       const res = await api.get(`/exams/${examId}`);
@@ -99,13 +142,17 @@ export default function EditExamPage() {
   }, [examId]);
 
   // ===== 2. UPDATE INFO =====
-  const handleUpdateInfo = async () => {
+  const handleUpdateInfo = async (overrideQuestions?: number[]) => {
     setIsUpdatingInfo(true);
     try {
+      const currentQuestionIds = exam?.questions.map((q: any) => q.id) || [];
+      const finalQuestionIds = overrideQuestions || currentQuestionIds;
+
       await api.put(`/exams/${examId}`, {
         title,
         description: description || "",
-        topic_id: exam?.topic_id,
+        topic_id: Number(topicId),
+        question_ids: finalQuestionIds,
         settings: {
           duration_minutes: Number(duration),
           password: password || "",
@@ -116,12 +163,31 @@ export default function EditExamPage() {
         }
       });
       toast.success("Cập nhật thông tin thành công!");
-      fetchExam();
+      const res = await api.get(`/exams/${examId}`);
+      setExam(res.data.data);
     } catch (error) {
       toast.error("Cập nhật thất bại");
     } finally {
       setIsUpdatingInfo(false);
     }
+  };
+
+  const handleAddQuestionsFromBank = (selectedIds: number[]) => {
+    if (!exam) return;
+    const currentIds = exam.questions.map((q: any) => q.id);
+    const newIds = Array.from(new Set([...currentIds, ...selectedIds]));
+
+    handleUpdateInfo(newIds);
+  };
+
+  const handleTopicChange = (newTopicId: string) => {
+    if (exam && exam.questions.length > 0) {
+      const confirmChange = window.confirm(
+        "Cảnh báo: Bạn đang thay đổi chủ đề của bài thi đã có câu hỏi. \nCác câu hỏi hiện tại có thể không thuộc chủ đề mới. Bạn có chắc chắn muốn đổi không?"
+      );
+      if (!confirmChange) return;
+    }
+    setTopicId(newTopicId);
   };
 
   // ===== 3. PUBLISH =====
@@ -233,6 +299,23 @@ export default function EditExamPage() {
               </div>
 
               <div>
+                <Label>Chủ đề (Topic)</Label>
+                <Select value={topicId} onValueChange={handleTopicChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn chủ đề thi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {topics.map((t) => (
+                      <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Câu hỏi được chọn sẽ dựa trên chủ đề này.
+                </p>
+              </div>
+
+              <div>
                 <Label>Mô tả</Label>
                 <Textarea
                   value={description}
@@ -320,20 +403,8 @@ export default function EditExamPage() {
             </CardContent>
           </Card>
 
-          <Button
-            onClick={handleUpdateInfo}
-            disabled={isUpdatingInfo}
-            className="w-full"
-            size="lg"
-          >
-            {isUpdatingInfo ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Đang cập nhật...
-              </>
-            ) : (
-              "Lưu thay đổi"
-            )}
+          <Button onClick={() => handleUpdateInfo()} disabled={isUpdatingInfo} className="w-full" size="lg">
+            {isUpdatingInfo ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Lưu thay đổi"}
           </Button>
         </div>
 
@@ -347,18 +418,24 @@ export default function EditExamPage() {
                 </CardTitle>
                 <div className="flex items-center gap-2">
                   <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setIsBankSelectorOpen(true)}
+                    disabled={!topicId}
+                  >
+                    <Library className="mr-2 h-4 w-4" />
+                    Chọn từ Ngân hàng
+                  </Button>
+                  <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setIsImportDialogOpen(true)}
                   >
                     Import Excel
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => setIsQuestionModalOpen(true)}
-                  >
+                  <Button size="sm" onClick={() => setIsQuestionModalOpen(true)}>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Thêm câu hỏi
+                    Tạo mới
                   </Button>
                 </div>
               </div>
@@ -368,7 +445,7 @@ export default function EditExamPage() {
                 <div className="text-center py-12 text-muted-foreground">
                   <FileQuestion className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p className="mb-2">Chưa có câu hỏi nào</p>
-                  <p className="text-sm">Nhấn "Thêm câu hỏi" để bắt đầu</p>
+                  {!topicId && <p className="text-red-500 text-sm mt-2">Vui lòng chọn Chủ đề để thêm câu hỏi.</p>}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -428,16 +505,20 @@ export default function EditExamPage() {
       </div>
 
       {/* DIALOGS */}
+      <QuestionBankSelector 
+        open={isBankSelectorOpen}
+        onOpenChange={setIsBankSelectorOpen}
+        topicId={Number(topicId)}
+        existingQuestionIds={exam.questions.map((q: any) => q.id)}
+        onAddQuestions={handleAddQuestionsFromBank}
+      />
       <AddQuestionDialog
         open={isQuestionModalOpen || !!editingQuestion}
-        onOpenChange={(open) => {
-          setIsQuestionModalOpen(open);
-          if (!open) setEditingQuestion(null);
-        }}
-        onSuccess={fetchExam}
+        onOpenChange={(open) => { setIsQuestionModalOpen(open); if (!open) setEditingQuestion(null); }}
+        onSuccess={() => { fetchExam(); }}
         questionToEdit={editingQuestion}
         examId={Number(examId)}
-        topicId={exam?.topic_id || 0}
+        defaultTopicId={Number(topicId)}
       />
 
       <ExcelImportDialog
