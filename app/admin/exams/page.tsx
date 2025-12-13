@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { PlusCircle, Eye, Edit, ArrowLeft, Loader2, Clock } from "lucide-react";
+import { PlusCircle, Eye, Edit, ArrowLeft, Loader2, Clock, Activity, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,7 +27,6 @@ export default function InstructorExamsPage() {
     const fetchExams = async () => {
       try {
         setIsLoading(true);
-        // Gọi API lấy danh sách bài thi của chính giảng viên
         const res = await api.get("/instructor/exams");
         setExams(res.data.data.exams || []);
       } catch (error) {
@@ -68,15 +67,36 @@ export default function InstructorExamsPage() {
               }
             </TableCell>
             <TableCell className="text-right">
-              <div className="flex justify-end gap-2">
-                {/* Nút Xem thử (như học viên) */}
-                <Button variant="ghost" size="icon" asChild>
+              <div className="flex justify-end gap-1">
+                
+                {/* 1. Nút Giám sát (Monitor) - Chỉ hiện khi đã xuất bản */}
+                {exam.is_published && (
+                  <Button variant="ghost" size="icon" asChild className="text-red-600 hover:text-red-700 hover:bg-red-50" title="Giám sát phòng thi">
+                    <Link href={`/admin/exams/${exam.id}/monitor`}>
+                      <Activity className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
+
+                {/* 2. Nút Thống kê (Stats) - Chỉ hiện khi đã xuất bản */}
+                {exam.is_published && (
+                  <Button variant="ghost" size="icon" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Xem thống kê">
+                    <Link href={`/admin/exams/${exam.id}/stats`}>
+                      <BarChart3 className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
+
+                {/* 3. Nút Xem thử (Preview) */}
+                <Button variant="ghost" size="icon" asChild title="Xem thử đề thi">
                   <Link href={`/exams/${exam.id}/take`} target="_blank"><Eye className="h-4 w-4" /></Link>
                 </Button>
-                {/* Nút Sửa */}
-                <Button variant="ghost" size="icon" asChild>
+
+                {/* 4. Nút Sửa (Edit) */}
+                <Button variant="ghost" size="icon" asChild title="Chỉnh sửa">
                   <Link href={`/admin/exams/edit/${exam.id}`}><Edit className="h-4 w-4" /></Link>
                 </Button>
+
               </div>
             </TableCell>
           </TableRow>

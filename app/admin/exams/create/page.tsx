@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { format } from "date-fns";
 import {
   Loader2, ArrowLeft, ArrowRight, Save, Clock, Shield, 
   Settings, BookOpen, Plus, Trash2, Shuffle, CheckSquare
@@ -22,11 +21,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
-// Import component chọn câu hỏi thủ công
 import { QuestionBankSelector } from "@/components/QuestionBankSelector"; 
 
 // ===== INTERFACES =====
 interface Topic {
+  id: number;
+  name: string;
+}
+
+interface Section {
   id: number;
   name: string;
 }
@@ -47,15 +50,14 @@ export default function CreateExamPage() {
 
   // --- DATA STATES ---
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [sections, setSections] = useState<Section[]>([]); // ✅ Thêm state sections
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
 
   // --- FORM STATES ---
-  // Step 1: Info
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [topicId, setTopicId] = useState<string>("");
 
-  // Step 2: Settings
   const [duration, setDuration] = useState(60);
   const [maxAttempts, setMaxAttempts] = useState(1);
   const [password, setPassword] = useState("");
@@ -65,7 +67,6 @@ export default function CreateExamPage() {
   const [showResult, setShowResult] = useState(true);
   const [requiresApproval, setRequiresApproval] = useState(false);
 
-  // --- DIALOG STATES ---
   const [isBankSelectorOpen, setIsBankSelectorOpen] = useState(false);
   const [isRandomDialogOpen, setIsRandomDialogOpen] = useState(false);
 
@@ -74,20 +75,24 @@ export default function CreateExamPage() {
     api.get("/topics").then(res => setTopics(res.data.data.topics || []));
   }, []);
 
+  // ✅ Fetch Sections khi chọn Topic
+  useEffect(() => {
+    if (topicId) {
+      api.get(`/exam-sections?topic_id=${topicId}`)
+        .then(res => setSections(res.data.data.sections || []))
+        .catch(console.error);
+    } else {
+      setSections([]);
+    }
+  }, [topicId]);
+
   // --- HANDLERS ---
 
-  // Xử lý khi chọn câu hỏi từ Bank Selector
   const handleSelectFromBank = async (selectedIds: number[]) => {
-    // Lọc những ID chưa có trong danh sách hiện tại
     const newIds = selectedIds.filter(id => !selectedQuestions.some(q => q.id === id));
     if (newIds.length === 0) return;
 
-    // Fetch chi tiết các câu hỏi vừa chọn để hiển thị (tạm thời fetch list để lấy info cơ bản)
-    // Tối ưu: Backend nên có API get-by-ids, ở đây ta hack bằng cách filter từ list
     try {
-        // Cách đơn giản: Fetch lại tất cả câu hỏi của topic (hoặc filter client side nếu bank selector trả về full object)
-        // Ở đây ta giả định bank selector chỉ trả về ID, nên ta cần fetch info.
-        // Tuy nhiên để đơn giản, ta sẽ gọi API get questions với limit lớn của topic này và filter client.
         const res = await api.get("/questions", { params: { topic_id: topicId, limit: 1000 } });
         const allQuestions = res.data.data.questions as Question[];
         const questionsToAdd = allQuestions.filter(q => newIds.includes(q.id));
@@ -98,30 +103,38 @@ export default function CreateExamPage() {
     }
   };
 
-  // Xử lý sinh ngẫu nhiên
-  const handleGenerateRandom = async (config: { difficulty: string; count: number }) => {
+  // ✅ Cập nhật handler sinh ngẫu nhiên
+  const handleGenerateRandom = async (config: { difficulty: string; count: number; sectionId: string }) => {
     if (!topicId) return toast.error("Vui lòng chọn chủ đề trước");
     
     try {
-        const res = await api.get("/questions", { 
-            params: { 
-                topic_id: topicId, 
-                difficulty: config.difficulty === 'all' ? undefined : config.difficulty,
-                limit: 100 // Lấy pool lớn để random
-            } 
-        });
+        const params: any = { 
+            topic_id: topicId, 
+            difficulty: config.difficulty === 'all' ? undefined : config.difficulty,
+            limit: 100 
+        };
+
+        // ✅ Thêm lọc theo section
+        if (config.sectionId !== 'all') {
+            params.section_id = config.sectionId;
+        }
+        
+        const res = await api.get("/questions", { params });
         
         let pool = res.data.data.questions as Question[];
-        // Loại bỏ các câu đã chọn
         pool = pool.filter(q => !selectedQuestions.some(sq => sq.id === q.id));
 
         if (pool.length < config.count) {
             toast.warning(`Chỉ tìm thấy ${pool.length} câu hỏi phù hợp (yêu cầu ${config.count})`);
         }
 
-        // Shuffle và lấy n câu
         const shuffled = pool.sort(() => 0.5 - Math.random());
         const selected = shuffled.slice(0, config.count);
+
+        if (selected.length === 0) {
+            toast.error("Không tìm thấy câu hỏi nào phù hợp tiêu chí");
+            return;
+        }
 
         setSelectedQuestions(prev => [...prev, ...selected]);
         setIsRandomDialogOpen(false);
@@ -131,12 +144,10 @@ export default function CreateExamPage() {
     }
   };
 
-  // Xóa câu hỏi khỏi danh sách
   const removeQuestion = (id: number) => {
     setSelectedQuestions(prev => prev.filter(q => q.id !== id));
   };
 
-  // Submit Form
   const handleSubmit = async () => {
     if (!title || !topicId) return toast.error("Thiếu thông tin bắt buộc");
     if (selectedQuestions.length === 0) return toast.error("Đề thi chưa có câu hỏi nào");
@@ -158,7 +169,7 @@ export default function CreateExamPage() {
                 show_result_immediately: showResult,
                 requires_approval: requiresApproval
             },
-            creator_id: 1 // TODO: Lấy từ Auth Context
+            creator_id: 1 
         };
 
         await api.post("/exams", payload);
@@ -184,16 +195,13 @@ export default function CreateExamPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {/* STEPS SIDEBAR */}
         <div className="md:col-span-1 space-y-2">
             <StepItem step={1} current={currentStep} label="Thông tin chung" icon={BookOpen} />
             <StepItem step={2} current={currentStep} label="Cấu hình thi" icon={Settings} />
             <StepItem step={3} current={currentStep} label="Soạn câu hỏi" icon={CheckSquare} />
         </div>
 
-        {/* CONTENT AREA */}
         <div className="md:col-span-3 space-y-6">
-            
             {/* STEP 1: INFO */}
             {currentStep === 1 && (
                 <Card>
@@ -208,7 +216,7 @@ export default function CreateExamPage() {
                         </div>
                         <div className="space-y-2">
                             <Label>Chủ đề (Topic) <span className="text-red-500">*</span></Label>
-                            <Select value={topicId} onValueChange={setTopicId}>
+                            <Select value={topicId} onValueChange={(val) => { setTopicId(val); setSections([]); }}>
                                 <SelectTrigger><SelectValue placeholder="Chọn chủ đề" /></SelectTrigger>
                                 <SelectContent>
                                     {topics.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}
@@ -223,7 +231,7 @@ export default function CreateExamPage() {
                 </Card>
             )}
 
-            {/* STEP 2: SETTINGS */}
+            {/* STEP 2: SETTINGS (Giữ nguyên) */}
             {currentStep === 2 && (
                 <Card>
                     <CardHeader>
@@ -379,7 +387,6 @@ export default function CreateExamPage() {
 
       {/* --- DIALOGS --- */}
       
-      {/* 1. Selector thủ công */}
       {topicId && (
           <QuestionBankSelector 
             open={isBankSelectorOpen}
@@ -390,11 +397,12 @@ export default function CreateExamPage() {
           />
       )}
 
-      {/* 2. Dialog Sinh ngẫu nhiên */}
+      {/* ✅ Truyền sections vào dialog */}
       <RandomGeneratorDialog 
         open={isRandomDialogOpen} 
         onOpenChange={setIsRandomDialogOpen}
         onGenerate={handleGenerateRandom}
+        sections={sections} 
       />
 
     </div>
@@ -419,8 +427,10 @@ function StepItem({ step, current, label, icon: Icon }: any) {
     )
 }
 
-function RandomGeneratorDialog({ open, onOpenChange, onGenerate }: any) {
+// ✅ Cập nhật Component Dialog
+function RandomGeneratorDialog({ open, onOpenChange, onGenerate, sections }: any) {
     const [difficulty, setDifficulty] = useState("all");
+    const [sectionId, setSectionId] = useState("all"); // State chọn Section
     const [count, setCount] = useState(10);
 
     return (
@@ -430,6 +440,20 @@ function RandomGeneratorDialog({ open, onOpenChange, onGenerate }: any) {
                     <DialogTitle>Sinh câu hỏi ngẫu nhiên</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
+                    {/* Select Section */}
+                    <div className="space-y-2">
+                        <Label>Chương / Phần</Label>
+                        <Select value={sectionId} onValueChange={setSectionId}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Toàn bộ chủ đề (Tất cả)</SelectItem>
+                                {sections?.map((s: Section) => (
+                                    <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="space-y-2">
                         <Label>Độ khó</Label>
                         <Select value={difficulty} onValueChange={setDifficulty}>
@@ -448,7 +472,7 @@ function RandomGeneratorDialog({ open, onOpenChange, onGenerate }: any) {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button onClick={() => onGenerate({ difficulty, count })}>Sinh đề</Button>
+                    <Button onClick={() => onGenerate({ difficulty, count, sectionId })}>Sinh đề</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

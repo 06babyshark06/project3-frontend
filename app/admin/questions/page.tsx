@@ -492,7 +492,15 @@ export default function QuestionBankPage() {
                         <DropdownMenuItem onClick={() => handleViewDetail(q.id)}>
                           <Eye className="mr-2 h-4 w-4" /> Chi tiết
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setEditingQuestion(q)}>
+                        <DropdownMenuItem onClick={async () => {
+                          try {
+                            const res = await api.get(`/questions/${q.id}`);
+                            setEditingQuestion(res.data.data);
+                            setIsAddDialogOpen(true);
+                          } catch (error) {
+                            toast.error("Không thể tải thông tin câu hỏi để sửa");
+                          }
+                        }}>
                           <Pencil className="mr-2 h-4 w-4" /> Sửa
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setQuestionToDelete(q.id)} className="text-red-600 focus:text-red-600">
@@ -563,7 +571,6 @@ export default function QuestionBankPage() {
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
         onImportSuccess={fetchQuestions}
-        topicId={selectedTopic !== "all" ? Number(selectedTopic) : undefined}
       />
 
       {/* VIEW DETAIL DIALOG */}
