@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Loader2, Search, PlusCircle, MoreHorizontal, Pencil,
   Trash2, Upload, Filter, Eye, RefreshCw, Library,
-  Book
+  Book,
+  X
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ import { AddQuestionDialog } from "@/components/AddQuestionDialog";
 import { ExcelImportDialog } from "@/components/ExcelImportDialog";
 import { AddTopicDialog } from "@/components/AddTopicDialog";
 import { AddSectionDialog } from "@/components/AddSectionDialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // ===== INTERFACES =====
 interface Choice {
@@ -103,18 +105,22 @@ export default function QuestionBankPage() {
   const [isAddTopicDialogOpen, setIsAddTopicDialogOpen] = useState(false);
   const [isAddSectionDialogOpen, setIsAddSectionDialogOpen] = useState(false);
 
+  // ===== BULK ACTION STATE =====
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   // ===== FETCH TOPICS =====
-  useEffect(() => {
-    const fetchTopics = async () => {
-      try {
-        const res = await api.get("/topics");
-        setTopics(res.data.data.topics || []);
-      } catch (error) {
-        console.error("Fetch topics error:", error);
-      }
-    };
-    fetchTopics();
+  const fetchTopics = useCallback(async () => {
+    try {
+      const res = await api.get("/topics");
+      setTopics(res.data.data.topics || []);
+    } catch (error) {
+      console.error("Fetch topics error:", error);
+    }
   }, []);
+  useEffect(() => {
+    fetchTopics();
+  }, [fetchTopics]);
 
   // ===== FETCH SECTIONS (Khi chọn Topic) =====
   useEffect(() => {
@@ -182,15 +188,6 @@ export default function QuestionBankPage() {
     return () => clearTimeout(timer);
   }, [searchTerm, selectedSection, selectedTopic, selectedDifficulty, page]);
 
-  // ===== ACTIONS =====
-  const handleResetFilters = () => {
-    setSearchTerm("");
-    setSelectedTopic("all");
-    setSelectedSection("all");
-    setSelectedDifficulty("all");
-    setPage(1);
-  };
-
   const handleDelete = async () => {
     if (!questionToDelete) return;
     try {
@@ -215,15 +212,6 @@ export default function QuestionBankPage() {
   };
 
   const handleTopicCreated = () => {
-    // Gọi lại API lấy topics để cập nhật dropdown
-    const fetchTopics = async () => {
-      try {
-        const res = await api.get("/topics");
-        setTopics(res.data.data.topics || []);
-      } catch (error) {
-        console.error("Fetch topics error:", error);
-      }
-    };
     fetchTopics();
   };
 
@@ -260,6 +248,56 @@ export default function QuestionBankPage() {
     }
   };
 
+  const handleImportSuccess = () => {
+    fetchQuestions();
+    fetchTopics();
+    toast.success("Dữ liệu đã được làm mới");
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === questions.length && questions.length > 0) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(questions.map(q => q.id));
+    }
+  };
+
+  const toggleSelectOne = (id: number) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    } else {
+      setSelectedIds(prev => [...prev, id]);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    if (!confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} câu hỏi đã chọn?`)) return;
+
+    setIsBulkDeleting(true);
+    try {
+      await Promise.all(selectedIds.map(id => api.delete(`/questions/${id}`)));
+
+      toast.success(`Đã xóa thành công ${selectedIds.length} câu hỏi!`);
+      setSelectedIds([]);
+      fetchQuestions();
+    } catch (error) {
+      console.error(error);
+      toast.error("Có lỗi xảy ra khi xóa một số câu hỏi.");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setSelectedTopic("all");
+    setSelectedSection("all");
+    setSelectedDifficulty("all");
+    setPage(1);
+  };
+
   const MediaDisplay = ({ url }: { url?: string }) => {
     if (!url) return null;
 
@@ -284,6 +322,12 @@ export default function QuestionBankPage() {
       </div>
     );
   };
+
+  const stripHtml = (html: string) => {
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -424,11 +468,43 @@ export default function QuestionBankPage() {
         </div>
       </Card>
 
+      {selectedIds.length > 0 && (
+        <div className="sticky top-4 z-20 mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <Badge variant="default" className="bg-primary text-primary-foreground">
+              Đã chọn {selectedIds.length}
+            </Badge>
+            <span className="text-sm text-muted-foreground">Bạn có thể thực hiện hành động hàng loạt</span>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])} className="hover:bg-background/50">
+              <X className="h-4 w-4 mr-1" /> Bỏ chọn
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+            >
+              {isBulkDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Trash2 className="h-4 w-4 mr-1" />}
+              Xóa {selectedIds.length} câu hỏi
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* DATA TABLE */}
       <Card className="overflow-hidden border-border/50">
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
+              <TableHead className="w-[40px] text-center">
+                <Checkbox
+                  checked={selectedIds.length === questions.length && questions.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead className="w-[60px]">ID</TableHead>
               <TableHead className="min-w-[300px]">Nội dung câu hỏi</TableHead>
               <TableHead className="w-[180px]">Chủ đề (Topic)</TableHead>
@@ -457,10 +533,17 @@ export default function QuestionBankPage() {
             ) : (
               questions.map((q) => (
                 <TableRow key={q.id} className="hover:bg-muted/30">
+                  <TableCell className="text-center">
+                    <Checkbox
+                      checked={selectedIds.includes(q.id)}
+                      onCheckedChange={() => toggleSelectOne(q.id)}
+                      aria-label={`Select question ${q.id}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">#{q.id}</TableCell>
                   <TableCell>
-                    <div className="line-clamp-2 font-medium" title={q.content}>
-                      {q.content}
+                    <div className="line-clamp-2 font-medium" title={stripHtml(q.content)}>
+                      {stripHtml(q.content)}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -570,7 +653,7 @@ export default function QuestionBankPage() {
       <ExcelImportDialog
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
-        onImportSuccess={fetchQuestions}
+        onImportSuccess={handleImportSuccess}
       />
 
       {/* VIEW DETAIL DIALOG */}
