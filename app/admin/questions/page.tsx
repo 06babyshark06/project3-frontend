@@ -8,7 +8,8 @@ import {
   Loader2, Search, PlusCircle, MoreHorizontal, Pencil,
   Trash2, Upload, Filter, Eye, RefreshCw, Library,
   Book,
-  X
+  X,
+  Download
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,8 @@ export default function QuestionBankPage() {
   // ===== BULK ACTION STATE =====
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  const [isExporting, setIsExporting] = useState(false);
 
   // ===== FETCH TOPICS =====
   const fetchTopics = useCallback(async () => {
@@ -329,6 +332,32 @@ export default function QuestionBankPage() {
     return tmp.textContent || tmp.innerText || "";
   }
 
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      toast.info("Đang tạo file Excel...");
+      
+      const params: any = {};
+      if (searchTerm) params.search = searchTerm;
+      if (selectedSection !== "all") params.section_id = selectedSection;
+      else if (selectedTopic !== "all") params.topic_id = selectedTopic;
+      if (selectedDifficulty !== "all") params.difficulty = selectedDifficulty;
+
+      const res = await api.get("/questions/export", { params });
+      
+      const fileUrl = res.data.data.file_url;
+      if (fileUrl) {
+        window.open(fileUrl, "_blank");
+        toast.success("Xuất file thành công!");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Xuất file thất bại");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
       {/* HEADER */}
@@ -356,6 +385,10 @@ export default function QuestionBankPage() {
           >
             <Book className="mr-2 h-4 w-4 text-orange-600" />
             Thêm chương
+          </Button>
+          <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+            Export Excel
           </Button>
           <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
             <Upload className="mr-2 h-4 w-4" />
