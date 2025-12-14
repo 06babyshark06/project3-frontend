@@ -150,20 +150,15 @@ export default function ExamTakingPage() {
     hasStartedRef.current = true;
 
     try {
-      // API này Backend cần xử lý:
-      // - Nếu chưa có submission -> Tạo mới, trả về time full.
-      // - Nếu đang có submission (in_progress) -> Trả về ID cũ, thời gian còn lại thực tế, và đáp án đã lưu.
       const res = await api.post(`/exams/${examId}/start`); 
       const { submission_id, remaining_seconds, current_answers } = res.data.data;
 
       setSubmissionId(submission_id);
       
-      // Đồng bộ thời gian từ server (chống F5 reset giờ)
       if (remaining_seconds !== undefined && remaining_seconds !== null) {
         setTimeLeft(remaining_seconds);
       }
 
-      // Khôi phục bài làm (chống F5 mất bài)
       if (current_answers) {
         setUserAnswers(current_answers);
         toast.info("Đã khôi phục bài làm trước đó.");
@@ -175,7 +170,6 @@ export default function ExamTakingPage() {
 
     } catch (error: any) {
         toast.error(error.response?.data?.error?.message || "Không thể bắt đầu bài thi");
-        // Nếu lỗi (vd: hết lượt), quay về
         router.push(`/exams/${examId}`);
     }
   }, [examId, router]);
