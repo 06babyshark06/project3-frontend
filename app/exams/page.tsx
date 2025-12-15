@@ -1,3 +1,6 @@
+"use client"; // ✅ QUAN TRỌNG: Chuyển thành Client Component
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -10,39 +13,43 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import { ArrowLeft, Home, LayoutDashboard, Clock, FileQuestion } from "lucide-react";
+import { ArrowLeft, Home, LayoutDashboard, Clock, FileQuestion, Loader2 } from "lucide-react";
 
 interface Exam {
   id: number;
   title: string;
   duration_minutes: number;
-  // Thêm description nếu backend có trả về
+  topic_name?: string; // Thêm topic name nếu có
 }
 
-async function getExams() {
-  try {
-    // Fetch public exams
-    const response = await api.get("/exams", {
-        params: {
-            limit: 100 // Lấy số lượng đủ lớn để hiển thị
+export default function ExamsPage() {
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchExams = async () => {
+      try {
+        setLoading(true);
+        // Gọi API lấy danh sách bài thi
+        const response = await api.get("/exams", {
+          params: {
+            limit: 100,
+          },
+        });
+        
+        const data = response.data.data;
+        if (data && Array.isArray(data.exams)) {
+          setExams(data.exams);
         }
-    });
-    
-    const data = response.data.data;
-    
-    if (data && Array.isArray(data.exams)) {
-       return data.exams as Exam[];
-    }
+      } catch (error) {
+        console.error("Lỗi khi fetch bài thi:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return []; 
-  } catch (error) {
-    console.error("Lỗi khi fetch bài thi:", error);
-    return []; 
-  }
-}
-
-export default async function ExamsPage() {
-  const exams = await getExams();
+    fetchExams();
+  }, []);
 
   return (
     <div className="container mx-auto max-w-7xl p-4 md:p-8">
@@ -81,7 +88,11 @@ export default async function ExamsPage() {
       </div>
       
       {/* === 2. DANH SÁCH BÀI THI === */}
-      {exams.length > 0 ? (
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      ) : exams.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {exams.map((exam) => (
             <Link href={`/exams/${exam.id}/take`} key={exam.id} className="group">
@@ -95,6 +106,10 @@ export default async function ExamsPage() {
                             <Clock className="mr-1 h-3 w-3" /> {exam.duration_minutes} phút
                         </Badge>
                     </div>
+                    {/* Hiển thị Topic nếu có */}
+                    {exam.topic_name && (
+                      <Badge variant="secondary" className="mt-2 w-fit">{exam.topic_name}</Badge>
+                    )}
                     <CardTitle className="text-xl font-bold line-clamp-2 group-hover:text-primary transition-colors mt-2">
                         {exam.title}
                     </CardTitle>

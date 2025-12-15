@@ -1,4 +1,3 @@
-// app/admin/dashboard/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,7 +6,11 @@ import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Users, BookCopy, Edit, Loader2, ShieldAlert, FileQuestion } from "lucide-react";
+import { 
+  Users, BookCopy, Edit, Loader2, ShieldAlert, 
+  FileQuestion, FolderCog, PlusCircle, ListChecks, 
+  UserCog, Library, Layers 
+} from "lucide-react";
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -51,7 +54,7 @@ export default function AdminDashboardPage() {
         Chào mừng, <span className="font-semibold text-primary">{user?.full_name}</span> ({user?.role}).
       </p>
 
-      {/* Thống kê (Giữ nguyên) */}
+      {/* Thống kê */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -88,26 +91,42 @@ export default function AdminDashboardPage() {
       <div className="grid gap-8 md:grid-cols-2">
         {/* Khu vực Giảng viên (Tạo nội dung) */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">Dành cho Giảng viên</h2>
+          <h2 className="text-2xl font-bold mb-4">Quản lý Nội dung</h2>
           <div className="flex flex-wrap gap-4">
             <Button asChild size="lg">
-              <Link href="/admin/courses/new">Tạo Khóa Học Mới</Link>
+              <Link href="/admin/courses/new">
+                <PlusCircle className="mr-2 h-5 w-5" /> Tạo Khóa Học Mới
+              </Link>
             </Button>
             <Button asChild size="lg" variant="secondary">
-              <Link href="/admin/exams/create">Tạo Bài Thi Mới</Link>
+              <Link href="/admin/exams/create">
+                <PlusCircle className="mr-2 h-5 w-5" /> Tạo Bài Thi Mới
+              </Link>
             </Button>
+            
             <Button asChild size="lg" variant="outline">
               <Link href="/admin/questions">
-                <FileQuestion className="mr-2 h-4 w-4" /> Ngân hàng Câu hỏi
+                <FileQuestion className="mr-2 h-5 w-5" /> Ngân hàng Câu hỏi
+              </Link>
+            </Button>
+
+            {/* ✅ NÚT QUẢN LÝ DANH MỤC */}
+            <Button asChild size="lg" variant="outline">
+              <Link href="/admin/categories">
+                <FolderCog className="mr-2 h-5 w-5" /> Quản lý Danh mục
               </Link>
             </Button>
 
             <Button asChild size="lg" variant="outline">
-              <Link href="/admin/courses">Khóa Học Của Tôi</Link>
+              <Link href="/admin/courses">
+                <BookCopy className="mr-2 h-5 w-5" /> Khóa Học Của Tôi
+              </Link>
             </Button>
 
             <Button asChild size="lg" variant="outline">
-              <Link href="/admin/exams">Bài Thi Của Tôi</Link>
+              <Link href="/admin/exams">
+                <ListChecks className="mr-2 h-5 w-5" /> Bài Thi Của Tôi
+              </Link>
             </Button>
           </div>
         </div>
@@ -116,17 +135,23 @@ export default function AdminDashboardPage() {
         {user?.role === 'admin' && (
           <div>
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-destructive">
-              <ShieldAlert className="w-6 h-6" /> Khu vực Admin
+              <ShieldAlert className="w-6 h-6" /> Khu vực Quản trị viên
             </h2>
             <div className="flex flex-wrap gap-4">
               <Button asChild size="lg" variant="destructive">
-                <Link href="/admin/users">Quản Lý User</Link>
+                <Link href="/admin/users">
+                  <UserCog className="mr-2 h-5 w-5" /> Quản Lý User
+                </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
-                <Link href="/admin/manage/courses">Quản Lý Tất Cả Khóa Học</Link>
+                <Link href="/admin/manage/courses">
+                  <Library className="mr-2 h-5 w-5" /> Quản Lý Tất Cả Khóa Học
+                </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
-                <Link href="/admin/manage/exams">Quản Lý Tất Cả Bài Thi</Link>
+                <Link href="/admin/manage/exams">
+                  <Layers className="mr-2 h-5 w-5" /> Quản Lý Tất Cả Bài Thi
+                </Link>
               </Button>
             </div>
           </div>

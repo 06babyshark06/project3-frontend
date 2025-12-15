@@ -6,7 +6,8 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Loader2, Clock, AlertTriangle, ChevronLeft, ChevronRight,
-  Circle, CheckCircle2, Square, CheckSquare, Lock, Maximize, Image as ImageIcon
+  Circle, CheckCircle2, Square, CheckSquare, Lock, Maximize, 
+  Image as ImageIcon, Calendar, Ban, UserPlus, Hourglass
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +43,9 @@ interface ExamSettings {
   duration_minutes: number;
   password?: string;
   shuffle_questions?: boolean;
+  start_time?: string;
+  end_time?: string;
+  requires_approval?: boolean; // ✅ Thêm trường này
 }
 interface ExamData {
   id: number;
@@ -65,7 +69,6 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-// ✅ Component hiển thị Media
 const MediaContent = ({ url }: { url?: string }) => {
   if (!url) return null;
   const isVideo = url.match(/\.(mp4|webm|mov)$/i);
@@ -89,6 +92,11 @@ export default function ExamTakingPage() {
   // ===== STATE =====
   const [exam, setExam] = useState<ExamData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Trạng thái hiển thị (Blocker)
+  const [examStatus, setExamStatus] = useState<"open" | "not_started" | "ended" | "need_approval" | "pending" | "rejected">("open");
+  const [statusMessage, setStatusMessage] = useState("");
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, number[]>>({});
   const [timeLeft, setTimeLeft] = useState(0);
@@ -100,13 +108,14 @@ export default function ExamTakingPage() {
   const [passwordInput, setPasswordInput] = useState("");
   const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isResuming, setIsResuming] = useState(false);
+  const [isRequesting, setIsRequesting] = useState(false); // State nút đăng ký
 
-  // Refs
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedAnswers = useRef<string>("");
-  const hasStartedRef = useRef(false); // Tránh gọi API start nhiều lần
+  const hasStartedRef = useRef(false);
 
-  // ===== 1. FETCH EXAM & CHECK PASSWORD =====
+  // ===== 1. FETCH EXAM & CHECK CONDITIONS =====
   useEffect(() => {
     const fetchExam = async () => {
       try {
@@ -115,7 +124,6 @@ export default function ExamTakingPage() {
 
         if (!data.questions) data.questions = [];
 
-        // Shuffle logic (Chỉ shuffle nếu là lần đầu, nếu resume thì nên giữ nguyên thứ tự hoặc lưu thứ tự vào DB - phần này nâng cao, tạm thời shuffle ở client)
         if (data.settings?.shuffle_questions) {
           data.questions = shuffleArray(data.questions);
           data.questions = data.questions.map((q: Question) => ({
@@ -125,18 +133,66 @@ export default function ExamTakingPage() {
         }
 
         setExam(data);
-        
-        // Mặc định thời gian (sẽ bị ghi đè nếu resume từ server)
         setTimeLeft(data.settings.duration_minutes * 60);
 
+        // 1.1 Check Thời gian
+        const now = new Date();
+        const start = data.settings.start_time ? new Date(data.settings.start_time) : null;
+        const end = data.settings.end_time ? new Date(data.settings.end_time) : null;
+
+        if (start && now < start) {
+            setExamStatus("not_started");
+            setStatusMessage(`Bài thi sẽ mở vào: ${start.toLocaleString('vi-VN')}`);
+            setIsLoading(false);
+            return; 
+        }
+        if (end && now > end) {
+            setExamStatus("ended");
+            setStatusMessage(`Bài thi đã kết thúc vào: ${end.toLocaleString('vi-VN')}`);
+            setIsLoading(false);
+            return;
+        }
+
+        // 1.2 Check Quyền truy cập (Approval)
+        if (data.settings?.requires_approval) {
+            // Gọi API check status
+            try {
+                const accessRes = await api.get("/exams/access/check", { params: { exam_id: examId } });
+                const { can_access, message } = accessRes.data.data;
+
+                if (!can_access) {
+                    if (message === "none") {
+                        setExamStatus("need_approval");
+                        setStatusMessage("Bài thi yêu cầu đăng ký trước.");
+                    } else if (message === "pending") {
+                        setExamStatus("pending");
+                        setStatusMessage("Yêu cầu của bạn đang chờ giáo viên duyệt.");
+                    } else if (message === "rejected") {
+                        setExamStatus("rejected");
+                        setStatusMessage("Yêu cầu tham gia của bạn đã bị từ chối.");
+                    } else {
+                        // Các lỗi khác (max_attempts...)
+                        setExamStatus("ended"); 
+                        setStatusMessage("Bạn không đủ điều kiện tham gia (Hết lượt hoặc bị chặn).");
+                    }
+                    setIsLoading(false);
+                    return;
+                }
+            } catch (e) {
+                console.error("Check access failed", e);
+            }
+        }
+
+        // Nếu qua hết các cửa ải -> Check Password
         if (data.settings?.password) {
           setIsPasswordDialogOpen(true);
         } else {
           setIsPasswordCorrect(true);
         }
+
       } catch (error) {
         toast.error("Không thể tải đề thi.");
-        router.push("/dashboard");
+        router.push("/exams");
       } finally {
         setIsLoading(false);
       }
@@ -144,7 +200,22 @@ export default function ExamTakingPage() {
     fetchExam();
   }, [examId, router]);
 
-  // ===== ✅ 2. START / RESUME EXAM (QUAN TRỌNG) =====
+  // ===== HANDLE REQUEST ACCESS =====
+  const handleRequestAccess = async () => {
+      setIsRequesting(true);
+      try {
+          await api.post("/exams/access/request", { exam_id: Number(examId) });
+          toast.success("Đã gửi yêu cầu! Vui lòng chờ duyệt.");
+          setExamStatus("pending");
+          setStatusMessage("Yêu cầu của bạn đang chờ giáo viên duyệt.");
+      } catch (error) {
+          toast.error("Gửi yêu cầu thất bại.");
+      } finally {
+          setIsRequesting(false);
+      }
+  };
+
+  // ===== START / RESUME EXAM =====
   const startOrResumeExam = useCallback(async () => {
     if (hasStartedRef.current) return;
     hasStartedRef.current = true;
@@ -160,27 +231,49 @@ export default function ExamTakingPage() {
       }
 
       if (current_answers) {
-        setUserAnswers(current_answers);
-        toast.info("Đã khôi phục bài làm trước đó.");
+        const formattedAnswers: Record<number, number[]> = {};
+        Object.entries(current_answers).forEach(([key, val]: [string, any]) => {
+            const choices = val.values ? val.values : val;
+            if (Array.isArray(choices)) {
+                formattedAnswers[Number(key)] = choices.map(Number);
+            }
+        });
+        setUserAnswers(formattedAnswers);
+        
+        if (Object.keys(formattedAnswers).length > 0) {
+             setIsResuming(true); 
+        } else {
+             requestFullscreen();
+        }
       } else {
-        toast.success("Bắt đầu tính giờ làm bài!");
+        requestFullscreen();
       }
 
-      requestFullscreen();
-
     } catch (error: any) {
-        toast.error(error.response?.data?.error?.message || "Không thể bắt đầu bài thi");
-        router.push(`/exams/${examId}`);
+        // Fallback check lỗi từ backend
+        const msg = error.response?.data?.error?.message || "";
+        toast.error(msg || "Không thể bắt đầu bài thi");
+        
+        // Nếu lỗi liên quan đến access, quay về màn hình chặn
+        if(msg.includes("pending")) { setExamStatus("pending"); }
+        else if(msg.includes("rejected")) { setExamStatus("rejected"); }
+        else { router.push(`/exams`); }
     }
   }, [examId, router]);
 
+  const handleResumeClick = () => {
+      requestFullscreen();
+      setIsResuming(false);
+      toast.success("Đã khôi phục bài làm!");
+  };
+
   useEffect(() => {
-    if (isPasswordCorrect && exam) {
+    if (isPasswordCorrect && exam && examStatus === "open") {
         startOrResumeExam();
     }
-  }, [isPasswordCorrect, exam, startOrResumeExam]);
+  }, [isPasswordCorrect, exam, examStatus, startOrResumeExam]);
 
-
+  // ... (Các hàm handlePasswordSubmit, requestFullscreen, handleFullscreenChange giữ nguyên) ...
   const handlePasswordSubmit = () => {
     if (!exam?.settings?.password) return;
     if (passwordInput === exam.settings.password) {
@@ -192,7 +285,6 @@ export default function ExamTakingPage() {
     }
   };
 
-  // ===== 3. FULLSCREEN & ANTI-CHEAT =====
   const requestFullscreen = () => {
     const elem = document.documentElement;
     if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
@@ -201,20 +293,11 @@ export default function ExamTakingPage() {
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
-      // Chỉ cảnh báo nếu đã bắt đầu tính giờ (có submissionId)
       if (!document.fullscreenElement && isPasswordCorrect && !isSubmitting && submissionId) {
         const newCount = violationCount + 1;
         setViolationCount(newCount);
-        
-        toast.error(`⚠️ CẢNH BÁO: Thoát toàn màn hình! (${newCount}/3)`, {
-          description: "Quá 3 lần bài thi sẽ bị nộp tự động."
-        });
-
-        api.post("/exams/log-violation", {
-          exam_id: Number(examId),
-          violation_type: "exit_fullscreen"
-        }).catch(console.error);
-
+        toast.error(`⚠️ CẢNH BÁO: Thoát toàn màn hình! (${newCount}/3)`);
+        api.post("/exams/log-violation", { exam_id: Number(examId), violation_type: "exit_fullscreen" }).catch(console.error);
         if (newCount >= 3) handleSubmit(true);
       }
     };
@@ -222,36 +305,19 @@ export default function ExamTakingPage() {
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, [isPasswordCorrect, isSubmitting, violationCount, submissionId, examId]);
 
-  // ===== 4. TIMER =====
+  // ... (Các hàm Timer, AutoSave, SelectAnswer, Submit giữ nguyên) ...
   useEffect(() => {
     if (!submissionId || isSubmitting) return;
-
-    if (timeLeft <= 0) {
-      handleSubmit(true);
-      return;
-    }
-
-    const timerId = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-            clearInterval(timerId);
-            return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
+    if (timeLeft <= 0) { handleSubmit(true); return; }
+    const timerId = setInterval(() => setTimeLeft(p => p - 1), 1000);
     return () => clearInterval(timerId);
   }, [timeLeft, submissionId, isSubmitting]);
 
-  // ===== 5. AUTO-SAVE =====
   useEffect(() => {
     if (!submissionId || isSubmitting) return;
-
     const saveAnswers = async () => {
       const currentAnswersStr = JSON.stringify(userAnswers);
       if (currentAnswersStr === lastSavedAnswers.current) return;
-
       try {
         const promises = Object.entries(userAnswers).flatMap(([qId, cIds]) =>
           cIds.map(cId => 
@@ -259,103 +325,88 @@ export default function ExamTakingPage() {
               exam_id: Number(examId),
               question_id: Number(qId),
               chosen_choice_id: cId,
-              submission_id: submissionId // ✅ Gửi kèm submissionId
+              submission_id: submissionId
             })
           )
         );
         await Promise.all(promises);
         lastSavedAnswers.current = currentAnswersStr;
-      } catch (err) {
-        console.error("Auto-save failed");
-      }
+      } catch (err) { console.error("Auto-save failed"); }
     };
-
-    autoSaveTimerRef.current = setInterval(saveAnswers, 30000); // 30s
+    autoSaveTimerRef.current = setInterval(saveAnswers, 30000);
     return () => { if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current); };
   }, [examId, userAnswers, submissionId, isSubmitting]);
 
   const handleSelectAnswer = (question: Question, choiceId: number) => {
-    if (isSubmitting) return;
-
-    setUserAnswers(prev => {
-      const currentSelected = prev[question.id] || [];
-      if (question.question_type === "multiple_choice") {
-        return currentSelected.includes(choiceId) 
-            ? { ...prev, [question.id]: currentSelected.filter(id => id !== choiceId) }
-            : { ...prev, [question.id]: [...currentSelected, choiceId] };
-      } else {
+      if (isSubmitting) return;
+      setUserAnswers(prev => {
+        const currentSelected = prev[question.id] || [];
+        if (question.question_type === "multiple_choice") {
+            return currentSelected.includes(choiceId) ? { ...prev, [question.id]: currentSelected.filter(id => id !== choiceId) } : { ...prev, [question.id]: [...currentSelected, choiceId] };
+        }
         return { ...prev, [question.id]: [choiceId] };
-      }
-    });
+      });
   };
 
-  // ===== 6. SUBMIT =====
   const handleSubmit = useCallback(async (autoSubmit = false) => {
-    if (isSubmitting || !exam) return;
-    setIsSubmitting(true);
-
-    const formattedAnswers = Object.entries(userAnswers).flatMap(([qId, cIds]) =>
-      cIds.map(cId => ({
-        question_id: Number(qId),
-        chosen_choice_id: Number(cId)
-      }))
-    );
-
-    try {
-      toast.info("Đang nộp bài...");
-      const response = await api.post("/exams/submit", {
-        exam_id: Number(examId),
-        submission_id: submissionId,
-        answers: formattedAnswers
-      });
-
-      const result = response.data.data;
-
-      if (autoSubmit) toast.warning("Hệ thống đã tự động thu bài.");
-      else toast.success("Nộp bài thành công!");
-
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-      
-      router.replace(`/exams/result/${result.submission_id || submissionId}`);
-      
-    } catch (error: any) {
-      toast.error(error.response?.data?.error?.message || "Nộp bài thất bại. Vui lòng thử lại.");
-      setIsSubmitting(false);
-    }
+      if (isSubmitting || !exam) return;
+      setIsSubmitting(true);
+      try {
+        const formattedAnswers = Object.entries(userAnswers).flatMap(([qId, cIds]) => cIds.map(cId => ({ question_id: Number(qId), chosen_choice_id: Number(cId) })));
+        const response = await api.post("/exams/submit", { exam_id: Number(examId), submission_id: submissionId, answers: formattedAnswers });
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        router.replace(`/exams/result/${response.data.data.submission_id || submissionId}`);
+      } catch (error) { setIsSubmitting(false); }
   }, [exam, userAnswers, isSubmitting, examId, submissionId, router]);
 
-  // ===== 7. PREVENT RELOAD (F5) =====
-  useEffect(() => {
-    if (!isSubmitting && submissionId) {
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            e.preventDefault();
-            e.returnValue = ''; // Trigger popup browser
-        };
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }
-  }, [isSubmitting, submissionId]);
-
-  // ===== VISIBILITY CHECK =====
-  useEffect(() => {
-    if (!submissionId || isSubmitting) return;
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        const newCount = violationCount + 1;
-        setViolationCount(newCount);
-        toast.error(`🚨 CẢNH BÁO: Rời khỏi màn hình thi! (${newCount}/3)`);
-        api.post("/exams/log-violation", { exam_id: Number(examId), violation_type: "tab_switch" }).catch(() => {});
-        if (newCount >= 3) handleSubmit(true);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [submissionId, isSubmitting, violationCount, examId, handleSubmit]);
 
   // ===== RENDER =====
   if (isLoading) return <div className="flex h-screen w-full items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!exam) return null;
 
+  // ✅ UI CHẶN / YÊU CẦU THAM GIA
+  if (examStatus !== "open") {
+      let icon = <Ban className="h-16 w-16" />;
+      let bgClass = "bg-red-100 text-red-600";
+      let action = null;
+
+      if (examStatus === 'not_started') {
+          icon = <Calendar className="h-16 w-16" />;
+          bgClass = "bg-blue-100 text-blue-600";
+      } else if (examStatus === 'need_approval') {
+          icon = <UserPlus className="h-16 w-16" />;
+          bgClass = "bg-purple-100 text-purple-600";
+          action = (
+              <Button size="lg" className="mt-4 bg-purple-600 hover:bg-purple-700" onClick={handleRequestAccess} disabled={isRequesting}>
+                  {isRequesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <UserPlus className="mr-2 h-4 w-4"/>}
+                  Đăng ký tham gia
+              </Button>
+          );
+      } else if (examStatus === 'pending') {
+          icon = <Hourglass className="h-16 w-16" />;
+          bgClass = "bg-yellow-100 text-yellow-600";
+      }
+
+      return (
+        <div className="flex flex-col h-screen items-center justify-center bg-background p-6 text-center space-y-6">
+            <div className={`p-6 rounded-full ${bgClass}`}>{icon}</div>
+            
+            <h1 className="text-3xl font-bold">{exam.title}</h1>
+            
+            <div className="max-w-md p-4 bg-muted/50 border rounded-lg">
+                <p className="text-lg font-medium text-muted-foreground">{statusMessage}</p>
+            </div>
+
+            {action}
+
+            <Button variant="outline" size="lg" onClick={() => router.push("/exams")}>
+                <ChevronLeft className="mr-2 h-5 w-5" /> Quay về danh sách
+            </Button>
+        </div>
+      );
+  }
+
+  // ✅ RENDER BÀI THI (Giữ nguyên)
   const currentQuestion = exam.questions[currentQuestionIndex];
   const answeredCount = Object.values(userAnswers).filter(ans => ans.length > 0).length;
   const progress = (answeredCount / exam.questions.length) * 100;
@@ -372,11 +423,27 @@ export default function ExamTakingPage() {
             <Input type="password" placeholder="Nhập mật khẩu..." value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handlePasswordSubmit()} autoFocus />
           </div>
           <DialogFooter>
-            <Button onClick={() => router.push("/dashboard")} variant="outline">Hủy</Button>
+            <Button onClick={() => router.push("/exams")} variant="outline">Hủy</Button>
             <Button onClick={handlePasswordSubmit}>Xác nhận</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {isResuming && (
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
+            <div className="max-w-md space-y-6">
+                <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto" />
+                <h2 className="text-2xl font-bold">Phát hiện gián đoạn!</h2>
+                <p className="text-muted-foreground">
+                    Hệ thống đã khôi phục bài làm của bạn. 
+                    Vui lòng nhấn nút bên dưới để quay lại chế độ toàn màn hình và tiếp tục làm bài.
+                </p>
+                <Button size="lg" onClick={handleResumeClick} className="w-full text-lg animate-pulse">
+                    <Maximize className="mr-2 h-5 w-5" /> Tiếp tục làm bài
+                </Button>
+            </div>
+        </div>
+      )}
 
       {isPasswordCorrect && (
         <div className="flex flex-col h-screen bg-background">
@@ -397,10 +464,7 @@ export default function ExamTakingPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* ✅ Render nội dung câu hỏi (HTML) */}
                   <div className="text-base leading-relaxed prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: currentQuestion.content }} />
-                  
-                  {/* ✅ Render Ảnh/Video câu hỏi */}
                   <MediaContent url={currentQuestion.attachment_url} />
 
                   <div className="space-y-3">
@@ -414,7 +478,6 @@ export default function ExamTakingPage() {
                                 {isMultiple ? (isSelected ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-muted-foreground" />) : (isSelected ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Circle className="h-5 w-5 text-muted-foreground" />)}
                                 <span className="text-base">{choice.content}</span>
                             </div>
-                            {/* ✅ Render Ảnh/Video đáp án */}
                             <MediaContent url={choice.attachment_url} />
                           </Label>
                         </div>

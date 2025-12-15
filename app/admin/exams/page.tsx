@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { PlusCircle, Eye, Edit, ArrowLeft, Loader2, Clock, Activity, BarChart3 } from "lucide-react";
+import { PlusCircle, Eye, Edit, ArrowLeft, Loader2, Clock, Activity, BarChart3, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -68,6 +68,20 @@ export default function InstructorExamsPage() {
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">
+
+                {exam.is_published && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    asChild 
+                    className="text-purple-600 hover:text-purple-700 hover:bg-purple-50" 
+                    title="Duyệt thí sinh đăng ký"
+                  >
+                    <Link href={`/admin/exams/${exam.id}/requests`}>
+                      <Users className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
                 
                 {/* 1. Nút Giám sát (Monitor) - Chỉ hiện khi đã xuất bản */}
                 {exam.is_published && (
