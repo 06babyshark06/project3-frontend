@@ -9,7 +9,7 @@ import Link from "next/link";
 import { 
   Users, BookCopy, Edit, Loader2, ShieldAlert, 
   FileQuestion, FolderCog, PlusCircle, ListChecks, 
-  UserCog, Library, Layers 
+  UserCog, Library, Layers, School // ✅ Đã thêm icon School
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -110,7 +110,13 @@ export default function AdminDashboardPage() {
               </Link>
             </Button>
 
-            {/* ✅ NÚT QUẢN LÝ DANH MỤC */}
+            {/* ✅ NÚT QUẢN LÝ LỚP HỌC (MỚI THÊM) */}
+            <Button asChild size="lg" variant="outline">
+              <Link href="/admin/classes">
+                <School className="mr-2 h-5 w-5" /> Quản lý Lớp Học
+              </Link>
+            </Button>
+
             <Button asChild size="lg" variant="outline">
               <Link href="/admin/categories">
                 <FolderCog className="mr-2 h-5 w-5" /> Quản lý Danh mục

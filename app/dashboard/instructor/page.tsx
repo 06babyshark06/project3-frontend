@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { 
   BookCopy, Edit, PlusCircle, ArrowRight, 
-  BarChart3, FileQuestion, Database, FolderCog 
-} from "lucide-react"; // ✅ Thêm icon Database và FolderCog
+  BarChart3, FileQuestion, Database, FolderCog,
+  School // ✅ Thêm icon School
+} from "lucide-react";
 
 export default function InstructorDashboardPage() {
   const { user } = useAuth();
@@ -89,7 +90,26 @@ export default function InstructorDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* 2. Ngân hàng Đề thi */}
+        {/* 2. ✅ MỚI: Quản lý Lớp học */}
+        <Card className="hover:border-primary/50 transition-colors">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <School className="h-5 w-5 text-indigo-500" /> Quản lý Lớp học
+            </CardTitle>
+            <CardDescription>
+              Tổ chức lớp học, quản lý danh sách học viên.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/admin/classes">
+                Danh sách lớp <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* 3. Ngân hàng Đề thi */}
         <Card className="hover:border-primary/50 transition-colors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -108,7 +128,7 @@ export default function InstructorDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* 3. Ngân hàng Câu hỏi */}
+        {/* 4. Ngân hàng Câu hỏi */}
         <Card className="hover:border-primary/50 transition-colors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -127,7 +147,7 @@ export default function InstructorDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* 4. ✅ MỚI: Quản lý Danh mục (Topics/Sections) */}
+        {/* 5. Quản lý Danh mục */}
         <Card className="hover:border-primary/50 transition-colors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -146,8 +166,8 @@ export default function InstructorDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* 5. Shortcuts / Tạo mới */}
-        <Card className="bg-primary/5 border-primary/20 md:col-span-2 lg:col-span-1">
+        {/* 6. Shortcuts / Tạo mới */}
+        <Card className="bg-primary/5 border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5 text-green-600" /> Tạo nhanh
@@ -170,6 +190,7 @@ export default function InstructorDashboardPage() {
             </Button>
           </CardContent>
         </Card>
+
       </div>
     </div>
   );
