@@ -5,12 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { 
-  ArrowLeft, Users, UserPlus, Trash2, Mail, Calendar, Loader2 
+  ArrowLeft, Users, UserPlus, Trash2, Mail, Loader2, 
+  FileText, Clock, BookOpen 
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
@@ -20,6 +20,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+
+// Import Component thêm bài thi mới tạo
+import { AddExamToClassDialog } from "@/components/AddExamToClassDialog";
 
 export default function ClassDetailPage() {
   const params = useParams();
@@ -28,6 +33,7 @@ export default function ClassDetailPage() {
 
   const [classData, setClassData] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
+  const [exams, setExams] = useState<any[]>([]); // State cho danh sách bài thi
   const [loading, setLoading] = useState(true);
   
   // Add Member State
@@ -38,25 +44,31 @@ export default function ClassDetailPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/classes/${classId}`);
-      setClassData(res.data.data.class);
-      setMembers(res.data.data.members || []);
+      // 1. Lấy thông tin lớp và thành viên
+      const resClass = await api.get(`/classes/${classId}`);
+      setClassData(resClass.data.data.class);
+      setMembers(resClass.data.data.members || []);
+
+      // 2. Lấy danh sách bài thi của lớp
+      const resExams = await api.get(`/classes/${classId}/exams`);
+      setExams(resExams.data.data || []);
+
     } catch (error) {
-      toast.error("Không tìm thấy lớp học");
-      router.push("/admin/classes");
+      console.error(error);
+      toast.error("Không tìm thấy thông tin lớp học");
+      // router.push("/admin/classes"); // Có thể bật lại nếu muốn redirect khi lỗi
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    if (classId) fetchData();
   }, [classId]);
 
   const handleAddMembers = async () => {
     if (!emailsInput.trim()) return;
     
-    // Tách email theo dòng hoặc dấu phẩy
     const emails = emailsInput.split(/[\n,]+/).map(e => e.trim()).filter(e => e);
     
     setIsAdding(true);
@@ -75,7 +87,7 @@ export default function ClassDetailPage() {
         
         setEmailsInput("");
         setIsAddMemberOpen(false);
-        fetchData(); // Reload list
+        fetchData(); 
     } catch (error) {
         toast.error("Thêm thành viên thất bại");
     } finally {
@@ -99,7 +111,7 @@ export default function ClassDetailPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
-      <Button variant="ghost" className="mb-4 pl-0" onClick={() => router.back()}>
+      <Button variant="ghost" className="mb-4 pl-0 hover:pl-2 transition-all" onClick={() => router.back()}>
         <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại danh sách
       </Button>
 
@@ -138,56 +150,118 @@ export default function ClassDetailPage() {
             </CardContent>
         </Card>
 
-        {/* RIGHT: MEMBERS LIST */}
-        <Card className="lg:col-span-2">
-            <CardHeader>
-                <CardTitle>Danh sách thành viên ({members.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Họ và tên</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Ngày tham gia</TableHead>
-                            <TableHead className="text-right">Hành động</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {members.length === 0 ? (
-                            <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground">Lớp chưa có học sinh nào.</TableCell></TableRow>
+        {/* RIGHT: TABS CONTENT */}
+        <div className="lg:col-span-2">
+            <Tabs defaultValue="exams" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="exams">Bài thi & Kiểm tra</TabsTrigger>
+                    <TabsTrigger value="students">Danh sách học viên</TabsTrigger>
+                </TabsList>
+
+                {/* TAB 1: BÀI THI */}
+                <TabsContent value="exams" className="space-y-4">
+                    <div className="flex justify-between items-center bg-card p-4 rounded-lg border shadow-sm">
+                        <div>
+                            <h3 className="font-semibold">Bài tập đã giao</h3>
+                            <p className="text-sm text-muted-foreground">Quản lý các bài thi của lớp</p>
+                        </div>
+                        {/* Nút thêm bài thi */}
+                        <AddExamToClassDialog 
+                            classId={classId as string} 
+                            onSuccess={fetchData} 
+                        />
+                    </div>
+
+                    <div className="grid gap-4">
+                        {exams.length === 0 ? (
+                            <div className="py-12 text-center border-2 border-dashed rounded-lg bg-muted/10">
+                                <BookOpen className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                                <h3 className="font-medium text-muted-foreground">Chưa có bài thi nào</h3>
+                            </div>
                         ) : (
-                            members.map((m) => (
-                                <TableRow key={m.user_id}>
-                                    <TableCell className="font-medium">{m.full_name}</TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2 text-muted-foreground">
-                                            <Mail className="h-3 w-3" /> {m.email}
+                            exams.map((exam) => (
+                                <Card key={exam.id} className="hover:border-primary/50 transition-colors">
+                                    <CardHeader className="pb-3">
+                                        <div className="flex justify-between items-start">
+                                            <div className="space-y-1">
+                                                <CardTitle className="text-lg line-clamp-1">{exam.title}</CardTitle>
+                                                <CardDescription className="line-clamp-1">{exam.description || "Không có mô tả"}</CardDescription>
+                                            </div>
+                                            <Badge variant={exam.is_published ? "default" : "secondary"}>
+                                                {exam.is_published ? "Đã mở" : "Đóng"}
+                                            </Badge>
                                         </div>
-                                    </TableCell>
-                                    <TableCell className="text-xs text-muted-foreground">
-                                        {new Date(m.joined_at).toLocaleDateString('vi-VN')}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleRemoveMember(m.user_id)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                                            <div className="flex items-center gap-1">
+                                                <Clock className="h-4 w-4" /> {exam.duration_minutes} phút
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <FileText className="h-4 w-4" /> {exam.question_count || 0} câu hỏi
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             ))
                         )}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+                    </div>
+                </TabsContent>
+
+                {/* TAB 2: HỌC VIÊN (Code cũ của bạn chuyển vào đây) */}
+                <TabsContent value="students">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Danh sách thành viên ({members.length})</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Họ và tên</TableHead>
+                                        <TableHead>Email</TableHead>
+                                        <TableHead>Ngày tham gia</TableHead>
+                                        <TableHead className="text-right">Hành động</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {members.length === 0 ? (
+                                        <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground">Lớp chưa có học sinh nào.</TableCell></TableRow>
+                                    ) : (
+                                        members.map((m) => (
+                                            <TableRow key={m.user_id}>
+                                                <TableCell className="font-medium">{m.full_name}</TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                                        <Mail className="h-3 w-3" /> {m.email}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-xs text-muted-foreground">
+                                                    {new Date(m.joined_at).toLocaleDateString('vi-VN')}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleRemoveMember(m.user_id)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+        </div>
       </div>
 
-      {/* DIALOG ADD MEMBER */}
+      {/* DIALOG ADD MEMBER (Giữ nguyên) */}
       <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Thêm học sinh vào lớp</DialogTitle>
-                <DialogDescription>Nhập email của học sinh (ngăn cách bằng dấu phẩy hoặc xuống dòng). Lưu ý: Học sinh phải có tài khoản trên hệ thống.</DialogDescription>
+                <DialogDescription>Nhập email của học sinh (ngăn cách bằng dấu phẩy hoặc xuống dòng).</DialogDescription>
             </DialogHeader>
             <div className="py-4">
                 <Textarea 
