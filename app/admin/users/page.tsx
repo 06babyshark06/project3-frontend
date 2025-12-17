@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; // Import router
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { 
-  Loader2, MoreHorizontal, Trash2, UserCog, Shield, 
+import {
+  Loader2, MoreHorizontal, Trash2, UserCog, Shield,
   GraduationCap, User as UserIcon, ArrowLeft, Search, Filter
 } from "lucide-react";
 
@@ -38,7 +38,7 @@ export default function UserManagementPage() {
   const router = useRouter(); // Hook điều hướng
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Pagination state
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -52,14 +52,19 @@ export default function UserManagementPage() {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // 1. Fetch Users
   const fetchUsers = async (pageNumber = 1) => {
     try {
       setIsLoading(true);
-      // (Sau này bạn có thể truyền thêm ?search=...&role=... vào đây)
-      const response = await api.get(`/users?page=${pageNumber}&limit=10`);
+      const queryParams = new URLSearchParams({
+        page: pageNumber.toString(),
+        limit: "10",
+        search: searchQuery,
+        role: roleFilter === "all" ? "" : roleFilter,
+      });
+
+      const response = await api.get(`/users?${queryParams.toString()}`);
       const data = response.data.data;
-      
+
       setUsers(data.users || []);
       setTotalPages(data.total_pages || 1);
       setTotalUsers(data.total || 0);
@@ -71,7 +76,7 @@ export default function UserManagementPage() {
     }
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { fetchUsers(1); }, [roleFilter]);
 
   // 2. Xử lý Xóa
   const handleDeleteUser = async () => {
@@ -80,11 +85,11 @@ export default function UserManagementPage() {
     try {
       await api.delete(`/users/${userToDelete.id}`);
       toast.success("Đã xóa người dùng thành công.");
-      
+
       if (users.length === 1 && page > 1) {
         fetchUsers(page - 1);
       } else {
-        fetchUsers(page); 
+        fetchUsers(page);
       }
     } catch (error) {
       toast.error("Xóa thất bại. Có thể do lỗi server.");
@@ -100,11 +105,11 @@ export default function UserManagementPage() {
     setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
 
     try {
-       await api.put(`/users/${userId}/role`, { role: newRole });
-       toast.success(`Đã cập nhật vai trò thành công!`);
+      await api.put(`/users/${userId}/role`, { role: newRole });
+      toast.success(`Đã cập nhật vai trò thành công!`);
     } catch (error: any) {
-       setUsers(oldUsers);
-       toast.error("Cập nhật vai trò thất bại.");
+      setUsers(oldUsers);
+      toast.error("Cập nhật vai trò thất bại.");
     }
   };
 
@@ -118,7 +123,7 @@ export default function UserManagementPage() {
 
   return (
     <div className="container mx-auto max-w-7xl p-6">
-      
+
       {/* === 1. TOP BAR ĐIỀU HƯỚNG === */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div className="flex items-center gap-4">
@@ -142,7 +147,8 @@ export default function UserManagementPage() {
             className="pl-9 bg-background"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            // (Logic search client hoặc server sẽ được gắn vào đây sau)
+            onKeyDown={(e) => e.key === "Enter" && fetchUsers(1)}
+          // (Logic search client hoặc server sẽ được gắn vào đây sau)
           />
         </div>
         <div className="w-full sm:w-[200px]">
@@ -181,78 +187,78 @@ export default function UserManagementPage() {
                   </TableHeader>
                   <TableBody>
                     {users.length === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                                Không tìm thấy người dùng nào.
-                            </TableCell>
-                        </TableRow>
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
+                          Không tìm thấy người dùng nào.
+                        </TableCell>
+                      </TableRow>
                     ) : (
-                        users.map((user) => (
+                      users.map((user) => (
                         <TableRow key={user.id} className="hover:bg-muted/5 transition-colors">
-                            <TableCell className="pl-6">
+                          <TableCell className="pl-6">
                             <Avatar className="h-10 w-10 border bg-white">
-                                <AvatarFallback className="bg-primary/5 text-primary font-bold">
+                              <AvatarFallback className="bg-primary/5 text-primary font-bold">
                                 {user.full_name?.charAt(0).toUpperCase()}
-                                </AvatarFallback>
+                              </AvatarFallback>
                             </Avatar>
-                            </TableCell>
-                            <TableCell>
-                                <div className="font-medium">{user.full_name}</div>
-                                <div className="text-xs text-muted-foreground md:hidden">{user.email}</div>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground hidden md:table-cell">{user.email}</TableCell>
-                            <TableCell>{getRoleBadge(user.role)}</TableCell>
-                            <TableCell className="text-right pr-6">
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{user.full_name}</div>
+                            <div className="text-xs text-muted-foreground md:hidden">{user.email}</div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground hidden md:table-cell">{user.email}</TableCell>
+                          <TableCell>{getRoleBadge(user.role)}</TableCell>
+                          <TableCell className="text-right pr-6">
                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
+                              <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
-                                    <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+                                  <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
                                 </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-56">
                                 <DropdownMenuLabel className="font-normal">
-                                    <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">{user.full_name}</p>
-                                        <p className="text-xs leading-none text-muted-foreground truncate">{user.email}</p>
-                                    </div>
+                                  <div className="flex flex-col space-y-1">
+                                    <p className="text-sm font-medium leading-none">{user.full_name}</p>
+                                    <p className="text-xs leading-none text-muted-foreground truncate">{user.email}</p>
+                                  </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => {
-                                    navigator.clipboard.writeText(user.email);
-                                    toast.success("Đã sao chép email");
+                                  navigator.clipboard.writeText(user.email);
+                                  toast.success("Đã sao chép email");
                                 }}>
-                                    Sao chép Email
+                                  Sao chép Email
                                 </DropdownMenuItem>
-                                
+
                                 <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
+                                  <DropdownMenuSubTrigger>
                                     <UserCog className="mr-2 h-4 w-4" />
                                     <span>Đổi vai trò</span>
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent>
+                                  </DropdownMenuSubTrigger>
+                                  <DropdownMenuSubContent>
                                     <DropdownMenuRadioGroup value={user.role} onValueChange={(val) => handleChangeRole(user.id, val)}>
-                                        <DropdownMenuRadioItem value="student">Học viên</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="instructor">Giảng viên</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="admin">Quản trị viên</DropdownMenuRadioItem>
+                                      <DropdownMenuRadioItem value="student">Học viên</DropdownMenuRadioItem>
+                                      <DropdownMenuRadioItem value="instructor">Giảng viên</DropdownMenuRadioItem>
+                                      <DropdownMenuRadioItem value="admin">Quản trị viên</DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
+                                  </DropdownMenuSubContent>
                                 </DropdownMenuSub>
 
-                                <DropdownMenuItem 
-                                    onClick={() => setUserToDelete(user)}
-                                    className="text-destructive focus:text-destructive focus:bg-destructive/10 mt-1"
+                                <DropdownMenuItem
+                                  onClick={() => setUserToDelete(user)}
+                                  className="text-destructive focus:text-destructive focus:bg-destructive/10 mt-1"
                                 >
-                                    <Trash2 className="mr-2 h-4 w-4" /> Xóa tài khoản
+                                  <Trash2 className="mr-2 h-4 w-4" /> Xóa tài khoản
                                 </DropdownMenuItem>
-                                </DropdownMenuContent>
+                              </DropdownMenuContent>
                             </DropdownMenu>
-                            </TableCell>
+                          </TableCell>
                         </TableRow>
-                        ))
+                      ))
                     )}
                   </TableBody>
                 </Table>
               </div>
-              
+
               {/* Pagination */}
               <div className="flex items-center justify-between px-6 py-4 border-t">
                 <div className="text-sm text-muted-foreground">
@@ -274,14 +280,14 @@ export default function UserManagementPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl text-destructive">Xóa người dùng?</AlertDialogTitle>
             <AlertDialogDescription className="text-base">
-              Bạn đang chuẩn bị xóa tài khoản <b>{userToDelete?.email}</b>.<br/>
+              Bạn đang chuẩn bị xóa tài khoản <b>{userToDelete?.email}</b>.<br />
               Hành động này sẽ xóa toàn bộ dữ liệu liên quan (kết quả thi, khóa học) và <b>không thể hoàn tác</b>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting} className="h-10">Hủy bỏ</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={(e) => { e.preventDefault(); handleDeleteUser(); }} 
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDeleteUser(); }}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10"
             >

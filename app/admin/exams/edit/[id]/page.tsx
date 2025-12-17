@@ -61,7 +61,7 @@ interface Exam {
     id: number;
     title: string;
     description: string;
-    is_published: boolean;
+    status: string;
     topic_id: number;
     settings: ExamSettings;
     questions: Question[];
@@ -180,13 +180,12 @@ export default function EditExamPage() {
         }
     };
 
-    const handlePublishToggle = async () => {
+    const updateStatus = async (newStatus: string) => {
         if (!exam) return;
-        const newStatus = !exam.is_published;
         try {
-            await api.put(`/exams/${examId}/publish`, { is_published: newStatus });
-            setExam({ ...exam, is_published: newStatus });
-            toast.success(newStatus ? "Đã xuất bản bài thi" : "Đã chuyển về nháp");
+            await api.put(`/exams/${examId}/publish`, { status: newStatus });
+            setExam({ ...exam, status: newStatus });
+            toast.success("Đã cập nhật trạng thái");
         } catch (error) {
             toast.error("Thay đổi trạng thái thất bại");
         }
@@ -319,9 +318,10 @@ export default function EditExamPage() {
                     <div>
                         <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
                             {exam.title}
-                            <Badge variant={exam.is_published ? "default" : "secondary"} className={exam.is_published ? "bg-green-600" : ""}>
-                                {exam.is_published ? <Globe className="h-3 w-3 mr-1" /> : <Lock className="h-3 w-3 mr-1" />}
-                                {exam.is_published ? "Đang mở" : "Bản nháp"}
+                            <Badge variant={exam.status === 'public' ? "default" : exam.status === 'private' ? "secondary" : "outline"}
+                                className={exam.status === 'public' ? "bg-green-600" : exam.status === 'private' ? "bg-yellow-600 text-white" : ""}>
+                                {exam.status === 'public' ? <Globe className="h-3 w-3 mr-1" /> : exam.status === 'private' ? <Lock className="h-3 w-3 mr-1" /> : <FileText className="h-3 w-3 mr-1" />}
+                                {exam.status === 'public' ? "Công khai" : exam.status === 'private' ? "Riêng tư" : "Bản nháp"}
                             </Badge>
                         </h1>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -336,13 +336,16 @@ export default function EditExamPage() {
                     <Button size="sm" onClick={handleSave} disabled={isSaving} className="min-w-[90px]">
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" /> Lưu</>}
                     </Button>
-                    <Button
-                        size="sm"
-                        variant={exam.is_published ? "destructive" : "default"}
-                        onClick={handlePublishToggle}
-                    >
-                        {exam.is_published ? "Gỡ bài" : "Xuất bản"}
-                    </Button>
+                    <Select value={exam.status || 'draft'} onValueChange={updateStatus}>
+                        <SelectTrigger className="w-[130px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="draft">📝 Bản nháp</SelectItem>
+                            <SelectItem value="private">🔒 Riêng tư</SelectItem>
+                            <SelectItem value="public">🌍 Công khai</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 

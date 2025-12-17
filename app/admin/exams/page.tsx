@@ -15,7 +15,7 @@ interface Exam {
   id: number;
   title: string;
   duration_minutes: number;
-  is_published: boolean;
+  status: string;
 }
 
 export default function InstructorExamsPage() {
@@ -38,8 +38,8 @@ export default function InstructorExamsPage() {
     fetchExams();
   }, []);
 
-  const publishedExams = exams.filter(e => e.is_published);
-  const draftExams = exams.filter(e => !e.is_published);
+  const publishedExams = exams.filter(e => e.status === 'public' || e.status === 'private');
+  const draftExams = exams.filter(e => e.status === 'draft' || !e.status);
 
   const ExamTable = ({ data }: { data: Exam[] }) => (
     <Table>
@@ -56,25 +56,25 @@ export default function InstructorExamsPage() {
           <TableRow key={exam.id}>
             <TableCell className="font-medium">{exam.title}</TableCell>
             <TableCell>
-               <span className="flex items-center gap-1 text-muted-foreground">
-                 <Clock className="h-3 w-3" /> {exam.duration_minutes} phút
-               </span>
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <Clock className="h-3 w-3" /> {exam.duration_minutes} phút
+              </span>
             </TableCell>
             <TableCell>
-              {exam.is_published ?
-                <Badge className="bg-green-600 hover:bg-green-700">Đã xuất bản</Badge> :
-                <Badge variant="secondary">Bản nháp</Badge>
-              }
+              <Badge variant={exam.status === 'public' ? "default" : exam.status === 'private' ? "secondary" : "outline"}
+                className={exam.status === 'public' ? "bg-green-600 hover:bg-green-700" : exam.status === 'private' ? "bg-yellow-600 text-white" : ""}>
+                {exam.status === 'public' ? "Công khai" : exam.status === 'private' ? "Riêng tư" : "Bản nháp"}
+              </Badge>
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">
 
-                {exam.is_published && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    asChild 
-                    className="text-purple-600 hover:text-purple-700 hover:bg-purple-50" 
+                {exam.status !== 'draft' && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                     title="Duyệt thí sinh đăng ký"
                   >
                     <Link href={`/admin/exams/${exam.id}/requests`}>
@@ -82,9 +82,9 @@ export default function InstructorExamsPage() {
                     </Link>
                   </Button>
                 )}
-                
-                {/* 1. Nút Giám sát (Monitor) - Chỉ hiện khi đã xuất bản */}
-                {exam.is_published && (
+
+                {/* 1. Nút Giám sát (Monitor) - Chỉ hiện khi không phải nháp */}
+                {exam.status !== 'draft' && (
                   <Button variant="ghost" size="icon" asChild className="text-red-600 hover:text-red-700 hover:bg-red-50" title="Giám sát phòng thi">
                     <Link href={`/admin/exams/${exam.id}/monitor`}>
                       <Activity className="h-4 w-4" />
@@ -92,8 +92,8 @@ export default function InstructorExamsPage() {
                   </Button>
                 )}
 
-                {/* 2. Nút Thống kê (Stats) - Chỉ hiện khi đã xuất bản */}
-                {exam.is_published && (
+                {/* 2. Nút Thống kê (Stats) - Chỉ hiện khi không phải nháp */}
+                {exam.status !== 'draft' && (
                   <Button variant="ghost" size="icon" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Xem thống kê">
                     <Link href={`/admin/exams/${exam.id}/stats`}>
                       <BarChart3 className="h-4 w-4" />
@@ -136,7 +136,7 @@ export default function InstructorExamsPage() {
             <p className="text-sm text-muted-foreground">Danh sách các bài thi bạn đã tạo.</p>
           </div>
         </div>
-        
+
         <Button asChild>
           <Link href="/admin/exams/create">
             <PlusCircle className="mr-2 h-4 w-4" /> Tạo bài thi mới
@@ -153,7 +153,7 @@ export default function InstructorExamsPage() {
         <TabsContent value="published">
           <Card>
             <CardContent className="pt-6">
-              {publishedExams.length > 0 ? <ExamTable data={publishedExams} /> : 
+              {publishedExams.length > 0 ? <ExamTable data={publishedExams} /> :
                 <div className="text-center py-12">
                   <p className="text-muted-foreground mb-4">Bạn chưa xuất bản bài thi nào.</p>
                   <Button variant="outline" asChild><Link href="/admin/exams/create">Tạo ngay</Link></Button>
@@ -166,7 +166,7 @@ export default function InstructorExamsPage() {
         <TabsContent value="drafts">
           <Card>
             <CardContent className="pt-6">
-              {draftExams.length > 0 ? <ExamTable data={draftExams} /> : 
+              {draftExams.length > 0 ? <ExamTable data={draftExams} /> :
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">Không có bản nháp nào.</p>
                 </div>

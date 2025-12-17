@@ -57,6 +57,7 @@ export default function CreateExamPage() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [topicId, setTopicId] = useState<string>("");
+    const [status, setStatus] = useState("draft");
 
     const [duration, setDuration] = useState(60);
     const [maxAttempts, setMaxAttempts] = useState(1);
@@ -169,7 +170,8 @@ export default function CreateExamPage() {
                     show_result_immediately: showResult,
                     requires_approval: requiresApproval
                 },
-                creator_id: 1
+                creator_id: 1,
+                status: status
             };
 
             await api.post("/exams", payload);
@@ -226,6 +228,17 @@ export default function CreateExamPage() {
                                 <div className="space-y-2">
                                     <Label>Mô tả</Label>
                                     <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Nội dung tóm tắt..." className="min-h-[100px]" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Trạng thái khởi tạo</Label>
+                                    <Select value={status} onValueChange={setStatus}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="draft">📝 Bản nháp (Mặc định)</SelectItem>
+                                            <SelectItem value="private">🔒 Riêng tư (Chỉ định lớp)</SelectItem>
+                                            <SelectItem value="public">🌍 Công khai (Ai cũng thấy)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </CardContent>
                         </Card>

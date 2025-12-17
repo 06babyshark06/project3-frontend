@@ -18,6 +18,10 @@ import {
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
 } from "@/components/ui/dialog";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,6 +44,9 @@ export default function ClassDetailPage() {
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
     const [emailsInput, setEmailsInput] = useState("");
     const [isAdding, setIsAdding] = useState(false);
+
+    // Dialog state for unassigning exam
+    const [examIdToRemove, setExamIdToRemove] = useState<number | null>(null);
 
     const fetchData = async () => {
         try {
@@ -106,14 +113,20 @@ export default function ClassDetailPage() {
         }
     };
 
-    const handleRemoveExam = async (examId: number) => {
-        if (!confirm("Gỡ bài thi này khỏi lớp?")) return;
+    const handleRemoveExam = (examId: number) => {
+        setExamIdToRemove(examId);
+    };
+
+    const confirmRemoveExam = async () => {
+        if (!examIdToRemove) return;
         try {
-            await api.delete(`/classes/${classId}/exams/${examId}`);
+            await api.delete(`/classes/${classId}/exams/${examIdToRemove}`);
             toast.success("Đã gỡ bài thi khỏi lớp");
-            setExams(prev => prev.filter(e => e.id !== examId));
+            setExams(prev => prev.filter(e => e.id !== examIdToRemove));
         } catch (error) {
             toast.error("Gỡ bài thi thất bại");
+        } finally {
+            setExamIdToRemove(null);
         }
     };
 
@@ -203,8 +216,9 @@ export default function ClassDetailPage() {
                                                         <CardTitle className="text-lg line-clamp-1">{exam.title}</CardTitle>
                                                         <CardDescription className="line-clamp-1">{exam.description || "Không có mô tả"}</CardDescription>
                                                     </div>
-                                                    <Badge variant={exam.is_published ? "default" : "secondary"}>
-                                                        {exam.is_published ? "Đã mở" : "Đóng"}
+                                                    <Badge variant={exam.status === 'public' ? "default" : exam.status === 'private' ? "secondary" : "outline"}
+                                                        className={exam.status === 'public' ? "bg-green-600" : exam.status === 'private' ? "bg-yellow-600 text-white" : ""}>
+                                                        {exam.status === 'public' ? "Công khai" : exam.status === 'private' ? "Riêng tư" : "Bản nháp"}
                                                     </Badge>
                                                 </div>
                                             </CardHeader>
@@ -296,6 +310,23 @@ export default function ClassDetailPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={!!examIdToRemove} onOpenChange={(open) => !open && setExamIdToRemove(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Xác nhận gỡ bài thi</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Bạn có chắc chắn muốn gỡ bài thi này khỏi lớp? Bài thi và kết quả của học sinh sẽ không còn hiển thị trong lớp này. (Dữ liệu bài thi gốc vẫn được giữ nguyên).
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Hủy bỏ</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmRemoveExam} className="bg-red-600 hover:bg-red-700">
+                            Xác nhận gỡ
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

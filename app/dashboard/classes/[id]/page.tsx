@@ -5,8 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { 
-  ArrowLeft, BookOpen, Clock, 
+import {
+  ArrowLeft, BookOpen, Clock,
   FileText, PlayCircle, Users, Mail
 } from "lucide-react";
 
@@ -44,7 +44,7 @@ interface ClassExam {
   description: string;
   duration_minutes: number;
   question_count: number; // Sửa từ total_questions
-  is_published: boolean;  // Sửa từ status
+  status: string;
   start_time?: string;
   end_time?: string;
 }
@@ -53,7 +53,7 @@ export default function ClassDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  
+
   const [classInfo, setClassInfo] = useState<ClassDetail | null>(null);
   const [members, setMembers] = useState<ClassMember[]>([]);
   const [exams, setExams] = useState<ClassExam[]>([]);
@@ -146,8 +146,8 @@ export default function ClassDetailPage() {
                         <CardTitle className="text-lg line-clamp-1">{exam.title}</CardTitle>
                         <CardDescription className="line-clamp-1">{exam.description || "Không có mô tả"}</CardDescription>
                       </div>
-                      <Badge variant={exam.is_published ? 'default' : 'secondary'}>
-                        {exam.is_published ? 'Đang mở' : 'Đóng'}
+                      <Badge variant={exam.status !== 'draft' ? 'default' : 'secondary'}>
+                        {exam.status !== 'draft' ? 'Đang mở' : 'Đóng'}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -160,11 +160,11 @@ export default function ClassDetailPage() {
                         <FileText className="h-4 w-4" /> {exam.question_count || 0} câu hỏi
                       </div>
                     </div>
-                    
-                    <Button 
-                      className="w-full" 
+
+                    <Button
+                      className="w-full"
                       onClick={() => handleStartExam(exam.id)}
-                      disabled={!exam.is_published}
+                      disabled={exam.status === 'draft'}
                     >
                       <PlayCircle className="mr-2 h-4 w-4" /> Làm bài thi
                     </Button>
@@ -203,21 +203,21 @@ export default function ClassDetailPage() {
                     members.map((mem) => (
                       <TableRow key={mem.user_id}>
                         <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                                <Avatar className="h-6 w-6">
-                                    <AvatarFallback>{mem.full_name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                {mem.full_name} 
-                                {mem.user_id === user?.id && <Badge variant="secondary" className="ml-2 text-xs">Bạn</Badge>}
-                            </div>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback>{mem.full_name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            {mem.full_name}
+                            {mem.user_id === user?.id && <Badge variant="secondary" className="ml-2 text-xs">Bạn</Badge>}
+                          </div>
                         </TableCell>
                         <TableCell>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Mail className="h-3 w-3" /> {mem.email}
-                            </div>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Mail className="h-3 w-3" /> {mem.email}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground text-xs">
-                            {new Date(mem.joined_at).toLocaleDateString('vi-VN')}
+                          {new Date(mem.joined_at).toLocaleDateString('vi-VN')}
                         </TableCell>
                       </TableRow>
                     ))
@@ -241,8 +241,8 @@ function ClassDetailSkeleton() {
       <div className="space-y-4">
         <Skeleton className="h-10 w-[300px]" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <Skeleton className="h-40 w-full" />
-           <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
         </div>
       </div>
     </div>
