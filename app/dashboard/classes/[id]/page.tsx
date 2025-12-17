@@ -43,10 +43,12 @@ interface ClassExam {
   title: string;
   description: string;
   duration_minutes: number;
-  question_count: number; // Sửa từ total_questions
+  question_count: number;
   status: string;
   start_time?: string;
   end_time?: string;
+  max_attempts: number;
+  attempts_used: number;
 }
 
 export default function ClassDetailPage() {
@@ -90,6 +92,23 @@ export default function ClassDetailPage() {
 
   const handleStartExam = (examId: number) => {
     router.push(`/exams/${examId}/take`);
+  };
+
+  const checkExamStatus = (exam: ClassExam) => {
+    const now = new Date();
+    const start = exam.start_time ? new Date(exam.start_time) : null;
+    const end = exam.end_time ? new Date(exam.end_time) : null;
+
+    if (exam.status === 'draft') return { canTake: false, label: 'Đóng', color: 'secondary' };
+
+    if (start && now < start) return { canTake: false, label: `Mở lúc ${start.toLocaleString('vi-VN')}`, color: 'outline' };
+    if (end && now > end) return { canTake: false, label: 'Đã kết thúc', color: 'destructive' };
+
+    if (exam.max_attempts > 0 && exam.attempts_used >= exam.max_attempts) {
+      return { canTake: false, label: 'Hết lượt làm bài', color: 'destructive' };
+    }
+
+    return { canTake: true, label: 'Đang mở', color: 'default' };
   };
 
   if (loading) {
@@ -138,39 +157,45 @@ export default function ClassDetailPage() {
         <TabsContent value="exams" className="mt-6 space-y-4">
           {exams.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {exams.map((exam) => (
-                <Card key={exam.id} className="hover:shadow-md transition-all border-l-4 border-l-primary/50 cursor-pointer">
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg line-clamp-1">{exam.title}</CardTitle>
-                        <CardDescription className="line-clamp-1">{exam.description || "Không có mô tả"}</CardDescription>
+              {exams.map((exam) => {
+                const { canTake, label, color } = checkExamStatus(exam);
+                return (
+                  <Card key={exam.id} className="hover:shadow-md transition-all border-l-4 border-l-primary/50 cursor-pointer">
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg line-clamp-1">{exam.title}</CardTitle>
+                          <CardDescription className="line-clamp-1">{exam.description || "Không có mô tả"}</CardDescription>
+                        </div>
+                        <Badge variant={color as any}>
+                          {label}
+                        </Badge>
                       </div>
-                      <Badge variant={exam.status !== 'draft' ? 'default' : 'secondary'}>
-                        {exam.status !== 'draft' ? 'Đang mở' : 'Đóng'}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" /> {exam.duration_minutes} phút
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col gap-1 text-sm text-muted-foreground mb-4">
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {exam.duration_minutes} phút</span>
+                          <span className="flex items-center gap-1"><FileText className="h-4 w-4" /> {exam.question_count || 0} câu hỏi</span>
+                        </div>
+                        {exam.max_attempts > 0 && (
+                          <div className="text-xs font-medium text-orange-600 mt-1">
+                            Số lần làm bài: {exam.attempts_used} / {exam.max_attempts}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <FileText className="h-4 w-4" /> {exam.question_count || 0} câu hỏi
-                      </div>
-                    </div>
 
-                    <Button
-                      className="w-full"
-                      onClick={() => handleStartExam(exam.id)}
-                      disabled={exam.status === 'draft'}
-                    >
-                      <PlayCircle className="mr-2 h-4 w-4" /> Làm bài thi
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                      <Button
+                        className="w-full"
+                        onClick={() => handleStartExam(exam.id)}
+                        disabled={!canTake}
+                      >
+                        <PlayCircle className="mr-2 h-4 w-4" /> Làm bài thi
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12 bg-muted/20 rounded-xl border border-dashed">
