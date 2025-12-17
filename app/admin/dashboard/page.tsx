@@ -6,9 +6,9 @@ import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { 
-  Users, BookCopy, Edit, Loader2, ShieldAlert, 
-  FileQuestion, FolderCog, PlusCircle, ListChecks, 
+import {
+  Users, BookCopy, Edit, Loader2, ShieldAlert,
+  FileQuestion, FolderCog, PlusCircle, ListChecks,
   UserCog, Library, Layers, School // ✅ Đã thêm icon School
 } from "lucide-react";
 
@@ -88,81 +88,7 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
-        {/* Khu vực Giảng viên (Tạo nội dung) */}
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Quản lý Nội dung</h2>
-          <div className="flex flex-wrap gap-4">
-            <Button asChild size="lg">
-              <Link href="/admin/courses/new">
-                <PlusCircle className="mr-2 h-5 w-5" /> Tạo Khóa Học Mới
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/admin/exams/create">
-                <PlusCircle className="mr-2 h-5 w-5" /> Tạo Bài Thi Mới
-              </Link>
-            </Button>
-            
-            <Button asChild size="lg" variant="outline">
-              <Link href="/admin/questions">
-                <FileQuestion className="mr-2 h-5 w-5" /> Ngân hàng Câu hỏi
-              </Link>
-            </Button>
-
-            {/* ✅ NÚT QUẢN LÝ LỚP HỌC (MỚI THÊM) */}
-            <Button asChild size="lg" variant="outline">
-              <Link href="/admin/classes">
-                <School className="mr-2 h-5 w-5" /> Quản lý Lớp Học
-              </Link>
-            </Button>
-
-            <Button asChild size="lg" variant="outline">
-              <Link href="/admin/categories">
-                <FolderCog className="mr-2 h-5 w-5" /> Quản lý Danh mục
-              </Link>
-            </Button>
-
-            <Button asChild size="lg" variant="outline">
-              <Link href="/admin/courses">
-                <BookCopy className="mr-2 h-5 w-5" /> Khóa Học Của Tôi
-              </Link>
-            </Button>
-
-            <Button asChild size="lg" variant="outline">
-              <Link href="/admin/exams">
-                <ListChecks className="mr-2 h-5 w-5" /> Bài Thi Của Tôi
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Khu vực Admin (Quản lý toàn hệ thống) */}
-        {user?.role === 'admin' && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-destructive">
-              <ShieldAlert className="w-6 h-6" /> Khu vực Quản trị viên
-            </h2>
-            <div className="flex flex-wrap gap-4">
-              <Button asChild size="lg" variant="destructive">
-                <Link href="/admin/users">
-                  <UserCog className="mr-2 h-5 w-5" /> Quản Lý User
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
-                <Link href="/admin/manage/courses">
-                  <Library className="mr-2 h-5 w-5" /> Quản Lý Tất Cả Khóa Học
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
-                <Link href="/admin/manage/exams">
-                  <Layers className="mr-2 h-5 w-5" /> Quản Lý Tất Cả Bài Thi
-                </Link>
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Navigation moved to Sidebar */}
     </div>
   );
 }

@@ -127,9 +127,7 @@ export default function UserManagementPage() {
       {/* === 1. TOP BAR ĐIỀU HƯỚNG === */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => router.push('/admin/dashboard')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Quản Lý Người Dùng</h1>
             <p className="text-sm text-muted-foreground">Tổng số: {totalUsers} tài khoản trong hệ thống.</p>

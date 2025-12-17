@@ -79,14 +79,9 @@ export default function ManageAllExamsPage() {
     <div className="container mx-auto max-w-6xl p-6">
       {/* === TOP BAR ĐIỀU HƯỚNG === */}
       <div className="flex items-center justify-between mb-8 pb-4 border-b">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => router.push('/admin/dashboard')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Quản Lý Tất Cả Bài Thi</h1>
-            <p className="text-sm text-muted-foreground">Kiểm soát ngân hàng đề thi trên hệ thống.</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Quản Lý Tất Cả Bài Thi</h1>
+          <p className="text-sm text-muted-foreground">Kiểm soát ngân hàng đề thi trên hệ thống.</p>
         </div>
 
         <Button asChild>

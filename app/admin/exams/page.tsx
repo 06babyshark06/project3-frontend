@@ -127,14 +127,9 @@ export default function InstructorExamsPage() {
     <div className="container mx-auto max-w-6xl p-6">
       {/* === TOP BAR === */}
       <div className="flex items-center justify-between mb-8 pb-4 border-b">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => router.push('/admin/dashboard')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Quản lý bài thi</h1>
-            <p className="text-sm text-muted-foreground">Danh sách các bài thi bạn đã tạo.</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Quản lý bài thi</h1>
+          <p className="text-sm text-muted-foreground">Danh sách các bài thi bạn đã tạo.</p>
         </div>
 
         <Button asChild>
@@ -175,6 +170,6 @@ export default function InstructorExamsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </div >
   );
 }

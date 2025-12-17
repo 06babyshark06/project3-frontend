@@ -87,16 +87,11 @@ export default function InstructorCoursesPage() {
     <div className="container mx-auto max-w-6xl p-6">
       {/* === TOP BAR ĐIỀU HƯỚNG === */}
       <div className="flex items-center justify-between mb-8 pb-4 border-b">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => router.push('/admin/dashboard')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Quản lý khóa học</h1>
-            <p className="text-sm text-muted-foreground">Danh sách các khóa học bạn đã tạo.</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Quản lý khóa học</h1>
+          <p className="text-sm text-muted-foreground">Danh sách các khóa học bạn đã tạo.</p>
         </div>
-        
+
         <Button asChild>
           <Link href="/admin/courses/new">
             <PlusCircle className="mr-2 h-4 w-4" /> Tạo khóa học mới
@@ -113,7 +108,7 @@ export default function InstructorCoursesPage() {
         <TabsContent value="published">
           <Card>
             <CardContent className="pt-6">
-              {publishedCourses.length > 0 ? <CourseTable data={publishedCourses} /> : 
+              {publishedCourses.length > 0 ? <CourseTable data={publishedCourses} /> :
                 <div className="text-center py-12">
                   <p className="text-muted-foreground mb-4">Bạn chưa xuất bản khóa học nào.</p>
                   <Button variant="outline" asChild><Link href="/admin/courses/new">Tạo ngay</Link></Button>
@@ -126,7 +121,7 @@ export default function InstructorCoursesPage() {
         <TabsContent value="drafts">
           <Card>
             <CardContent className="pt-6">
-              {draftCourses.length > 0 ? <CourseTable data={draftCourses} /> : 
+              {draftCourses.length > 0 ? <CourseTable data={draftCourses} /> :
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">Không có bản nháp nào.</p>
                 </div>
@@ -135,6 +130,6 @@ export default function InstructorCoursesPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </div >
   );
 }
