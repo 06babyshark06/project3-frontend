@@ -411,7 +411,7 @@ export default function EditExamPage() {
                                                                             <div className="flex items-center gap-2 mb-1">
                                                                                 <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Câu {idx + 1}</Badge>
                                                                                 <Badge className={`h-5 px-1.5 text-[10px] ${q.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                                                                                        q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                                                                                    q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
                                                                                     }`}>
                                                                                     {q.difficulty}
                                                                                 </Badge>
@@ -501,7 +501,7 @@ export default function EditExamPage() {
                                         <div><Label>Mật khẩu</Label><Input value={settings.password} onChange={e => setSettings({ ...settings, password: e.target.value })} placeholder="Bỏ trống nếu không cần" /></div>
                                         <div className="space-y-3 pt-2">
                                             <div className="flex justify-between items-center border p-2 rounded"><Label className="text-xs">Trộn câu hỏi</Label><Switch checked={settings.shuffle_questions} onCheckedChange={v => setSettings({ ...settings, shuffle_questions: v })} /></div>
-                                            <div className="flex justify-between items-center border p-2 rounded"><Label className="text-xs">Xem điểm ngay</Label><Switch checked={settings.show_result_immediately} onCheckedChange={v => setSettings({ ...settings, show_result_immediately: v })} /></div>
+                                            <div className="flex justify-between items-center border p-2 rounded"><Label className="text-xs">Xem đáp án ngay</Label><Switch checked={settings.show_result_immediately} onCheckedChange={v => setSettings({ ...settings, show_result_immediately: v })} /></div>
                                             <div className="flex justify-between items-center border p-2 rounded"><Label className="text-xs">Duyệt tham gia</Label><Switch checked={settings.requires_approval} onCheckedChange={v => setSettings({ ...settings, requires_approval: v })} /></div>
                                         </div>
                                     </CardContent>
