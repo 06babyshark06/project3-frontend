@@ -9,6 +9,7 @@ import {
     Settings, FileText, ListChecks, Plus, Shuffle, Eye,
     ChevronRight, ChevronDown, FolderOpen, FileQuestion, GripVertical
 } from "lucide-react";
+import { toLocalISOString } from "@/lib/date-utils";
 
 // ✅ 1. Import thư viện kéo thả
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -486,7 +487,7 @@ export default function EditExamPage() {
                                                 <Label>Thời gian mở đề (Bắt đầu)</Label>
                                                 <Input
                                                     type="datetime-local"
-                                                    value={settings.start_time ? new Date(settings.start_time).toISOString().slice(0, 16) : ""}
+                                                    value={toLocalISOString(settings.start_time)}
                                                     onChange={e => setSettings({ ...settings, start_time: e.target.value ? new Date(e.target.value).toISOString() : "" })}
                                                 />
                                                 <p className="text-[10px] text-muted-foreground mt-1">Bỏ trống để mở ngay lập tức</p>
@@ -495,7 +496,7 @@ export default function EditExamPage() {
                                                 <Label>Thời gian đóng đề (Kết thúc)</Label>
                                                 <Input
                                                     type="datetime-local"
-                                                    value={settings.end_time ? new Date(settings.end_time).toISOString().slice(0, 16) : ""}
+                                                    value={toLocalISOString(settings.end_time)}
                                                     onChange={e => setSettings({ ...settings, end_time: e.target.value ? new Date(e.target.value).toISOString() : "" })}
                                                 />
                                                 <p className="text-[10px] text-muted-foreground mt-1">Bỏ trống để không giới hạn</p>

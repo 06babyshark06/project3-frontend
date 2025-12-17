@@ -8,6 +8,7 @@ import {
     Loader2, ArrowLeft, ArrowRight, Save, Clock, Shield,
     Settings, BookOpen, Plus, Trash2, Shuffle, CheckSquare
 } from "lucide-react";
+import { toLocalISOString } from "@/lib/date-utils";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -269,11 +270,19 @@ export default function CreateExamPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label>Thời gian bắt đầu (Tùy chọn)</Label>
-                                        <Input type="datetime-local" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                                        <Input
+                                            type="datetime-local"
+                                            value={toLocalISOString(startTime)}
+                                            onChange={e => setStartTime(e.target.value ? new Date(e.target.value).toISOString() : "")}
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Thời gian kết thúc (Tùy chọn)</Label>
-                                        <Input type="datetime-local" value={endTime} onChange={e => setEndTime(e.target.value)} />
+                                        <Input
+                                            type="datetime-local"
+                                            value={toLocalISOString(endTime)}
+                                            onChange={e => setEndTime(e.target.value ? new Date(e.target.value).toISOString() : "")}
+                                        />
                                     </div>
                                 </div>
 
