@@ -137,7 +137,7 @@ export default function CategoryManagementPage() {
 
     return (
         <div className="container mx-auto py-8 px-4 max-w-5xl">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold">Quản lý Danh mục</h1>
                     <p className="text-muted-foreground">Tổ chức Chủ đề và Chương học cho ngân hàng câu hỏi.</p>
@@ -150,7 +150,7 @@ export default function CategoryManagementPage() {
             {loading ? (
                 <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>
             ) : (
-                <div className="border rounded-md">
+                <div className="border rounded-md overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>

@@ -33,19 +33,25 @@ export function JoinClassDialog() {
 
     setIsLoading(true);
     try {
-      await api.post("/classes/join", { code });
+      const response = await api.post("/classes/join", { code });
 
       toast.success("Tham gia lớp học thành công!");
-      
+
       setCode("");
       setOpen(false);
-      
-      router.refresh(); 
-      
+
+      // Redirect to the newly joined class
+      const classId = response.data?.classId;
+      if (classId) {
+        router.push(`/dashboard/classes/${classId}`);
+      } else {
+        router.refresh();
+      }
+
     } catch (error: any) {
       console.error("Lỗi tham gia lớp:", error);
       const errorMessage = error.response?.data?.error || "Không thể tham gia lớp. Vui lòng kiểm tra lại mã.";
-      
+
       toast.error("Tham gia thất bại", {
         description: errorMessage,
       });

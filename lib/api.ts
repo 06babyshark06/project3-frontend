@@ -1,6 +1,11 @@
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1";
+const RAW_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!RAW_BASE_URL) {
+  console.warn("Missing NEXT_PUBLIC_API_URL env var, defaulting to localhost");
+}
+// Fallback for dev if env is missing, but intended to be from env
+const API_URL = RAW_BASE_URL || "http://localhost:8081/api/v1";
 const STORAGE_KEY = "accessToken";
 
 const getToken = () => typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -22,7 +27,7 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 export const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
 });
@@ -59,15 +64,15 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post(`${BASE_URL}/refresh`, {}, { withCredentials: true });
+        const { data } = await axios.post(`${API_URL}/refresh`, {}, { withCredentials: true });
         const newToken = data.access_token;
-        
+
         setToken(newToken);
         api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
         processQueue(null, newToken);
-        
+
         window.dispatchEvent(new Event("tokenRefreshed"));
-        
+
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);

@@ -31,6 +31,7 @@ interface Exam {
   duration_minutes: number;
   status: string;
   creator_id: number;
+  creator_name?: string;
 }
 
 export default function ManageAllExamsPage() {
@@ -78,7 +79,7 @@ export default function ManageAllExamsPage() {
   return (
     <div className="container mx-auto max-w-6xl p-6">
       {/* === TOP BAR ĐIỀU HƯỚNG === */}
-      <div className="flex items-center justify-between mb-8 pb-4 border-b">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-4 border-b">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Quản Lý Tất Cả Bài Thi</h1>
           <p className="text-sm text-muted-foreground">Kiểm soát ngân hàng đề thi trên hệ thống.</p>
@@ -126,7 +127,7 @@ export default function ManageAllExamsPage() {
                             </span>
                           </TableCell>
                           <TableCell>
-                            <span className="text-xs bg-secondary px-2 py-1 rounded-full">ID: {exam.creator_id}</span>
+                            <span className="text-xs bg-secondary px-2 py-1 rounded-full">{exam.creator_name || `ID: ${exam.creator_id}`}</span>
                           </TableCell>
                           <TableCell>
                             {exam.status === 'public' ?
@@ -198,6 +199,6 @@ export default function ManageAllExamsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </div >
   );
 }

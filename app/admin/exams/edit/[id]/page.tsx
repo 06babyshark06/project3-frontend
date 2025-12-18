@@ -29,6 +29,7 @@ import {
     AlertDialogHeader, AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import { AddQuestionDialog } from "@/components/AddQuestionDialog";
 
@@ -91,7 +92,7 @@ export default function EditExamPage() {
         duration_minutes: 60,
         max_attempts: 1,
         shuffle_questions: false,
-        show_result_immediately: true,
+        show_result_immediately: false,
         requires_approval: false,
         password: ""
     });
@@ -124,7 +125,7 @@ export default function EditExamPage() {
                     duration_minutes: examData.settings?.duration_minutes || 60,
                     max_attempts: examData.settings?.max_attempts || 1,
                     shuffle_questions: examData.settings?.shuffle_questions || false,
-                    show_result_immediately: examData.settings?.show_result_immediately ?? true,
+                    show_result_immediately: examData.settings?.show_result_immediately ?? false,
                     requires_approval: examData.settings?.requires_approval || false,
                     password: examData.settings?.password || "",
                     start_time: examData.settings?.start_time || "",
@@ -309,15 +310,15 @@ export default function EditExamPage() {
     if (!exam) return <div className="text-center py-20">Không tìm thấy bài thi</div>;
 
     return (
-        <div className="container mx-auto max-w-[1600px] py-4 px-4 h-[calc(100vh-20px)] flex flex-col gap-4">
+        <div className="container mx-auto max-w-[1600px] py-4 px-4 h-[calc(100vh-64px)] md:h-[calc(100vh-20px)] flex flex-col gap-4">
             {/* HEADER AREA */}
-            <div className="flex items-center justify-between border-b pb-3 bg-background sticky top-0 z-10 shrink-0">
+            <div className="flex flex-col md:flex-row md:items-center justify-between border-b pb-3 bg-background sticky top-0 z-10 shrink-0 gap-4">
                 <div className="flex items-center gap-3">
                     <Button variant="outline" size="icon" onClick={() => router.back()}>
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                        <h1 className="text-xl font-bold tracking-tight flex flex-wrap items-center gap-2">
                             {exam.title}
                             <Badge variant={exam.status === 'public' ? "default" : exam.status === 'private' ? "secondary" : "outline"}
                                 className={exam.status === 'public' ? "bg-green-600" : exam.status === 'private' ? "bg-yellow-600 text-white" : ""}>
@@ -330,7 +331,7 @@ export default function EditExamPage() {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end md:self-auto">
                     <Button variant="outline" size="sm" onClick={() => router.push(`/exams/${examId}/take`)}>
                         <Eye className="h-4 w-4 mr-2" /> Xem thử
                     </Button>
@@ -350,30 +351,30 @@ export default function EditExamPage() {
                 </div>
             </div>
 
-            <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden min-h-0">
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 overflow-hidden min-h-0">
                 {/* LEFT PANE */}
-                <div className="col-span-7 flex flex-col gap-4 overflow-hidden min-h-0">
+                <div className="col-span-1 md:col-span-7 flex flex-col gap-4 overflow-hidden min-h-0">
                     <Tabs defaultValue="questions" className="flex-1 flex flex-col overflow-hidden min-h-0">
-                        <TabsList className="w-full justify-start border-b rounded-none px-0 h-10 bg-transparent shrink-0">
-                            <TabsTrigger value="questions" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+                        <TabsList className="w-full justify-start border-b rounded-none px-0 h-10 bg-transparent shrink-0 overflow-x-auto">
+                            <TabsTrigger value="questions" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shrink-0">
                                 <ListChecks className="h-4 w-4 mr-2" /> Danh sách câu hỏi ({exam.questions?.length || 0})
                             </TabsTrigger>
-                            <TabsTrigger value="settings" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"><Settings className="h-4 w-4 mr-2" /> Cấu hình & Thông tin</TabsTrigger>
+                            <TabsTrigger value="settings" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shrink-0"><Settings className="h-4 w-4 mr-2" /> Cấu hình & Thông tin</TabsTrigger>
                         </TabsList>
 
                         {/* TAB QUESTIONS VỚI DRAG & DROP */}
                         <TabsContent value="questions" className="flex-1 overflow-hidden mt-4 min-h-0 flex flex-col">
                             <Card className="flex-1 flex flex-col border-none shadow-none bg-muted/10 overflow-hidden min-h-0">
-                                <div className="flex justify-between items-center p-2 bg-background border rounded-t-lg shrink-0">
+                                <div className="flex justify-between items-center p-2 bg-background border rounded-t-lg shrink-0 flex-wrap gap-2">
                                     <div className="flex gap-2">
                                         <Button variant="outline" size="sm" onClick={() => setIsRandomDialogOpen(true)}>
-                                            <Shuffle className="h-4 w-4 mr-2" /> Sinh ngẫu nhiên
+                                            <Shuffle className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Sinh ngẫu nhiên</span>
                                         </Button>
                                         <Button size="sm" onClick={() => setIsQuestionDialogOpen(true)}>
-                                            <Plus className="h-4 w-4 mr-2" /> Tạo câu hỏi mới
+                                            <Plus className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Tạo câu hỏi mới</span>
                                         </Button>
                                     </div>
-                                    <span className="text-xs text-muted-foreground">Kéo thả icon <GripVertical className="inline h-3 w-3" /> để sắp xếp</span>
+                                    <span className="text-xs text-muted-foreground hidden sm:inline">Kéo thả icon <GripVertical className="inline h-3 w-3" /> để sắp xếp</span>
                                 </div>
 
                                 <div className="flex-1 border-x border-b rounded-b-lg bg-background p-2 overflow-y-auto min-h-0">
@@ -412,7 +413,7 @@ export default function EditExamPage() {
                                                                         </div>
 
                                                                         <div className="flex-1 min-w-0">
-                                                                            <div className="flex items-center gap-2 mb-1">
+                                                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                                                                                 <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Câu {idx + 1}</Badge>
                                                                                 <Badge className={`h-5 px-1.5 text-[10px] ${q.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
                                                                                     q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
@@ -478,14 +479,15 @@ export default function EditExamPage() {
                                 <Card>
                                     <CardHeader className="py-3"><CardTitle className="text-base">Cấu hình thi</CardTitle></CardHeader>
                                     <CardContent className="space-y-4 py-4">
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div><Label>Thời gian (phút)</Label><Input type="number" value={settings.duration_minutes} onChange={e => setSettings({ ...settings, duration_minutes: Number(e.target.value) })} /></div>
                                             <div><Label>Lượt thi tối đa</Label><Input type="number" value={settings.max_attempts} onChange={e => setSettings({ ...settings, max_attempts: Number(e.target.value) })} /></div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <Label>Thời gian mở đề (Bắt đầu)</Label>
                                                 <Input
+
                                                     type="datetime-local"
                                                     value={toLocalISOString(settings.start_time)}
                                                     onChange={e => setSettings({ ...settings, start_time: e.target.value ? new Date(e.target.value).toISOString() : "" })}
@@ -515,8 +517,8 @@ export default function EditExamPage() {
                     </Tabs>
                 </div>
 
-                {/* RIGHT PANE: QUESTION BANK TREE (5 cols) - Giữ nguyên không đổi */}
-                <div className="col-span-5 flex flex-col border-l pl-6 overflow-hidden min-h-0">
+                {/* RIGHT PANE: QUESTION BANK TREE (5 cols) */}
+                <div className="hidden md:flex col-span-5 flex-col border-l pl-6 overflow-hidden min-h-0">
                     <div className="mb-4 shrink-0">
                         <h3 className="font-semibold flex items-center gap-2">
                             <FolderOpen className="h-4 w-4 text-blue-500" /> Ngân hàng câu hỏi
@@ -581,7 +583,6 @@ export default function EditExamPage() {
                 </div>
             </div>
 
-            {/* DIALOGS - Giữ nguyên */}
             <AddQuestionDialog
                 open={isQuestionDialogOpen || !!editingQuestion}
                 onOpenChange={(open) => { setIsQuestionDialogOpen(open); if (!open) setEditingQuestion(null); }}
@@ -602,6 +603,73 @@ export default function EditExamPage() {
                 onGenerate={handleGenerateRandom}
                 sections={sections}
             />
+
+            <Sheet>
+                <SheetTrigger asChild>
+                    <Button size="sm" variant="outline" className="md:hidden fixed bottom-4 right-4 z-50 shadow-lg rounded-full h-12 w-12 p-0 bg-primary text-primary-foreground hover:bg-primary/90">
+                        <FolderOpen className="h-6 w-6" />
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[80vh] flex flex-col p-0">
+                    <div className="p-4 border-b">
+                        <h3 className="font-semibold flex items-center gap-2">
+                            <FolderOpen className="h-4 w-4 text-blue-500" /> Ngân hàng câu hỏi
+                        </h3>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4">
+                        {sections.length === 0 ? (
+                            <div className="text-center py-10 text-muted-foreground text-sm">
+                                Chưa có dữ liệu hoặc chưa chọn chủ đề.
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {sections.map(sec => {
+                                    const isExpanded = expandedSections.includes(sec.id);
+                                    return (
+                                        <div key={sec.id} className="border rounded bg-background">
+                                            <div
+                                                className="flex items-center justify-between p-2 cursor-pointer hover:bg-muted/50 sticky top-0 bg-background z-10"
+                                                onClick={() => toggleSection(sec.id)}
+                                            >
+                                                <div className="flex items-center gap-2 font-medium text-sm">
+                                                    {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                                                    {sec.name} <span className="text-xs text-muted-foreground">({sec.questions?.length || 0})</span>
+                                                </div>
+                                            </div>
+
+                                            {isExpanded && sec.questions && sec.questions.length > 0 && (
+                                                <div className="border-t bg-muted/10 p-2 space-y-1">
+                                                    {sec.questions.map(q => {
+                                                        const isSelected = (exam?.questions || []).some(eq => eq.id === q.id);
+                                                        return (
+                                                            <div
+                                                                key={q.id}
+                                                                className={`flex items-start gap-2 p-2 rounded text-sm cursor-pointer transition-colors ${isSelected ? "bg-blue-50 border border-blue-200" : "hover:bg-muted"}`}
+                                                                onClick={() => toggleQuestionInExam(q)}
+                                                            >
+                                                                <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? "bg-blue-600 border-blue-600" : "border-gray-400"}`}>
+                                                                    {isSelected && <div className="w-2 h-2 bg-white rounded-sm" />}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className={`line-clamp-2 ${isSelected ? "text-blue-700 font-medium" : "text-muted-foreground"}`}>{q.content}</p>
+                                                                    <div className="flex gap-1 mt-1">
+                                                                        <span className={`text-[10px] px-1 rounded border ${q.difficulty === 'easy' ? 'text-green-600 border-green-200' : q.difficulty === 'medium' ? 'text-yellow-600 border-yellow-200' : 'text-red-600 border-red-200'}`}>{q.difficulty}</span>
+                                                                        <span className="text-[10px] px-1 rounded border bg-muted">{q.question_type === 'single_choice' ? '1 Đ.A' : 'Nhiều Đ.A'}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div>
     );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
+import { APP_CONFIG } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -97,7 +98,7 @@ export default function AdminQuestionBankPage() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalQuestions, setTotalQuestions] = useState(0);
-    const LIMIT = 20;
+    const LIMIT = APP_CONFIG.PAGINATION.DEFAULT_LIMIT;
 
     // ===== DIALOG STATES =====
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -189,7 +190,7 @@ export default function AdminQuestionBankPage() {
     useEffect(() => {
         const timer = setTimeout(() => {
             fetchQuestions();
-        }, 300);
+        }, APP_CONFIG.PAGINATION.DEBOUNCE_DELAY);
         return () => clearTimeout(timer);
     }, [searchTerm, selectedSection, selectedTopic, selectedDifficulty, page]);
 
@@ -371,37 +372,72 @@ export default function AdminQuestionBankPage() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="secondary"
-                        onClick={() => setIsAddTopicDialogOpen(true)}
-                        className="border"
-                    >
-                        <Library className="mr-2 h-4 w-4" />
-                        Thêm chủ đề
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={() => setIsAddSectionDialogOpen(true)}
-                        className="border bg-background hover:bg-muted"
-                    >
-                        <Book className="mr-2 h-4 w-4 text-orange-600" />
-                        Thêm chương
-                    </Button>
-                    <Button variant="outline" onClick={handleExport} disabled={isExporting}>
-                        {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                        Export Excel
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Import Excel
-                    </Button>
+                <div className="flex items-center gap-2">
+                    {/* Mobile Actions Menu */}
+                    <div className="md:hidden">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => setIsAddTopicDialogOpen(true)}>
+                                    <Library className="mr-2 h-4 w-4" />
+                                    Thêm chủ đề
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setIsAddSectionDialogOpen(true)}>
+                                    <Book className="mr-2 h-4 w-4" />
+                                    Thêm chương
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleExport} disabled={isExporting}>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Export Excel
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setIsImportDialogOpen(true)}>
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Import Excel
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    {/* Desktop Actions Group */}
+                    <div className="hidden md:flex items-center gap-2">
+                        <Button
+                            variant="secondary"
+                            onClick={() => setIsAddTopicDialogOpen(true)}
+                            className="border"
+                        >
+                            <Library className="mr-2 h-4 w-4" />
+                            Thêm chủ đề
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            onClick={() => setIsAddSectionDialogOpen(true)}
+                            className="border bg-background hover:bg-muted"
+                        >
+                            <Book className="mr-2 h-4 w-4 text-orange-600" />
+                            Thêm chương
+                        </Button>
+                        <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+                            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                            Export Excel
+                        </Button>
+                        <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+                            <Upload className="mr-2 h-4 w-4" />
+                            Import Excel
+                        </Button>
+                    </div>
+
+                    {/* Primary Action */}
                     <Button onClick={() => {
                         setEditingQuestion(null);
                         setIsAddDialogOpen(true);
                     }}>
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Thêm câu hỏi
+                        <span className="hidden md:inline">Thêm câu hỏi</span>
+                        <span className="md:hidden">Thêm</span>
                     </Button>
                 </div>
             </div>

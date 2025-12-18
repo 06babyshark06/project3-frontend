@@ -66,7 +66,7 @@ export default function CreateExamPage() {
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
     const [shuffleQuestions, setShuffleQuestions] = useState(false);
-    const [showResult, setShowResult] = useState(true);
+    const [showResult, setShowResult] = useState(false);
     const [requiresApproval, setRequiresApproval] = useState(false);
 
     const [isBankSelectorOpen, setIsBankSelectorOpen] = useState(false);
@@ -253,7 +253,7 @@ export default function CreateExamPage() {
                                 <CardDescription>Thiết lập thời gian, bảo mật và quy tắc thi.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label>Thời gian làm bài (phút)</Label>
                                         <div className="relative">
@@ -267,7 +267,7 @@ export default function CreateExamPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label>Thời gian bắt đầu (Tùy chọn)</Label>
                                         <Input
@@ -326,13 +326,13 @@ export default function CreateExamPage() {
                     {/* STEP 3: QUESTIONS */}
                     {currentStep === 3 && (
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <h2 className="text-lg font-semibold">Danh sách câu hỏi ({selectedQuestions.length})</h2>
-                                <div className="flex gap-2">
-                                    <Button variant="outline" onClick={() => setIsRandomDialogOpen(true)}>
+                                <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                                    <Button variant="outline" onClick={() => setIsRandomDialogOpen(true)} className="w-full md:w-auto">
                                         <Shuffle className="mr-2 h-4 w-4" /> Sinh ngẫu nhiên
                                     </Button>
-                                    <Button onClick={() => setIsBankSelectorOpen(true)}>
+                                    <Button onClick={() => setIsBankSelectorOpen(true)} className="w-full md:w-auto">
                                         <Plus className="mr-2 h-4 w-4" /> Chọn thủ công
                                     </Button>
                                 </div>

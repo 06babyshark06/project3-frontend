@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
+import { APP_CONFIG } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -95,7 +96,7 @@ export default function QuestionBankPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalQuestions, setTotalQuestions] = useState(0);
-  const LIMIT = 20;
+  const LIMIT = APP_CONFIG.PAGINATION.DEFAULT_LIMIT;
 
   // ===== DIALOG STATES =====
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -187,7 +188,7 @@ export default function QuestionBankPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchQuestions();
-    }, 300);
+    }, APP_CONFIG.PAGINATION.DEBOUNCE_DELAY);
     return () => clearTimeout(timer);
   }, [searchTerm, selectedSection, selectedTopic, selectedDifficulty, page]);
 
@@ -336,7 +337,7 @@ export default function QuestionBankPage() {
     setIsExporting(true);
     try {
       toast.info("Đang tạo file Excel...");
-      
+
       const params: any = {};
       if (searchTerm) params.search = searchTerm;
       if (selectedSection !== "all") params.section_id = selectedSection;
@@ -344,7 +345,7 @@ export default function QuestionBankPage() {
       if (selectedDifficulty !== "all") params.difficulty = selectedDifficulty;
 
       const res = await api.get("/questions/export", { params });
-      
+
       const fileUrl = res.data.data.file_url;
       if (fileUrl) {
         window.open(fileUrl, "_blank");
@@ -369,37 +370,68 @@ export default function QuestionBankPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => setIsAddTopicDialogOpen(true)}
-            className="border"
-          >
-            <Library className="mr-2 h-4 w-4" />
-            Thêm chủ đề
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => setIsAddSectionDialogOpen(true)}
-            className="border bg-background hover:bg-muted"
-          >
-            <Book className="mr-2 h-4 w-4 text-orange-600" />
-            Thêm chương
-          </Button>
-          <Button variant="outline" onClick={handleExport} disabled={isExporting}>
-            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-            Export Excel
-          </Button>
-          <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" />
-            Import Excel
-          </Button>
+        <div className="flex items-center gap-2">
+          {/* DESKTOP ACTIONS */}
+          <div className="hidden md:flex items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => setIsAddTopicDialogOpen(true)}
+              className="border"
+            >
+              <Library className="mr-2 h-4 w-4" />
+              Thêm chủ đề
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setIsAddSectionDialogOpen(true)}
+              className="border bg-background hover:bg-muted"
+            >
+              <Book className="mr-2 h-4 w-4 text-orange-600" />
+              Thêm chương
+            </Button>
+            <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+              {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              Export Excel
+            </Button>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import Excel
+            </Button>
+          </div>
+
+          {/* MOBILE ACTIONS MENU */}
+          <div className="md:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsAddTopicDialogOpen(true)}>
+                  <Library className="mr-2 h-4 w-4" /> Thêm chủ đề
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsAddSectionDialogOpen(true)}>
+                  <Book className="mr-2 h-4 w-4 text-orange-600" /> Thêm chương
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExport} disabled={isExporting}>
+                  <Download className="mr-2 h-4 w-4" /> Export Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsImportDialogOpen(true)}>
+                  <Upload className="mr-2 h-4 w-4" /> Import Excel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* PRIMARY ACTION */}
           <Button onClick={() => {
             setEditingQuestion(null);
             setIsAddDialogOpen(true);
           }}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Thêm câu hỏi
+            <span className="hidden sm:inline">Thêm câu hỏi</span>
+            <span className="sm:hidden">Thêm</span>
           </Button>
         </div>
       </div>
@@ -528,108 +560,110 @@ export default function QuestionBankPage() {
 
       {/* DATA TABLE */}
       <Card className="overflow-hidden border-border/50">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow>
-              <TableHead className="w-[40px] text-center">
-                <Checkbox
-                  checked={selectedIds.length === questions.length && questions.length > 0}
-                  onCheckedChange={toggleSelectAll}
-                  aria-label="Select all"
-                />
-              </TableHead>
-              <TableHead className="w-[60px]">ID</TableHead>
-              <TableHead className="min-w-[300px]">Nội dung câu hỏi</TableHead>
-              <TableHead className="w-[180px]">Chủ đề (Topic)</TableHead>
-              <TableHead className="w-[180px]">Chương (Section)</TableHead>
-              <TableHead className="w-[100px]">Loại</TableHead>
-              <TableHead className="w-[100px]">Độ khó</TableHead>
-              <TableHead className="w-[70px] text-right">#</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center">
-                  <div className="flex justify-center items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Đang tải dữ liệu...</span>
-                  </div>
-                </TableCell>
+                <TableHead className="w-[40px] text-center">
+                  <Checkbox
+                    checked={selectedIds.length === questions.length && questions.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
+                <TableHead className="w-[60px]">ID</TableHead>
+                <TableHead className="min-w-[300px]">Nội dung câu hỏi</TableHead>
+                <TableHead className="w-[180px]">Chủ đề (Topic)</TableHead>
+                <TableHead className="w-[180px]">Chương (Section)</TableHead>
+                <TableHead className="w-[100px]">Loại</TableHead>
+                <TableHead className="w-[100px]">Độ khó</TableHead>
+                <TableHead className="w-[70px] text-right">#</TableHead>
               </TableRow>
-            ) : questions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                  Không tìm thấy câu hỏi nào phù hợp.
-                </TableCell>
-              </TableRow>
-            ) : (
-              questions.map((q) => (
-                <TableRow key={q.id} className="hover:bg-muted/30">
-                  <TableCell className="text-center">
-                    <Checkbox
-                      checked={selectedIds.includes(q.id)}
-                      onCheckedChange={() => toggleSelectOne(q.id)}
-                      aria-label={`Select question ${q.id}`}
-                    />
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">#{q.id}</TableCell>
-                  <TableCell>
-                    <div className="line-clamp-2 font-medium" title={stripHtml(q.content)}>
-                      {stripHtml(q.content)}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-32 text-center">
+                    <div className="flex justify-center items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Đang tải dữ liệu...</span>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="font-normal text-xs bg-blue-50 text-blue-700 border-blue-200 truncate max-w-[150px]">
-                        {q.topic_name || "N/A"}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-muted-foreground truncate max-w-[150px]" title={q.section_name}>
-                      {q.section_name || "N/A"}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={q.question_type === "multiple_choice" ? "secondary" : "outline"}>
-                      {q.question_type === "multiple_choice" ? "Nhiều Đ.A" : "1 Đ.A"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{getDifficultyBadge(q.difficulty)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewDetail(q.id)}>
-                          <Eye className="mr-2 h-4 w-4" /> Chi tiết
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={async () => {
-                          try {
-                            const res = await api.get(`/questions/${q.id}`);
-                            setEditingQuestion(res.data.data);
-                            setIsAddDialogOpen(true);
-                          } catch (error) {
-                            toast.error("Không thể tải thông tin câu hỏi để sửa");
-                          }
-                        }}>
-                          <Pencil className="mr-2 h-4 w-4" /> Sửa
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setQuestionToDelete(q.id)} className="text-red-600 focus:text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" /> Xóa
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : questions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                    Không tìm thấy câu hỏi nào phù hợp.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                questions.map((q) => (
+                  <TableRow key={q.id} className="hover:bg-muted/30">
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={selectedIds.includes(q.id)}
+                        onCheckedChange={() => toggleSelectOne(q.id)}
+                        aria-label={`Select question ${q.id}`}
+                      />
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">#{q.id}</TableCell>
+                    <TableCell>
+                      <div className="line-clamp-2 font-medium" title={stripHtml(q.content)}>
+                        {stripHtml(q.content)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-normal text-xs bg-blue-50 text-blue-700 border-blue-200 truncate max-w-[150px]">
+                          {q.topic_name || "N/A"}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm text-muted-foreground truncate max-w-[150px]" title={q.section_name}>
+                        {q.section_name || "N/A"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={q.question_type === "multiple_choice" ? "secondary" : "outline"}>
+                        {q.question_type === "multiple_choice" ? "Nhiều Đ.A" : "1 Đ.A"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{getDifficultyBadge(q.difficulty)}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewDetail(q.id)}>
+                            <Eye className="mr-2 h-4 w-4" /> Chi tiết
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={async () => {
+                            try {
+                              const res = await api.get(`/questions/${q.id}`);
+                              setEditingQuestion(res.data.data);
+                              setIsAddDialogOpen(true);
+                            } catch (error) {
+                              toast.error("Không thể tải thông tin câu hỏi để sửa");
+                            }
+                          }}>
+                            <Pencil className="mr-2 h-4 w-4" /> Sửa
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setQuestionToDelete(q.id)} className="text-red-600 focus:text-red-600">
+                            <Trash2 className="mr-2 h-4 w-4" /> Xóa
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
       {/* PAGINATION */}

@@ -3,7 +3,7 @@
 import { Sidebar } from "@/components/Sidebar";
 import { LayoutDashboard, Users, FileText, BookCopy, School, FolderCog, FileQuestion } from "lucide-react";
 
-export function AdminSidebar() {
+export function AdminSidebar({ className }: { className?: string }) {
     const items = [
         { title: "Tổng quan", href: "/admin/dashboard", icon: LayoutDashboard },
         { title: "Quản lý Người dùng", href: "/admin/users", icon: Users },
@@ -17,7 +17,7 @@ export function AdminSidebar() {
     return (
         <Sidebar
             items={items}
-            className="h-[calc(100vh-64px)]"
+            className={className || "h-[calc(100vh-64px)]"}
         />
     );
 }

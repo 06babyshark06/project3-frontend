@@ -59,64 +59,64 @@ export default function ExamRequestsPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-            <h1 className="text-2xl font-bold">Duyệt tham gia thi</h1>
-            <p className="text-muted-foreground">Quản lý các yêu cầu truy cập cho bài thi #{examId}</p>
+          <h1 className="text-2xl font-bold">Duyệt tham gia thi</h1>
+          <p className="text-muted-foreground">Quản lý các yêu cầu truy cập cho bài thi #{examId}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-            <CardTitle>Danh sách yêu cầu ({requests.filter(r => r.status === 'pending').length} chờ duyệt)</CardTitle>
+          <CardTitle>Danh sách yêu cầu ({requests.filter(r => r.status === 'pending').length} chờ duyệt)</CardTitle>
         </CardHeader>
         <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Học sinh (ID)</TableHead>
-                        <TableHead>Thời gian gửi</TableHead>
-                        <TableHead>Trạng thái</TableHead>
-                        <TableHead className="text-right">Hành động</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {loading ? (
-                        <TableRow><TableCell colSpan={4} className="text-center h-24"><Loader2 className="animate-spin h-6 w-6 mx-auto"/></TableCell></TableRow>
-                    ) : requests.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="text-center h-24 text-muted-foreground">Chưa có yêu cầu nào.</TableCell></TableRow>
-                    ) : (
-                        requests.map((req) => (
-                            <TableRow key={req.id}>
-                                <TableCell className="font-medium">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                            <User className="h-4 w-4 text-muted-foreground" />
-                                        </div>
-                                        <span>User #{req.user_id}</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell>{new Date(req.created_at).toLocaleString('vi-VN')}</TableCell>
-                                <TableCell>
-                                    <Badge variant={req.status === 'approved' ? 'default' : req.status === 'rejected' ? 'destructive' : 'secondary'}>
-                                        {req.status === 'approved' ? 'Đã duyệt' : req.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    {req.status === 'pending' && (
-                                        <div className="flex justify-end gap-2">
-                                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700" onClick={() => handleApprove(req.user_id, false)}>
-                                                <X className="h-4 w-4 mr-1" /> Từ chối
-                                            </Button>
-                                            <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleApprove(req.user_id, true)}>
-                                                <Check className="h-4 w-4 mr-1" /> Duyệt
-                                            </Button>
-                                        </div>
-                                    )}
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Học sinh (ID)</TableHead>
+                <TableHead>Thời gian gửi</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="text-right">Hành động</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow><TableCell colSpan={4} className="text-center h-24"><Loader2 className="animate-spin h-6 w-6 mx-auto" /></TableCell></TableRow>
+              ) : requests.length === 0 ? (
+                <TableRow><TableCell colSpan={4} className="text-center h-24 text-muted-foreground">Chưa có yêu cầu nào.</TableCell></TableRow>
+              ) : (
+                requests.map((req) => (
+                  <TableRow key={req.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <span>{req.full_name || req.student_name || `User #${req.user_id}`}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{new Date(req.created_at).toLocaleString('vi-VN')}</TableCell>
+                    <TableCell>
+                      <Badge variant={req.status === 'approved' ? 'default' : req.status === 'rejected' ? 'destructive' : 'secondary'}>
+                        {req.status === 'approved' ? 'Đã duyệt' : req.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {req.status === 'pending' && (
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700" onClick={() => handleApprove(req.user_id, false)}>
+                            <X className="h-4 w-4 mr-1" /> Từ chối
+                          </Button>
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleApprove(req.user_id, true)}>
+                            <Check className="h-4 w-4 mr-1" /> Duyệt
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
