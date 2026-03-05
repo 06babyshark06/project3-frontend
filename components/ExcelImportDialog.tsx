@@ -56,26 +56,26 @@ export function ExcelImportDialog({
     if (!file) {
       return toast.error("Vui lòng chọn file Excel");
     }
-    
+
     setIsLoading(true);
     const formData = new FormData();
     formData.append("file", file);
-    
+
     try {
       const res = await api.post("/questions/import", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      
+
       const { success_count, error_count } = res.data.data;
-      
+
       if (success_count > 0) {
-          toast.success(`Đã import thành công ${success_count} câu hỏi!`, {
-              description: error_count > 0 ? `Có ${error_count} dòng bị lỗi, vui lòng kiểm tra lại.` : "Tất cả dữ liệu hợp lệ."
-          });
-          onImportSuccess();
-          onOpenChange(false);
+        toast.success(`Đã import thành công ${success_count} câu hỏi!`, {
+          description: error_count > 0 ? `Có ${error_count} dòng bị lỗi, vui lòng kiểm tra lại.` : "Tất cả dữ liệu hợp lệ."
+        });
+        onImportSuccess();
+        onOpenChange(false);
       } else {
-          toast.error("Import thất bại", { description: "Không có câu hỏi nào được thêm. Vui lòng kiểm tra file." });
+        toast.error("Import thất bại", { description: "Không có câu hỏi nào được thêm. Vui lòng kiểm tra file." });
       }
 
     } catch (error: any) {
@@ -87,7 +87,7 @@ export function ExcelImportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-green-600" />
@@ -99,7 +99,7 @@ export function ExcelImportDialog({
           {/* ALERT HƯỚNG DẪN TỔNG QUAN */}
           <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex gap-3 items-start">
             <div className="bg-blue-100 p-2 rounded-full shrink-0">
-                <AlertCircle className="h-5 w-5 text-blue-600" />
+              <AlertCircle className="h-5 w-5 text-blue-600" />
             </div>
             <div className="text-sm text-blue-900 space-y-1">
               <p className="font-medium">Tự động phân loại thông minh</p>
@@ -129,7 +129,7 @@ export function ExcelImportDialog({
               />
               <div className="flex flex-col items-center gap-3">
                 <div className="p-3 bg-muted rounded-full group-hover:bg-background transition-colors">
-                    <UploadCloud className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <UploadCloud className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 {file ? (
                   <div className="text-sm">
@@ -150,49 +150,49 @@ export function ExcelImportDialog({
 
           {/* HƯỚNG DẪN CHI TIẾT CẤU TRÚC FILE */}
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-             <div className="p-4 bg-muted/40 border-b">
-                <h4 className="text-sm font-semibold flex items-center gap-2">
-                    📋 Cấu trúc cột bắt buộc (Thứ tự từ A → J)
-                </h4>
-             </div>
-             <div className="p-4 text-xs grid grid-cols-2 gap-x-8 gap-y-3 text-muted-foreground">
-                <div className="flex justify-between border-b border-dashed pb-1">
-                    <span>Cột A</span> 
-                    <span className="font-medium text-foreground">Tên Chủ đề (Topic)</span>
-                </div>
-                <div className="flex justify-between border-b border-dashed pb-1">
-                    <span>Cột B</span> 
-                    <span className="font-medium text-foreground">Tên Chương (Section)</span>
-                </div>
-                <div className="flex justify-between border-b border-dashed pb-1">
-                    <span>Cột C</span> 
-                    <span className="font-medium text-foreground">Nội dung câu hỏi</span>
-                </div>
-                <div className="flex justify-between border-b border-dashed pb-1">
-                    <span>Cột D</span> 
-                    <span className="font-medium text-foreground">Loại (single/multiple_choice)</span>
-                </div>
-                <div className="flex justify-between border-b border-dashed pb-1">
-                    <span>Cột E</span> 
-                    <span className="font-medium text-foreground">Độ khó (easy/medium/hard)</span>
-                </div>
-                <div className="flex justify-between border-b border-dashed pb-1">
-                    <span>Cột F</span> 
-                    <span className="font-medium text-foreground">Giải thích (Explanation)</span>
-                </div>
-                <div className="flex justify-between border-b border-dashed pb-1">
-                    <span>Cột G</span> 
-                    <span className="font-medium text-foreground">Link Ảnh/Video (nếu có)</span>
-                </div>
-                <div className="flex justify-between border-b border-dashed pb-1">
-                    <span>Cột H</span> 
-                    <span className="font-medium text-foreground">Đáp án đúng (VD: A,C)</span>
-                </div>
-                <div className="col-span-2 flex justify-between bg-muted/30 p-1.5 rounded">
-                    <span>Cột I, J, K, L...</span> 
-                    <span className="font-medium text-foreground">Nội dung các lựa chọn A, B, C, D...</span>
-                </div>
-             </div>
+            <div className="p-4 bg-muted/40 border-b">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                📋 Cấu trúc cột bắt buộc (Thứ tự từ A → J)
+              </h4>
+            </div>
+            <div className="p-4 text-xs grid grid-cols-2 gap-x-8 gap-y-3 text-muted-foreground">
+              <div className="flex justify-between border-b border-dashed pb-1">
+                <span>Cột A</span>
+                <span className="font-medium text-foreground">Tên Chủ đề (Topic)</span>
+              </div>
+              <div className="flex justify-between border-b border-dashed pb-1">
+                <span>Cột B</span>
+                <span className="font-medium text-foreground">Tên Chương (Section)</span>
+              </div>
+              <div className="flex justify-between border-b border-dashed pb-1">
+                <span>Cột C</span>
+                <span className="font-medium text-foreground">Nội dung câu hỏi</span>
+              </div>
+              <div className="flex justify-between border-b border-dashed pb-1">
+                <span>Cột D</span>
+                <span className="font-medium text-foreground">Loại (single/multiple_choice)</span>
+              </div>
+              <div className="flex justify-between border-b border-dashed pb-1">
+                <span>Cột E</span>
+                <span className="font-medium text-foreground">Độ khó (easy/medium/hard)</span>
+              </div>
+              <div className="flex justify-between border-b border-dashed pb-1">
+                <span>Cột F</span>
+                <span className="font-medium text-foreground">Giải thích (Explanation)</span>
+              </div>
+              <div className="flex justify-between border-b border-dashed pb-1">
+                <span>Cột G</span>
+                <span className="font-medium text-foreground">Link Ảnh/Video (nếu có)</span>
+              </div>
+              <div className="flex justify-between border-b border-dashed pb-1">
+                <span>Cột H</span>
+                <span className="font-medium text-foreground">Đáp án đúng (VD: A,C)</span>
+              </div>
+              <div className="col-span-2 flex justify-between bg-muted/30 p-1.5 rounded">
+                <span>Cột I, J, K, L...</span>
+                <span className="font-medium text-foreground">Nội dung các lựa chọn A, B, C, D...</span>
+              </div>
+            </div>
           </div>
         </div>
 
