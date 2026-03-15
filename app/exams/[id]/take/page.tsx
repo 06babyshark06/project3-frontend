@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   Loader2, Clock, AlertTriangle, ChevronLeft, ChevronRight,
   Circle, CheckCircle2, Square, CheckSquare, Lock, Maximize,
-  Image as ImageIcon, Calendar, Ban, UserPlus, Hourglass, Menu
+  Image as ImageIcon, Calendar, Ban, UserPlus, Hourglass, Menu, Flag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,14 +61,7 @@ const formatTime = (seconds: number) => {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
+// Hàm xáo trộn (Bị xoá do đã làm ở Backend để bảo mật hơn)
 
 const MediaContent = ({ url }: { url?: string }) => {
   if (!url) return null;
@@ -100,6 +93,7 @@ export default function ExamTakingPage() {
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, number[]>>({});
+  const [flaggedQuestions, setFlaggedQuestions] = useState<number[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [violationCount, setViolationCount] = useState(0);
@@ -108,6 +102,7 @@ export default function ExamTakingPage() {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
+  const [isAntiCheatWarningOpen, setIsAntiCheatWarningOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false); // State nút đăng ký
@@ -125,13 +120,7 @@ export default function ExamTakingPage() {
 
         if (!data.questions) data.questions = [];
 
-        if (data.settings?.shuffle_questions) {
-          data.questions = shuffleArray(data.questions);
-          data.questions = data.questions.map((q: Question) => ({
-            ...q,
-            choices: shuffleArray(q.choices)
-          }));
-        }
+        // Choices đã được Backend Shuffle (không cần Frontend Shuffle để tránh lặp)
 
         setExam(data);
         setTimeLeft(data.settings.duration_minutes * 60);
@@ -223,7 +212,7 @@ export default function ExamTakingPage() {
 
     try {
       const res = await api.post(`/exams/${examId}/start`);
-      const { submission_id, remaining_seconds, current_answers } = res.data.data;
+      const { submission_id, remaining_seconds, current_answers, questions } = res.data.data;
 
       setSubmissionId(submission_id);
 
@@ -231,23 +220,47 @@ export default function ExamTakingPage() {
         setTimeLeft(remaining_seconds);
       }
 
+      // 🛠 CẬP NHẬT CÂU HỎI CHO ĐỀ THI ĐỘNG (Sinh ngẫu nhiên cho từng học sinh)
+      if (questions && questions.length > 0) {
+        setExam(prev => {
+          if (!prev) return prev;
+          // Backend đã lo việc shuffle
+          return { ...prev, questions: questions };
+        });
+      }
+
       if (current_answers) {
-        const formattedAnswers: Record<number, number[]> = {};
+        let formattedAnswers: Record<number, number[]> = {};
         Object.entries(current_answers).forEach(([key, val]: [string, any]) => {
           const choices = val.values ? val.values : val;
           if (Array.isArray(choices)) {
             formattedAnswers[Number(key)] = choices.map(Number);
           }
         });
+
+        // Offline Fallback: Load saved draft from localStorage
+        const localDraft = localStorage.getItem(`exam_draft_${examId}_${user?.id}`);
+        if (localDraft) {
+          try {
+            const parsedDraft = JSON.parse(localDraft);
+            formattedAnswers = { ...formattedAnswers, ...parsedDraft };
+          } catch (e) {}
+        }
         setUserAnswers(formattedAnswers);
+
+        // Load Flagged Questions
+        const localFlags = localStorage.getItem(`exam_flags_${examId}_${user?.id}`);
+        if (localFlags) {
+          try { setFlaggedQuestions(JSON.parse(localFlags)); } catch (e) {}
+        }
 
         if (Object.keys(formattedAnswers).length > 0) {
           setIsResuming(true);
         } else {
-          requestFullscreen();
+          setIsAntiCheatWarningOpen(true);
         }
       } else {
-        requestFullscreen();
+        setIsAntiCheatWarningOpen(true);
       }
 
     } catch (error: any) {
@@ -263,9 +276,14 @@ export default function ExamTakingPage() {
   }, [examId, router]);
 
   const handleResumeClick = () => {
-    requestFullscreen();
     setIsResuming(false);
     toast.success("Đã khôi phục bài làm!");
+    setIsAntiCheatWarningOpen(true);
+  };
+
+  const handleConfirmAntiCheat = () => {
+    setIsAntiCheatWarningOpen(false);
+    requestFullscreen();
   };
 
   useEffect(() => {
@@ -292,18 +310,79 @@ export default function ExamTakingPage() {
   };
 
   useEffect(() => {
+    if (!isPasswordCorrect || isSubmitting || !submissionId || !examId) return;
+
+    const logAndWarn = (type: string, message: string) => {
+      const newCount = violationCount + 1;
+      setViolationCount(newCount);
+      toast.error(`⚠️ CẢNH BÁO: ${message} (${newCount}/3)`);
+      api.post("/exams/log-violation", { exam_id: Number(examId), violation_type: type }).catch(console.error);
+      if (newCount >= 3) handleSubmit(true);
+    };
+
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
-      if (!document.fullscreenElement && isPasswordCorrect && !isSubmitting && submissionId) {
-        const newCount = violationCount + 1;
-        setViolationCount(newCount);
-        toast.error(`⚠️ CẢNH BÁO: Thoát toàn màn hình! (${newCount}/3)`);
-        api.post("/exams/log-violation", { exam_id: Number(examId), violation_type: "exit_fullscreen" }).catch(console.error);
-        if (newCount >= 3) handleSubmit(true);
+      if (!document.fullscreenElement) {
+        logAndWarn("exit_fullscreen", "Thoát toàn màn hình!");
       }
     };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        logAndWarn("tab_switch", "Chuyển Tab trình duyệt!");
+      }
+    };
+
+    const handleWindowBlur = () => {
+      logAndWarn("focus_lost", "Mất tiêu điểm cửa sổ!");
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      toast.error("Vui lòng không sử dụng chuột phải trong giờ thi!");
+    };
+
+    const handleCopyPaste = (e: ClipboardEvent) => {
+      e.preventDefault();
+      toast.error("Chức năng Copy/Paste đã bị khóa!");
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Chặn F12
+      if (e.key === "F12") {
+        e.preventDefault();
+        toast.error("Không được mở Developer Tools!");
+        api.post("/exams/log-violation", { exam_id: Number(examId), violation_type: "devtools_opened" }).catch(console.error);
+      }
+      // Chặn Ctrl/Cmd shortcuts
+      if (e.ctrlKey || e.metaKey) {
+        const key = e.key.toLowerCase();
+        if (["c", "v", "x", "p", "u", "s"].includes(key)) {
+          e.preventDefault();
+          toast.error(`Phím tắt Ctrl+${key.toUpperCase()} đã bị khóa!`);
+        }
+      }
+    };
+
     document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleWindowBlur);
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("copy", handleCopyPaste);
+    document.addEventListener("cut", handleCopyPaste);
+    document.addEventListener("paste", handleCopyPaste);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleWindowBlur);
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("copy", handleCopyPaste);
+      document.removeEventListener("cut", handleCopyPaste);
+      document.removeEventListener("paste", handleCopyPaste);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isPasswordCorrect, isSubmitting, violationCount, submissionId, examId]);
 
   // ... (Các hàm Timer, AutoSave, SelectAnswer, Submit giữ nguyên) ...
@@ -332,7 +411,14 @@ export default function ExamTakingPage() {
         );
         await Promise.all(promises);
         lastSavedAnswers.current = currentAnswersStr;
-      } catch (err) { console.error("Auto-save failed"); }
+      } catch (err: any) {
+        if (err.response?.data?.error?.includes("gian lận thi hộ")) {
+          toast.error("Phát hiện tài khoản đang mở bài thi ở nơi khác!", { duration: 5000 });
+          router.replace("/");
+          return;
+        }
+        console.error("Auto-save failed:", err);
+      }
     };
     autoSaveTimerRef.current = setInterval(saveAnswers, 30000);
     return () => { if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current); };
@@ -342,10 +428,22 @@ export default function ExamTakingPage() {
     if (isSubmitting) return;
     setUserAnswers(prev => {
       const currentSelected = prev[question.id] || [];
+      let nextAnswers;
       if (question.question_type === "multiple_choice") {
-        return currentSelected.includes(choiceId) ? { ...prev, [question.id]: currentSelected.filter(id => id !== choiceId) } : { ...prev, [question.id]: [...currentSelected, choiceId] };
+        nextAnswers = currentSelected.includes(choiceId) ? { ...prev, [question.id]: currentSelected.filter(id => id !== choiceId) } : { ...prev, [question.id]: [...currentSelected, choiceId] };
+      } else {
+        nextAnswers = { ...prev, [question.id]: [choiceId] };
       }
-      return { ...prev, [question.id]: [choiceId] };
+      localStorage.setItem(`exam_draft_${examId}_${user?.id}`, JSON.stringify(nextAnswers));
+      return nextAnswers;
+    });
+  };
+
+  const toggleFlag = (questionId: number) => {
+    setFlaggedQuestions(prev => {
+      const nextFlags = prev.includes(questionId) ? prev.filter(id => id !== questionId) : [...prev, questionId];
+      localStorage.setItem(`exam_flags_${examId}_${user?.id}`, JSON.stringify(nextFlags));
+      return nextFlags;
     });
   };
 
@@ -357,7 +455,15 @@ export default function ExamTakingPage() {
       const response = await api.post("/exams/submit", { exam_id: Number(examId), submission_id: submissionId, answers: formattedAnswers });
       if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
       router.replace(`/exams/result/${response.data.data.submission_id || submissionId}`);
-    } catch (error) { setIsSubmitting(false); }
+    } catch (error: any) {
+      if (error.response?.data?.error?.includes("gian lận thi hộ")) {
+        toast.error("Phát hiện tài khoản đang mở bài thi ở nơi khác! Đã tự động hủy bài.", { duration: 5000 });
+        router.replace("/");
+        return;
+      }
+      setIsSubmitting(false);
+      toast.error("Nộp bài thất bại, vui lòng thử lại!");
+    }
   }, [exam, userAnswers, isSubmitting, examId, submissionId, router]);
 
 
@@ -414,21 +520,19 @@ export default function ExamTakingPage() {
 
   return (
     <>
-      <Dialog open={isPasswordDialogOpen} onOpenChange={() => { }}>
-        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Lock className="h-5 w-5" /> Nhập mật khẩu</DialogTitle>
-            <DialogDescription>Bài thi <strong>{exam?.title}</strong> yêu cầu mật khẩu.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <Input type="password" placeholder="Nhập mật khẩu..." value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handlePasswordSubmit()} autoFocus />
-          </div>
-          <DialogFooter>
-            <Button onClick={() => router.push("/exams")} variant="outline">Hủy</Button>
+      <AlertDialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nhập mật khẩu bài thi</AlertDialogTitle>
+            <AlertDialogDescription>Bài thi này yêu cầu mật khẩu để truy cập.</AlertDialogDescription>
+            <Input type="password" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} placeholder="Nhập mật khẩu..." className="mt-4" />
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => router.push(`/exams`)}>Quay lại</AlertDialogCancel>
             <Button onClick={handlePasswordSubmit}>Xác nhận</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {isResuming && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
@@ -476,7 +580,16 @@ export default function ExamTakingPage() {
                             {exam.questions.map((_, idx) => {
                               const qId = exam.questions[idx].id;
                               const hasAns = userAnswers[qId]?.length > 0;
-                              return <Button key={idx} variant={currentQuestionIndex === idx ? "default" : hasAns ? "secondary" : "outline"} size="sm" onClick={() => setCurrentQuestionIndex(idx)} className="h-10">{idx + 1}</Button>;
+                              const isFlagged = flaggedQuestions.includes(qId);
+                              
+                              let btnVariant = currentQuestionIndex === idx ? "default" : hasAns ? "secondary" : "outline";
+                              let className = "h-10";
+                              if (isFlagged && currentQuestionIndex !== idx) {
+                                className += " bg-yellow-500 text-white hover:bg-yellow-600 border-0";
+                                btnVariant = "default";
+                              }
+                              
+                              return <Button key={idx} variant={btnVariant as any} size="sm" onClick={() => setCurrentQuestionIndex(idx)} className={className}>{idx + 1}</Button>;
                             })}
                           </div>
                         </ScrollArea>
@@ -511,7 +624,13 @@ export default function ExamTakingPage() {
                 <CardHeader className="px-0 md:px-6">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">Câu {currentQuestionIndex + 1}/{exam.questions.length}</CardTitle>
-                    <Badge variant="outline">{currentQuestion.question_type === "multiple_choice" ? "Nhiều đáp án" : "Một đáp án"}</Badge>
+                    <div className="flex items-center gap-2">
+                       <Button variant="ghost" size="sm" onClick={() => toggleFlag(currentQuestion.id)} className={flaggedQuestions.includes(currentQuestion.id) ? "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30" : "text-muted-foreground"}>
+                          <Flag className="w-4 h-4 mr-1" />
+                          <span className="hidden sm:inline">{flaggedQuestions.includes(currentQuestion.id) ? "Đã đánh dấu" : "Đánh dấu"}</span>
+                       </Button>
+                       <Badge variant="outline">{currentQuestion.question_type === "multiple_choice" ? "Nhiều đáp án" : "Một đáp án"}</Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6 px-0 md:px-6">
@@ -556,7 +675,16 @@ export default function ExamTakingPage() {
                   {exam.questions.map((_, idx) => {
                     const qId = exam.questions[idx].id;
                     const hasAns = userAnswers[qId]?.length > 0;
-                    return <Button key={idx} variant={currentQuestionIndex === idx ? "default" : hasAns ? "secondary" : "outline"} size="sm" onClick={() => setCurrentQuestionIndex(idx)} className="h-10">{idx + 1}</Button>;
+                    const isFlagged = flaggedQuestions.includes(qId);
+                    
+                    let btnVariant = currentQuestionIndex === idx ? "default" : hasAns ? "secondary" : "outline";
+                    let className = "h-10";
+                    if (isFlagged && currentQuestionIndex !== idx) {
+                      className += " bg-yellow-500 text-white hover:bg-yellow-600 border-0";
+                      btnVariant = "default";
+                    }
+                    
+                    return <Button key={idx} variant={btnVariant as any} size="sm" onClick={() => setCurrentQuestionIndex(idx)} className={className}>{idx + 1}</Button>;
                   })}
                 </div>
               </ScrollArea>

@@ -107,9 +107,14 @@ export default function ExamMonitorPage() {
   };
 
   const translateViolation = (type: string) => {
-    if (type === "tab_switch") return "Chuyển tab / Rời màn hình";
-    if (type === "copy_paste") return "Sao chép / Dán";
-    return type;
+    switch (type) {
+      case "tab_switch": return "Chuyển tab / Ẩn trình duyệt";
+      case "focus_lost": return "Mất tiêu điểm / Chia màn hình";
+      case "exit_fullscreen": return "Thoát toàn màn hình";
+      case "devtools_opened": return "Mở Developer Tools (F12)";
+      case "copy_paste": return "Sao chép / Dán";
+      default: return type;
+    }
   };
 
   return (

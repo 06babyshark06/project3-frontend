@@ -68,6 +68,15 @@ export default function CreateExamPage() {
     const [shuffleQuestions, setShuffleQuestions] = useState(false);
     const [showResult, setShowResult] = useState(false);
     const [requiresApproval, setRequiresApproval] = useState(false);
+    const [isDynamic, setIsDynamic] = useState(false);
+
+    interface DynamicConfig {
+        id: string;
+        sectionId: number | string;
+        difficulty: string;
+        count: number;
+    }
+    const [dynamicConfigs, setDynamicConfigs] = useState<DynamicConfig[]>([]);
 
     const [isBankSelectorOpen, setIsBankSelectorOpen] = useState(false);
     const [isRandomDialogOpen, setIsRandomDialogOpen] = useState(false);
@@ -152,10 +161,17 @@ export default function CreateExamPage() {
 
     const handleSubmit = async () => {
         if (!title || !topicId) return toast.error("Thiếu thông tin bắt buộc");
-        if (selectedQuestions.length === 0) return toast.error("Đề thi chưa có câu hỏi nào");
+        if (!isDynamic && selectedQuestions.length === 0) return toast.error("Đề thi chưa có câu hỏi nào (chọn chế độ thủ công)");
+        if (isDynamic && dynamicConfigs.length === 0) return toast.error("Vui lòng cấu hình ít nhất 1 quy tắc sinh đề động");
 
         setIsSubmitting(true);
         try {
+            const configArray = dynamicConfigs.map(c => ({
+                section_id: c.sectionId === 'all' ? 0 : Number(c.sectionId),
+                count: Number(c.count),
+                difficulty: c.difficulty
+            }));
+
             const payload = {
                 title,
                 description,
@@ -169,7 +185,9 @@ export default function CreateExamPage() {
                     end_time: endTime ? new Date(endTime).toISOString() : "",
                     shuffle_questions: shuffleQuestions,
                     show_result_immediately: showResult,
-                    requires_approval: requiresApproval
+                    requires_approval: requiresApproval,
+                    is_dynamic: isDynamic,
+                    dynamic_config: isDynamic ? JSON.stringify(configArray) : ""
                 },
                 creator_id: 1,
                 status: status
@@ -201,7 +219,7 @@ export default function CreateExamPage() {
                 <div className="md:col-span-1 space-y-2">
                     <StepItem step={1} current={currentStep} label="Thông tin chung" icon={BookOpen} />
                     <StepItem step={2} current={currentStep} label="Cấu hình thi" icon={Settings} />
-                    <StepItem step={3} current={currentStep} label="Soạn câu hỏi" icon={CheckSquare} />
+                    <StepItem step={3} current={currentStep} label={isDynamic ? "Ma trận đề động" : "Soạn câu hỏi"} icon={CheckSquare} />
                 </div>
 
                 <div className="md:col-span-3 space-y-6">
@@ -297,6 +315,13 @@ export default function CreateExamPage() {
                                 </div>
 
                                 <div className="space-y-4">
+                                    <div className="flex items-center justify-between border p-3 rounded-lg bg-primary/5 border-primary/20">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-primary font-semibold">Đề thi động (Personalized)</Label>
+                                            <p className="text-xs text-muted-foreground">Mỗi học sinh sẽ nhận một bộ câu hỏi ngẫu nhiên và độc lập nhau (Sinh từ ma trận đề)</p>
+                                        </div>
+                                        <Switch checked={isDynamic} onCheckedChange={setIsDynamic} />
+                                    </div>
                                     <div className="flex items-center justify-between border p-3 rounded-lg">
                                         <div className="space-y-0.5">
                                             <Label>Trộn câu hỏi</Label>
@@ -324,7 +349,7 @@ export default function CreateExamPage() {
                     )}
 
                     {/* STEP 3: QUESTIONS */}
-                    {currentStep === 3 && (
+                    {currentStep === 3 && !isDynamic && (
                         <div className="space-y-4">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <h2 className="text-lg font-semibold">Danh sách câu hỏi ({selectedQuestions.length})</h2>
@@ -372,6 +397,87 @@ export default function CreateExamPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <Button variant="ghost" size="icon" onClick={() => removeQuestion(q.id)}>
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </Card>
+                        </div>
+                    )}
+
+                    {currentStep === 3 && isDynamic && (
+                        <div className="space-y-4">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div>
+                                    <h2 className="text-lg font-semibold">Cấu hình ma trận sinh đề động</h2>
+                                    <p className="text-sm text-muted-foreground">Thêm các luồng quy tắc để hệ thống bốc câu hỏi cho từng học sinh</p>
+                                </div>
+                                <Button onClick={() => setDynamicConfigs([...dynamicConfigs, { id: Math.random().toString(), sectionId: 'all', difficulty: 'all', count: 5 }])}>
+                                    <Plus className="mr-2 h-4 w-4" /> Thêm quy tắc
+                                </Button>
+                            </div>
+
+                            <Card>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Chương / Phần</TableHead>
+                                            <TableHead className="w-[150px]">Độ khó</TableHead>
+                                            <TableHead className="w-[120px]">Số lượng</TableHead>
+                                            <TableHead className="w-[50px]"></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {dynamicConfigs.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="h-32 text-center text-muted-foreground">
+                                                    Chưa có quy tắc nào. Vui lòng thêm quy tắc sinh đề.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            dynamicConfigs.map((cfg, i) => (
+                                                <TableRow key={cfg.id}>
+                                                    <TableCell>
+                                                        <Select value={cfg.sectionId.toString()} onValueChange={(val) => {
+                                                            const newCfgs = [...dynamicConfigs];
+                                                            newCfgs[i].sectionId = val;
+                                                            setDynamicConfigs(newCfgs);
+                                                        }}>
+                                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="all">Tất cả chương</SelectItem>
+                                                                {sections.map(s => <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>)}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Select value={cfg.difficulty} onValueChange={(val) => {
+                                                            const newCfgs = [...dynamicConfigs];
+                                                            newCfgs[i].difficulty = val;
+                                                            setDynamicConfigs(newCfgs);
+                                                        }}>
+                                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="all">Tất cả</SelectItem>
+                                                                <SelectItem value="easy">Dễ</SelectItem>
+                                                                <SelectItem value="medium">Trung bình</SelectItem>
+                                                                <SelectItem value="hard">Khó</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Input type="number" min={1} max={100} value={cfg.count} onChange={(e) => {
+                                                            const newCfgs = [...dynamicConfigs];
+                                                            newCfgs[i].count = Number(e.target.value);
+                                                            setDynamicConfigs(newCfgs);
+                                                        }} />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Button variant="ghost" size="icon" onClick={() => setDynamicConfigs(dynamicConfigs.filter(c => c.id !== cfg.id))}>
                                                             <Trash2 className="h-4 w-4 text-red-500" />
                                                         </Button>
                                                     </TableCell>
