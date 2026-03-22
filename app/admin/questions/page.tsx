@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Loader2, Search, PlusCircle, MoreHorizontal, Pencil,
   Trash2, Upload, Filter, Eye, RefreshCw, Library,
-  Book,
+  Book, Sparkles,
   X,
   Download
 } from "lucide-react";
@@ -79,6 +79,8 @@ interface Topic {
 }
 
 export default function QuestionBankPage() {
+  const router = useRouter();
+  
   // ===== STATE MANAGEMENT =====
   const [questions, setQuestions] = useState<Question[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
@@ -425,14 +427,25 @@ export default function QuestionBankPage() {
           </div>
 
           {/* PRIMARY ACTION */}
-          <Button onClick={() => {
-            setEditingQuestion(null);
-            setIsAddDialogOpen(true);
-          }}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Thêm câu hỏi</span>
-            <span className="sm:hidden">Thêm</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold" onClick={() => {
+              // Note: Using a default ID of 1 for now since this form is global. 
+              // Navigate to the global AI question generation page
+              router.push('/admin/questions/generate');
+            }}>
+              <Sparkles className="mr-2 h-4 w-4 text-blue-600" />
+              <span className="hidden sm:inline">Sinh bằng AI</span>
+              <span className="sm:hidden">AI</span>
+            </Button>
+            <Button onClick={() => {
+              setEditingQuestion(null);
+              setIsAddDialogOpen(true);
+            }}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Thêm câu hỏi</span>
+              <span className="sm:hidden">Thêm</span>
+            </Button>
+          </div>
         </div>
       </div>
 
