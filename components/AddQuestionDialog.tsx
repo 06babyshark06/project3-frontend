@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import RichTextEditor from "@/components/RichTextEditor";
 
 interface AddQuestionDialogProps {
   examId?: number;
@@ -310,11 +311,11 @@ export function AddQuestionDialog({
                 <input type="file" ref={questionFileInputRef} className="hidden" accept="image/*,video/*" onChange={handleQuestionFileSelect} />
             </div>
             
-            <Textarea 
-                value={content} 
-                onChange={(e) => setContent(e.target.value)} 
+            <RichTextEditor
+                content={content} 
+                onChange={(newContent) => setContent(newContent)} 
                 placeholder="Nhập nội dung câu hỏi tại đây..." 
-                className="min-h-[120px] font-medium"
+                minHeight="150px"
             />
             
             <div className="mt-2">
@@ -397,11 +398,11 @@ export function AddQuestionDialog({
           {/* === EXPLANATION (TEXTAREA ĐƠN GIẢN) === */}
           <div className="space-y-2">
             <Label>Giải thích chi tiết (Hiện sau khi nộp bài)</Label>
-            <Textarea 
-                value={explanation} 
-                onChange={(e) => setExplanation(e.target.value)} 
+            <RichTextEditor 
+                content={explanation} 
+                onChange={(newVal) => setExplanation(newVal)} 
                 placeholder="Giải thích tại sao đáp án này đúng..." 
-                className="min-h-[80px]"
+                minHeight="100px"
             />
           </div>
         </div>

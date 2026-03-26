@@ -1,0 +1,192 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import { PlusCircle, Eye, Edit, ArrowLeft, Loader2, Clock, Activity, BarChart3, Users, FileQuestion } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+interface Exam {
+  id: number;
+  title: string;
+  duration_minutes: number;
+  status: string;
+}
+
+export default function InstructorExamsPage() {
+  const router = useRouter();
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchExams = async () => {
+      try {
+        setIsLoading(true);
+        const res = await api.get("/instructor/exams");
+        setExams(res.data.data.exams || []);
+      } catch (error) {
+        console.error("Lỗi tải danh sách bài thi:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchExams();
+  }, []);
+
+  const publishedExams = exams.filter(e => e.status === 'public' || e.status === 'private');
+  const draftExams = exams.filter(e => e.status === 'draft' || !e.status);
+
+  const ExamTable = ({ data }: { data: Exam[] }) => (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Tên bài thi</TableHead>
+            <TableHead>Thời gian</TableHead>
+            <TableHead>Trạng thái</TableHead>
+            <TableHead className="text-right">Hành động</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((exam) => (
+            <TableRow key={exam.id}>
+              <TableCell className="font-medium">{exam.title}</TableCell>
+              <TableCell>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <Clock className="h-3 w-3" /> {exam.duration_minutes} phút
+                </span>
+              </TableCell>
+              <TableCell>
+                <Badge variant={exam.status === 'public' ? "default" : exam.status === 'private' ? "secondary" : "outline"}
+                  className={exam.status === 'public' ? "bg-green-600 hover:bg-green-700" : exam.status === 'private' ? "bg-yellow-600 text-white" : ""}>
+                  {exam.status === 'public' ? "Công khai" : exam.status === 'private' ? "Riêng tư" : "Bản nháp"}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-1">
+
+                  {exam.status !== 'draft' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                      className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                      title="Duyệt thí sinh đăng ký"
+                    >
+                      <Link href={`/instructor/exams/${exam.id}/requests`}>
+                        <Users className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
+
+                  {/* 1. Nút Giám sát (Monitor) - Chỉ hiện khi không phải nháp */}
+                  {exam.status !== 'draft' && (
+                    <Button variant="ghost" size="icon" asChild className="text-red-600 hover:text-red-700 hover:bg-red-50" title="Giám sát phòng thi">
+                      <Link href={`/instructor/exams/${exam.id}/monitor`}>
+                        <Activity className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
+
+                  {/* 2. Nút Thống kê (Stats) - Chỉ hiện khi không phải nháp */}
+                  {exam.status !== 'draft' && (
+                    <Button variant="ghost" size="icon" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Xem thống kê">
+                      <Link href={`/instructor/exams/${exam.id}/stats`}>
+                        <BarChart3 className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
+
+                  {/* NEW: Nút Chấm bài/Xem bài nộp */}
+                  {exam.status !== 'draft' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                      className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                      title="Chấm bài & Xem kết quả"
+                    >
+                      <Link href={`/instructor/exams/${exam.id}/submissions`}>
+                        <FileQuestion className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
+
+                  {/* 3. Nút Xem thử (Preview) */}
+                  <Button variant="ghost" size="icon" asChild title="Xem thử đề thi">
+                    <Link href={`/exams/${exam.id}/take`} target="_blank"><Eye className="h-4 w-4" /></Link>
+                  </Button>
+
+                  {/* 4. Nút Sửa (Edit) */}
+                  <Button variant="ghost" size="icon" asChild title="Chỉnh sửa">
+                    <Link href={`/instructor/exams/edit/${exam.id}`}><Edit className="h-4 w-4" /></Link>
+                  </Button>
+
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  if (isLoading) {
+    return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
+  }
+
+  return (
+    <div className="container mx-auto max-w-6xl p-6">
+      {/* === TOP BAR === */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-4 border-b">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Quản lý bài thi</h1>
+          <p className="text-sm text-muted-foreground">Danh sách các bài thi bạn đã tạo.</p>
+        </div>
+
+        <Button asChild>
+          <Link href="/instructor/exams/create">
+            <PlusCircle className="mr-2 h-4 w-4" /> Tạo bài thi mới
+          </Link>
+        </Button>
+      </div>
+
+      <Tabs defaultValue="published" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="published">Đã xuất bản ({publishedExams.length})</TabsTrigger>
+          <TabsTrigger value="drafts">Bản nháp ({draftExams.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="published">
+          <Card>
+            <CardContent className="pt-6">
+              {publishedExams.length > 0 ? <ExamTable data={publishedExams} /> :
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground mb-4">Bạn chưa xuất bản bài thi nào.</p>
+                  <Button variant="outline" asChild><Link href="/instructor/exams/create">Tạo ngay</Link></Button>
+                </div>
+              }
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="drafts">
+          <Card>
+            <CardContent className="pt-6">
+              {draftExams.length > 0 ? <ExamTable data={draftExams} /> :
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">Không có bản nháp nào.</p>
+                </div>
+              }
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div >
+  );
+}

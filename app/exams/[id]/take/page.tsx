@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
+import RichTextDisplay from "@/components/RichTextDisplay";
 
 // --- Interfaces ---
 interface Choice {
@@ -634,7 +635,7 @@ export default function ExamTakingPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6 px-0 md:px-6">
-                  <div className="text-base leading-relaxed prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: currentQuestion.content }} />
+                  <RichTextDisplay content={currentQuestion.content} className="text-base leading-relaxed" />
                   <MediaContent url={currentQuestion.attachment_url} />
 
                   <div className="space-y-3">
@@ -646,7 +647,7 @@ export default function ExamTakingPage() {
                           <Label className="flex flex-col gap-2 cursor-pointer pointer-events-none">
                             <div className="flex items-center gap-3">
                               {isMultiple ? (isSelected ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-muted-foreground" />) : (isSelected ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Circle className="h-5 w-5 text-muted-foreground" />)}
-                              <span className="text-base">{choice.content}</span>
+                               <RichTextDisplay content={choice.content} className="text-base" />
                             </div>
                             <MediaContent url={choice.attachment_url} />
                           </Label>

@@ -5,12 +5,12 @@ import { LayoutDashboard, BookCopy, School, Edit, Database, FolderCog } from "lu
 
 export function InstructorSidebar({ className }: { className?: string }) {
     const items = [
-        { title: "Bảng Hiệu Suất", href: "/dashboard/instructor", icon: LayoutDashboard },
-        { title: "Quản lý Khóa học", href: "/admin/courses", icon: BookCopy },
-        { title: "Quản lý Lớp học", href: "/admin/classes", icon: School },
-        { title: "Quản lý Đề thi", href: "/admin/exams", icon: Edit },
-        { title: "Ngân hàng Câu hỏi", href: "/admin/questions", icon: Database },
-        { title: "Quản lý Danh mục", href: "/admin/categories", icon: FolderCog },
+        { title: "Bảng Hiệu Suất", href: "/instructor/dashboard", icon: LayoutDashboard },
+        { title: "Quản lý Khóa học", href: "/instructor/courses", icon: BookCopy },
+        { title: "Quản lý Lớp học", href: "/instructor/classes", icon: School },
+        { title: "Quản lý Đề thi", href: "/instructor/exams", icon: Edit },
+        { title: "Ngân hàng Câu hỏi", href: "/instructor/questions", icon: Database },
+        { title: "Quản lý Danh mục", href: "/instructor/categories", icon: FolderCog },
     ];
 
     return (

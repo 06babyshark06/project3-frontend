@@ -44,6 +44,7 @@ import { ExcelImportDialog } from "@/components/ExcelImportDialog";
 import { AddTopicDialog } from "@/components/AddTopicDialog";
 import { AddSectionDialog } from "@/components/AddSectionDialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import RichTextDisplay from "@/components/RichTextDisplay";
 
 // ===== INTERFACES =====
 interface Choice {
@@ -751,7 +752,7 @@ export default function AdminQuestionBankPage() {
                                     <Badge variant="outline">{questionToView.section_name || "Chưa có chương"}</Badge>
                                 </div>
 
-                                <h4 className="font-semibold text-lg text-foreground whitespace-pre-wrap">{questionToView.content}</h4>
+                                <RichTextDisplay content={questionToView.content} />
 
                                 {/* ẢNH/VIDEO CỦA CÂU HỎI */}
                                 <MediaDisplay url={questionToView.attachment_url} />
@@ -770,7 +771,7 @@ export default function AdminQuestionBankPage() {
                                                     {String.fromCharCode(65 + i)}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <span className={c.is_correct ? "font-medium text-green-700 dark:text-green-400" : ""}>{c.content}</span>
+                                                    <RichTextDisplay content={c.content} className={c.is_correct ? "font-medium text-green-700 dark:text-green-400" : ""} />
 
                                                     {/* ẢNH/VIDEO CỦA ĐÁP ÁN */}
                                                     <MediaDisplay url={c.attachment_url} />
@@ -785,7 +786,7 @@ export default function AdminQuestionBankPage() {
                             {questionToView.explanation && (
                                 <div className="mt-2 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-lg text-sm text-blue-800 dark:text-blue-300">
                                     <div className="font-semibold mb-1">💡 Giải thích chi tiết</div>
-                                    <div className="whitespace-pre-wrap">{questionToView.explanation}</div>
+                                    <RichTextDisplay content={questionToView.explanation} />
                                 </div>
                             )}
                         </div>

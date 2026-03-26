@@ -36,44 +36,11 @@ export default function MyCoursesPage() {
     const fetchMyCourses = async () => {
       try {
         setIsLoading(true);
-        // 1. Lấy danh sách khóa học đã đăng ký
+        // 1. Lấy danh sách khóa học đã đăng ký (Bao gồm cả Progress đã được tối ưu ở Backend)
         const response = await api.get("/my-courses");
         const coursesData = response.data.data.courses || [];
 
-        // 2. (FIX) Lấy chi tiết từng khóa học để tính tiến độ thực tế
-        // Chúng ta gọi song song các request để tiết kiệm thời gian
-        const coursesWithProgress = await Promise.all(
-          coursesData.map(async (course: EnrolledCourse) => {
-            try {
-              // Gọi API chi tiết để lấy danh sách bài học và trạng thái hoàn thành
-              const detailRes = await api.get(`/courses/${course.id}`);
-              const { sections } = detailRes.data.data;
-              
-              let total = 0;
-              let completed = 0;
-              
-              if (sections && Array.isArray(sections)) {
-                sections.forEach((sec: any) => {
-                  sec.lessons?.forEach((les: any) => {
-                    total++;
-                    if (les.is_completed) completed++;
-                  });
-                });
-              }
-
-              // Tính % tiến độ
-              const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
-              return { ...course, progress };
-
-            } catch (e) {
-              // Nếu lỗi khi lấy chi tiết, giữ nguyên progress = 0
-              console.error(`Lỗi lấy tiến độ khóa ${course.id}`, e);
-              return { ...course, progress: 0 };
-            }
-          })
-        );
-
-        setCourses(coursesWithProgress);
+        setCourses(coursesData);
       } catch (err) {
         console.error("Lỗi khi fetch khóa học của tôi:", err);
         toast.error("Không thể tải danh sách khóa học.");

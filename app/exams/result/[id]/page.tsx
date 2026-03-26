@@ -15,6 +15,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import RichTextDisplay from "@/components/RichTextDisplay";
 
 // --- Interfaces ---
 interface ChoiceReview {
@@ -226,7 +227,7 @@ export default function ExamResultPage() {
                     {idx + 1}
                   </span>
                   <div className="flex-1">
-                    <h3 className="text-lg font-medium leading-relaxed">{item.question_content}</h3>
+                    <RichTextDisplay content={item.question_content} className="text-lg font-medium leading-relaxed" />
                     <MediaContent url={item.attachment_url} />
                   </div>
                   {item.is_correct ? (
@@ -263,7 +264,7 @@ export default function ExamResultPage() {
                       <div key={choice.id} className={`p-3 rounded-lg text-sm flex items-center gap-3 transition-colors ${styleClass}`}>
                         <div className="shrink-0">{icon}</div>
                         <div className="flex-1">
-                          <span className={`${choice.is_correct ? "font-bold" : ""}`}>{choice.content}</span>
+                          <RichTextDisplay content={choice.content} className={choice.is_correct ? "font-bold" : ""} />
                           <MediaContent url={choice.attachment_url} />
                         </div>
                         <div className="flex flex-col items-end gap-1">
@@ -281,7 +282,7 @@ export default function ExamResultPage() {
                     <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-bold text-blue-700 block mb-1">Giải thích chi tiết:</span>
-                      <p className="text-sm leading-relaxed opacity-90">{item.explanation}</p>
+                      <RichTextDisplay content={item.explanation} className="text-sm leading-relaxed opacity-90" />
                     </div>
                   </div>
                 )}
