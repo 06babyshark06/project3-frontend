@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { format } from "date-fns";
 import {
   Loader2, ArrowLeft, AlertTriangle, ShieldAlert,
-  RefreshCcw, UserX, Clock, Eye
+  RefreshCcw, UserX, Clock, Eye, Info
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,12 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Violation {
   id: number;
@@ -43,6 +49,7 @@ export default function ExamMonitorPage() {
   const [studentMap, setStudentMap] = useState<Record<number, StudentStatus>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
 
   const fetchViolations = async () => {
     try {
@@ -144,7 +151,7 @@ export default function ExamMonitorPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 overflow-hidden">
         {/* CỘT TRÁI: DANH SÁCH SINH VIÊN VI PHẠM */}
         <Card className="lg:col-span-2 flex flex-col overflow-hidden">
           <CardHeader className="pb-3 border-b">
@@ -188,7 +195,11 @@ export default function ExamMonitorPage() {
                       </TableCell>
                       <TableCell>{getStatusBadge(s.status)}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setSelectedStudentId(s.user_id)}
+                        >
                           <Eye className="h-4 w-4 mr-1" /> Chi tiết
                         </Button>
                       </TableCell>
@@ -201,37 +212,80 @@ export default function ExamMonitorPage() {
         </Card>
 
         {/* CỘT PHẢI: LOG REALTIME */}
-        <Card className="flex flex-col overflow-hidden bg-zinc-950 text-zinc-50 border-zinc-800">
+        <Card className="flex flex-col min-h-0 overflow-hidden bg-zinc-950 text-zinc-50 border-zinc-800">
           <CardHeader className="pb-3 border-b border-zinc-800 bg-zinc-900/50">
             <CardTitle className="text-sm font-mono flex items-center gap-2">
               <Clock className="h-4 w-4 text-green-500" />
               LIVE LOGS
             </CardTitle>
           </CardHeader>
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-3 font-mono text-xs">
-              {violations.length === 0 ? (
-                <p className="text-zinc-500 text-center py-10">Waiting for events...</p>
-              ) : (
-                [...violations].reverse().map((v) => (
-                  <div key={v.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-left-2">
-                    <span className="text-zinc-500 min-w-[60px]">
-                      {format(new Date(v.violation_time), "HH:mm:ss")}
-                    </span>
-                    <div>
-                      <span className="text-yellow-500 font-bold">User #{v.user_id}</span>
-                      <span className="text-zinc-300"> đã </span>
-                      <span className="text-red-400 font-semibold">
-                        {translateViolation(v.violation_type)}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <ScrollArea className="h-full w-full p-4">
+              <div className="space-y-3 font-mono text-xs">
+                {violations.length === 0 ? (
+                  <p className="text-zinc-500 text-center py-10">Waiting for events...</p>
+                ) : (
+                  [...violations].reverse().map((v) => (
+                    <div key={v.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-left-2">
+                      <span className="text-zinc-500 min-w-[60px]">
+                        {format(new Date(v.violation_time), "HH:mm:ss")}
                       </span>
+                      <div>
+                        <span className="text-yellow-500 font-bold">User #{v.user_id}</span>
+                        <span className="text-zinc-300"> đã </span>
+                        <span className="text-red-400 font-semibold">
+                          {translateViolation(v.violation_type)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
         </Card>
       </div>
+
+      {/* DETAIL DIALOG */}
+      <Dialog open={selectedStudentId !== null} onOpenChange={() => setSelectedStudentId(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-blue-500" />
+              Chi tiết vi phạm - User #{selectedStudentId}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto py-4">
+            {selectedStudentId && studentMap[selectedStudentId] ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Thời gian</TableHead>
+                    <TableHead>Loại vi phạm</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[...studentMap[selectedStudentId].details]
+                    .sort((a, b) => new Date(b.violation_time).getTime() - new Date(a.violation_time).getTime())
+                    .map((v) => (
+                      <TableRow key={v.id}>
+                        <TableCell className="font-mono">
+                          {format(new Date(v.violation_time), "HH:mm:ss, dd/MM/yyyy")}
+                        </TableCell>
+                        <TableCell className="font-medium text-red-600">
+                          {translateViolation(v.violation_type)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-center py-10 text-muted-foreground">Không tìm thấy dữ liệu.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

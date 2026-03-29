@@ -550,6 +550,34 @@ export default function ExamTakingPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={isAntiCheatWarningOpen} onOpenChange={setIsAntiCheatWarningOpen}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-6 w-6" />
+              Quy định phòng thi & Chống gian lận
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 pt-4 text-foreground">
+              <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-sm space-y-2 text-red-800">
+                <p>Để đảm bảo công bằng, bài thi yêu cầu các điều kiện sau:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Phải luôn ở chế độ <b>Toàn màn hình</b>.</li>
+                  <li>Không được <b>Chuyển Tab</b> hoặc rời khỏi trình duyệt.</li>
+                  <li>Mọi hành vi thoát toàn màn hình hoặc mất tiêu điểm sẽ bị tính là <b>Vi phạm</b>.</li>
+                  <li>Vi phạm quá 3 lần hệ thống sẽ <b>Tự động nộp bài</b>.</li>
+                </ul>
+              </div>
+              <p className="font-medium">Bạn đã sẵn sàng bắt đầu bài thi?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+             <AlertDialogAction onClick={handleConfirmAntiCheat} className="w-full bg-red-600 hover:bg-red-700 text-white">
+               Tôi đã hiểu và Bắt đầu thi
+             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {isResuming && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
           <div className="max-w-md space-y-6">

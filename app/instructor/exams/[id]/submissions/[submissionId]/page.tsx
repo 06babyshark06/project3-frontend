@@ -15,23 +15,22 @@ import { toast } from "sonner";
 import RichTextDisplay from "@/components/RichTextDisplay";
 
 // ===== INTERFACES =====
-interface Choice {
+interface ChoiceReview {
   id: number;
   content: string;
   is_correct: boolean;
+  user_selected: boolean;
+  attachment_url?: string;
 }
 
-interface Question {
-  id: number;
-  content: string;
-  question_type: string;
-  choices: Choice[];
-}
-
-interface Answer {
+interface SubmissionDetail {
   question_id: number;
-  chosen_choice_ids: number[];
+  question_content: string;
+  explanation: string;
+  question_type: string;
   is_correct: boolean;
+  choices: ChoiceReview[];
+  attachment_url?: string;
 }
 
 interface Submission {
@@ -39,10 +38,11 @@ interface Submission {
   student_name: string;
   student_email: string;
   score: number;
+  correct_count: number;
+  total_questions: number;
   submitted_at: string;
   exam_title: string;
-  questions: Question[];
-  answers: Answer[];
+  details: SubmissionDetail[];
 }
 
 export default function SubmissionDetailPage() {
@@ -89,8 +89,8 @@ export default function SubmissionDetailPage() {
   }
 
   // ===== CALCULATE STATS =====
-  const totalQuestions = submission.questions.length;
-  const correctCount = submission.answers.filter(a => a.is_correct).length;
+  const totalQuestions = submission.total_questions || 0;
+  const correctCount = submission.correct_count || 0;
   const wrongCount = totalQuestions - correctCount;
 
   return (
@@ -111,7 +111,7 @@ export default function SubmissionDetailPage() {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-4xl font-bold text-primary">{submission.score.toFixed(2)}</p>
+              <p className="text-4xl font-bold text-primary">{(submission.score ?? 0).toFixed(2)}</p>
               <p className="text-sm text-muted-foreground">điểm</p>
             </div>
           </div>
@@ -133,20 +133,18 @@ export default function SubmissionDetailPage() {
           </div>
           <Separator className="my-4" />
           <p className="text-sm text-muted-foreground text-center">
-            Nộp bài lúc: {format(new Date(submission.submitted_at), "HH:mm:ss, dd/MM/yyyy", { locale: vi })}
+            Nộp bài lúc: {submission.submitted_at ? format(new Date(submission.submitted_at), "HH:mm:ss, dd/MM/yyyy", { locale: vi }) : "Chưa xác định"}
           </p>
         </CardContent>
       </Card>
 
       {/* QUESTIONS & ANSWERS */}
       <div className="space-y-6">
-        {submission.questions.map((question, idx) => {
-          const answer = submission.answers.find(a => a.question_id === question.id);
-          const chosenIds = answer?.chosen_choice_ids || [];
-          const isCorrect = answer?.is_correct || false;
+        {(submission.details || []).map((detail, idx) => {
+          const isCorrect = detail.is_correct;
 
           return (
-            <Card key={question.id} className={isCorrect ? "border-green-500" : "border-red-500"}>
+            <Card key={detail.question_id} className={isCorrect ? "border-green-500" : "border-red-500"}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -159,18 +157,18 @@ export default function SubmissionDetailPage() {
                         )}
                       </Badge>
                       <Badge variant="outline">Câu {idx + 1}</Badge>
-                      {question.question_type === "multiple_choice" && (
+                      {detail.question_type === "multiple_choice" && (
                         <Badge variant="secondary">Nhiều đáp án</Badge>
                       )}
                     </div>
-                    <RichTextDisplay content={question.content} className="text-base font-medium" />
+                    <RichTextDisplay content={detail.question_content} className="text-base font-medium" />
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {question.choices.map((choice) => {
-                    const isChosen = chosenIds.includes(choice.id);
+                  {detail.choices.map((choice) => {
+                    const isChosen = choice.user_selected;
                     const isCorrectChoice = choice.is_correct;
 
                     let bgColor = "";
@@ -178,22 +176,18 @@ export default function SubmissionDetailPage() {
                     let textColor = "";
 
                     if (isChosen && isCorrectChoice) {
-                      // Học sinh chọn đúng
                       bgColor = "bg-green-50 dark:bg-green-950";
                       borderColor = "border-green-500";
                       textColor = "text-green-700 dark:text-green-300";
                     } else if (isChosen && !isCorrectChoice) {
-                      // Học sinh chọn sai
                       bgColor = "bg-red-50 dark:bg-red-950";
                       borderColor = "border-red-500";
                       textColor = "text-red-700 dark:text-red-300";
                     } else if (!isChosen && isCorrectChoice) {
-                      // Đáp án đúng nhưng học sinh không chọn
                       bgColor = "bg-blue-50 dark:bg-blue-950";
                       borderColor = "border-blue-500";
                       textColor = "text-blue-700 dark:text-blue-300";
                     } else {
-                      // Đáp án sai và không được chọn
                       bgColor = "bg-muted/30";
                       borderColor = "border-border";
                       textColor = "text-muted-foreground";
