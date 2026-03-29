@@ -515,6 +515,21 @@ export default function ExamTakingPage() {
   }
 
   // ✅ RENDER BÀI THI (Giữ nguyên)
+  if (!exam.questions || exam.questions.length === 0) {
+    return (
+      <div className="flex flex-col h-screen items-center justify-center bg-background p-6 text-center space-y-6">
+        <div className="p-6 rounded-full bg-red-100 text-red-600"><AlertTriangle className="h-16 w-16" /></div>
+        <h1 className="text-3xl font-bold">{exam.title}</h1>
+        <div className="max-w-md p-4 bg-muted/50 border rounded-lg">
+          <p className="text-lg font-medium text-muted-foreground">Đề thi này chưa có câu hỏi nào. Vui lòng liên hệ giáo viên!</p>
+        </div>
+        <Button variant="outline" size="lg" onClick={() => router.push("/exams")}>
+          <ChevronLeft className="mr-2 h-5 w-5" /> Quay về danh sách
+        </Button>
+      </div>
+    );
+  }
+
   const currentQuestion = exam.questions[currentQuestionIndex];
   const answeredCount = Object.values(userAnswers).filter(ans => ans.length > 0).length;
   const progress = (answeredCount / exam.questions.length) * 100;

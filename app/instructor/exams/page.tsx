@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import ExamPreviewDialog from "@/components/ExamPreviewDialog";
 
 interface Exam {
   id: number;
@@ -22,6 +23,8 @@ export default function InstructorExamsPage() {
   const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [previewExamId, setPreviewExamId] = useState<number | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
     const fetchExams = async () => {
@@ -118,8 +121,16 @@ export default function InstructorExamsPage() {
                   )}
 
                   {/* 3. Nút Xem thử (Preview) */}
-                  <Button variant="ghost" size="icon" asChild title="Xem thử đề thi">
-                    <Link href={`/exams/${exam.id}/take`} target="_blank"><Eye className="h-4 w-4" /></Link>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    title="Xem thử đề thi"
+                    onClick={() => {
+                      setPreviewExamId(exam.id);
+                      setIsPreviewOpen(true);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
                   </Button>
 
                   {/* 4. Nút Sửa (Edit) */}
@@ -133,6 +144,11 @@ export default function InstructorExamsPage() {
           ))}
         </TableBody>
       </Table>
+      <ExamPreviewDialog 
+        examId={previewExamId} 
+        isOpen={isPreviewOpen} 
+        onClose={() => setIsPreviewOpen(false)} 
+      />
     </div>
   );
 

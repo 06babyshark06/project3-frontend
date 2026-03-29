@@ -81,7 +81,7 @@ interface Topic {
 
 export default function QuestionBankPage() {
   const router = useRouter();
-  
+
   // ===== STATE MANAGEMENT =====
   const [questions, setQuestions] = useState<Question[]>([]);
   const [sections, setSections] = useState<Section[]>([]);

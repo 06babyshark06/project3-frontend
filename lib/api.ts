@@ -48,6 +48,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    if (error.response?.status === 429) {
+      const { toast } = await import("sonner");
+      toast.error(error.response.data?.message || "Bạn đang thao tác quá nhanh. Vui lòng thử lại sau giây lát.");
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise(function (resolve, reject) {
