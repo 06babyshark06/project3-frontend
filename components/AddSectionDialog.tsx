@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Loader2, Plus, BookOpen } from "lucide-react";
+import { Loader2, Plus, BookOpen, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,11 +17,19 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
+interface Section {
+  id: number;
+  name: string;
+  description?: string;
+  topic_id: number;
+}
+
 interface AddSectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  defaultTopicId?: number; // Pre-fill nếu đang filter theo topic
+  defaultTopicId?: number;
+  sectionToEdit?: Section | null;
 }
 
 interface Topic {
@@ -33,7 +41,8 @@ export function AddSectionDialog({
   open,
   onOpenChange,
   onSuccess,
-  defaultTopicId
+  defaultTopicId,
+  sectionToEdit,
 }: AddSectionDialogProps) {
   const [loading, setLoading] = useState(false);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -43,23 +52,27 @@ export function AddSectionDialog({
   const [description, setDescription] = useState("");
   const [topicId, setTopicId] = useState<string>("");
 
-  // Load danh sách Topic khi mở dialog
   useEffect(() => {
     if (open) {
       api.get("/topics")
         .then(res => setTopics(res.data.data.topics || []))
         .catch(err => console.error("Load topics failed", err));
         
-      // Reset form
-      setName("");
-      setDescription("");
-      if (defaultTopicId) {
-        setTopicId(defaultTopicId.toString());
+      if (sectionToEdit) {
+        setName(sectionToEdit.name);
+        setDescription(sectionToEdit.description || "");
+        setTopicId(sectionToEdit.topic_id.toString());
       } else {
-        setTopicId("");
+        setName("");
+        setDescription("");
+        if (defaultTopicId) {
+          setTopicId(defaultTopicId.toString());
+        } else {
+          setTopicId("");
+        }
       }
     }
-  }, [open, defaultTopicId]);
+  }, [open, defaultTopicId, sectionToEdit]);
 
   const handleSubmit = async () => {
     if (!topicId) {
@@ -71,13 +84,23 @@ export function AddSectionDialog({
 
     setLoading(true);
     try {
-      await api.post("/exam-sections", {
-        name: name.trim(),
-        description: description.trim(),
-        topic_id: parseInt(topicId)
-      });
+      if (sectionToEdit) {
+        await api.put(`/exam-sections/${sectionToEdit.id}`, {
+          id: sectionToEdit.id,
+          name: name.trim(),
+          description: description.trim(),
+          topic_id: parseInt(topicId)
+        });
+        toast.success("Cập nhật chương thành công!");
+      } else {
+        await api.post("/exam-sections", {
+          name: name.trim(),
+          description: description.trim(),
+          topic_id: parseInt(topicId)
+        });
+        toast.success("Tạo chương thành công!");
+      }
       
-      toast.success("Tạo chương thành công!");
       onSuccess(); // Refresh danh sách bên ngoài
       onOpenChange(false);
     } catch (error: any) {
@@ -92,7 +115,7 @@ export function AddSectionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Tạo chương mới (Section)</DialogTitle>
+          <DialogTitle>{sectionToEdit ? "Cập nhật chương" : "Tạo chương mới (Section)"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -101,7 +124,7 @@ export function AddSectionDialog({
             <Select 
               value={topicId} 
               onValueChange={setTopicId} 
-              disabled={!!defaultTopicId} // Nếu đã chọn ở ngoài thì khóa lại cho tiện
+              disabled={!!defaultTopicId || !!sectionToEdit} // Khóa khi edit để tránh nhầm lẫn
             >
               <SelectTrigger>
                 <SelectValue placeholder="Chọn chủ đề..." />
@@ -146,12 +169,12 @@ export function AddSectionDialog({
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Đang tạo...
+                {sectionToEdit ? "Đang cập nhật..." : "Đang tạo..."}
               </>
             ) : (
               <>
-                <Plus className="mr-2 h-4 w-4" />
-                Lưu chương
+                {sectionToEdit ? <Save className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
+                {sectionToEdit ? "Cập nhật chương" : "Lưu chương"}
               </>
             )}
           </Button>

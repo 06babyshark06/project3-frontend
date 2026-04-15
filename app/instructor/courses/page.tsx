@@ -4,12 +4,24 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation"; // Import useRouter
 import { api } from "@/lib/api";
-import { PlusCircle, Eye, Edit, MoreHorizontal, ArrowLeft, Loader2 } from "lucide-react"; // Thêm ArrowLeft, Loader2
+import { PlusCircle, Eye, Edit, Trash2, ArrowLeft, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Course {
   id: number;
@@ -24,20 +36,32 @@ export default function InstructorCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true); // Thêm state loading
 
+  const fetchCourses = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get("/instructor/courses");
+      setCourses(res.data.data.courses || []);
+    } catch (error) {
+      console.error("Lỗi tải danh sách khóa học:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setIsLoading(true);
-        const res = await api.get("/instructor/courses");
-        setCourses(res.data.data.courses || []);
-      } catch (error) {
-        console.error("Lỗi tải danh sách khóa học:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchCourses();
   }, []);
+
+  const handleDeleteCourse = async (id: number) => {
+    try {
+      await api.delete(`/courses/${id}`);
+      toast.success("Xóa khóa học thành công");
+      fetchCourses();
+    } catch (error) {
+      toast.error("Lỗi khi xóa khóa học");
+      console.error(error);
+    }
+  };
 
   const publishedCourses = courses.filter(c => c.is_published);
   const draftCourses = courses.filter(c => !c.is_published);
@@ -68,9 +92,31 @@ export default function InstructorCoursesPage() {
                 <Button variant="ghost" size="icon" asChild>
                   <Link href={`/courses/${course.id}`} target="_blank"><Eye className="h-4 w-4" /></Link>
                 </Button>
-                <Button variant="ghost" size="icon" asChild>
+                <Button variant="ghost" size="icon" asChild title="Chỉnh sửa">
                   <Link href={`/instructor/courses/edit/${course.id}`}><Edit className="h-4 w-4" /></Link>
                 </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" title="Xóa" className="text-red-500 hover:text-red-600 hover:bg-red-50">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Hành động này không thể hoàn tác. Khóa học "<strong>{course.title}</strong>" và tất cả các bài học liên quan sẽ bị xóa vĩnh viễn.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Hủy</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDeleteCourse(course.id)} className="bg-red-600 hover:bg-red-700">
+                        Xác nhận xóa
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </TableCell>
           </TableRow>

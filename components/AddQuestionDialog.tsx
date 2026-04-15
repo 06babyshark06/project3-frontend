@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RichTextEditor from "@/components/RichTextEditor";
+import { MediaRenderer } from "@/components/MediaRenderer";
 
 interface AddQuestionDialogProps {
   examId?: number;
@@ -42,34 +43,6 @@ interface AddQuestionDialogProps {
 
 interface Topic { id: number; name: string; }
 interface Section { id: number; name: string; }
-
-// --- COMPONENT: MEDIA PREVIEW (Giữ lại tính năng hiển thị ảnh/video) ---
-const AttachmentPreview = ({ url, onRemove }: { url: string, onRemove?: () => void }) => {
-    if (!url) return null;
-    const isImage = url.match(/\.(jpeg|jpg|gif|png|webp)$/i);
-    const isVideo = url.match(/\.(mp4|webm)$/i);
-
-    return (
-        <div className="relative inline-block group mt-2">
-            {isImage ? (
-                <img src={url} alt="Attachment" className="h-20 w-auto rounded-md border object-cover bg-muted" />
-            ) : isVideo ? (
-                <video src={url} controls className="h-20 w-auto rounded-md border bg-black" />
-            ) : (
-                <div className="p-2 border rounded bg-muted text-xs break-all max-w-[200px]">{url}</div>
-            )}
-            {onRemove && (
-                <button
-                    type="button"
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm z-10"
-                    onClick={onRemove}
-                >
-                    <X className="h-3 w-3" />
-                </button>
-            )}
-        </div>
-    );
-};
 
 export function AddQuestionDialog({ 
   examId, defaultTopicId, defaultSectionId,
@@ -308,7 +281,7 @@ export function AddQuestionDialog({
                     {isUploading ? <Loader2 className="h-3 w-3 animate-spin mr-1"/> : <ImageIcon className="h-3 w-3 mr-1"/>}
                     {attachmentUrl ? "Thay đổi ảnh/video" : "Thêm media"}
                 </Button>
-                <input type="file" ref={questionFileInputRef} className="hidden" accept="image/*,video/*" onChange={handleQuestionFileSelect} />
+                <input type="file" ref={questionFileInputRef} className="hidden" accept="image/*,video/*,audio/*" onChange={handleQuestionFileSelect} />
             </div>
             
             <RichTextEditor
@@ -319,7 +292,7 @@ export function AddQuestionDialog({
             />
             
             <div className="mt-2">
-              <AttachmentPreview url={attachmentUrl} onRemove={() => setAttachmentUrl("")} />
+              <MediaRenderer url={attachmentUrl} onRemove={() => setAttachmentUrl("")} />
             </div>
           </div>
 
@@ -373,7 +346,7 @@ export function AddQuestionDialog({
                             >
                                 {uploadingChoiceIndex === index ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImageIcon className="h-5 w-5" />}
                             </Label>
-                            <input id={`choice-file-${index}`} type="file" className="hidden" accept="image/*" onChange={(e) => handleChoiceFileSelect(index, e)} />
+                            <input id={`choice-file-${index}`} type="file" className="hidden" accept="image/*,video/*,audio/*" onChange={(e) => handleChoiceFileSelect(index, e)} />
 
                             {choices.length > 2 && (
                                 <Button type="button" variant="ghost" size="icon" onClick={() => removeChoice(index)} className="text-muted-foreground hover:text-red-500">
@@ -383,10 +356,10 @@ export function AddQuestionDialog({
                         </div>
                     </div>
                     
-                    {/* Preview ảnh của choice */}
+                    {/* Preview ảnh/video/âm thanh của choice */}
                     {choice.attachmentUrl && (
                         <div className="ml-9">
-                            <AttachmentPreview url={choice.attachmentUrl} onRemove={() => removeChoiceAttachment(index)} />
+                            <MediaRenderer url={choice.attachmentUrl} onRemove={() => removeChoiceAttachment(index)} />
                         </div>
                     )}
                 </div>

@@ -1,11 +1,12 @@
 "use client";
 
 import { Sidebar } from "@/components/Sidebar";
-import { LayoutDashboard, BookCopy, School, Edit, Database, FolderCog } from "lucide-react";
+import { LayoutDashboard, BookCopy, School, Edit, Database, FolderCog, Activity } from "lucide-react";
 
 export function InstructorSidebar({ className }: { className?: string }) {
     const items = [
         { title: "Bảng Hiệu Suất", href: "/instructor/dashboard", icon: LayoutDashboard },
+        { title: "Kết quả bài thi", href: "/instructor/submissions", icon: Activity },
         { title: "Quản lý Khóa học", href: "/instructor/courses", icon: BookCopy },
         { title: "Quản lý Lớp học", href: "/instructor/classes", icon: School },
         { title: "Quản lý Đề thi", href: "/instructor/exams", icon: Edit },

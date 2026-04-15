@@ -42,6 +42,14 @@ interface ExamSettings {
     show_result_immediately?: boolean;
     start_time?: string;
     end_time?: string;
+    is_dynamic?: boolean;
+    dynamic_config?: string;
+}
+
+interface SectionConfig {
+    section_id: number;
+    count: number;
+    difficulty: string;
 }
 
 interface Question {
@@ -94,8 +102,12 @@ export default function EditExamPage() {
         shuffle_questions: false,
         show_result_immediately: false,
         requires_approval: false,
-        password: ""
+        password: "",
+        is_dynamic: false,
+        dynamic_config: "[]"
     });
+
+    const [dynamicRules, setDynamicRules] = useState<SectionConfig[]>([]);
 
     const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
     const [isRandomDialogOpen, setIsRandomDialogOpen] = useState(false);
@@ -129,8 +141,17 @@ export default function EditExamPage() {
                     requires_approval: examData.settings?.requires_approval || false,
                     password: examData.settings?.password || "",
                     start_time: examData.settings?.start_time || "",
-                    end_time: examData.settings?.end_time || ""
+                    end_time: examData.settings?.end_time || "",
+                    is_dynamic: examData.settings?.is_dynamic || false,
+                    dynamic_config: examData.settings?.dynamic_config || "[]"
                 });
+
+                try {
+                    const rules = JSON.parse(examData.settings?.dynamic_config || "[]");
+                    setDynamicRules(rules);
+                } catch {
+                    setDynamicRules([]);
+                }
 
             } catch (error) {
                 toast.error("Không thể tải dữ liệu bài thi");
@@ -169,8 +190,11 @@ export default function EditExamPage() {
                 title,
                 description,
                 topic_id: Number(topicId),
-                settings: settings,
-                question_ids: exam?.questions?.map(q => q.id) || []
+                settings: {
+                    ...settings,
+                    dynamic_config: JSON.stringify(dynamicRules)
+                },
+                question_ids: settings.is_dynamic ? [] : (exam?.questions?.map(q => q.id) || [])
             });
             toast.success("Đã lưu thay đổi!");
             const res = await api.get(`/exams/${examId}`);
@@ -381,8 +405,12 @@ export default function EditExamPage() {
                                     {(exam.questions || []).length === 0 ? (
                                         <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
                                             <FileQuestion className="h-10 w-10 mb-2 opacity-20" />
-                                            <p>Chưa có câu hỏi nào.</p>
-                                            <p className="text-xs">Chọn từ ngân hàng bên phải hoặc tạo mới.</p>
+                                            <p>{settings.is_dynamic ? "Đang ở chế độ Đề thi Sinh động" : "Chưa có câu hỏi nào."}</p>
+                                            <p className="text-xs">
+                                                {settings.is_dynamic
+                                                    ? "Các câu hỏi sẽ được sinh tự động khi thí sinh bắt đầu thi dựa trên quy tắc trong phần Cấu hình."
+                                                    : "Chọn từ ngân hàng bên phải hoặc tạo mới."}
+                                            </p>
                                         </div>
                                     ) : (
                                         // ✅ 3. Bọc DragDropContext
@@ -506,6 +534,95 @@ export default function EditExamPage() {
                                         </div>
                                         <div><Label>Mật khẩu</Label><Input value={settings.password} onChange={e => setSettings({ ...settings, password: e.target.value })} placeholder="Bỏ trống nếu không cần" /></div>
                                         <div className="space-y-3 pt-2">
+                                            <div className="flex justify-between items-center border p-2 rounded">
+                                                <div className="space-y-0.5">
+                                                    <Label className="text-xs">Chế độ Đề thi Sinh động (Dynamic)</Label>
+                                                    <p className="text-[10px] text-muted-foreground">Tự động chọn câu hỏi ngẫu nhiên cho mỗi thí sinh theo quy tắc.</p>
+                                                </div>
+                                                <Switch checked={settings.is_dynamic} onCheckedChange={v => setSettings({ ...settings, is_dynamic: v })} />
+                                            </div>
+
+                                            {settings.is_dynamic && (
+                                                <div className="mt-4 space-y-4 border-t pt-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <Label className="text-sm font-bold">Quy tắc sinh đề</Label>
+                                                        <Button size="sm" variant="outline" onClick={() => setDynamicRules([...dynamicRules, { section_id: Number(sections[0]?.id) || 0, count: 5, difficulty: 'medium' }])}>
+                                                            <Plus className="h-3 w-3 mr-1" /> Thêm quy tắc
+                                                        </Button>
+                                                    </div>
+
+                                                    {dynamicRules.length === 0 ? (
+                                                        <div className="text-center py-4 border-2 border-dashed rounded text-muted-foreground text-xs">
+                                                            Chưa có quy tắc nào. Vui lòng thêm quy tắc.
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-2">
+                                                            {dynamicRules.map((rule, idx) => (
+                                                                <div key={idx} className="flex flex-col gap-2 p-3 border rounded-lg bg-muted/20 relative group">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                        onClick={() => setDynamicRules(dynamicRules.filter((_, i) => i !== idx))}
+                                                                    >
+                                                                        <Trash2 className="h-3 w-3" />
+                                                                    </Button>
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <div className="space-y-1">
+                                                                            <Label className="text-[10px]">Chương / Phần</Label>
+                                                                            <Select
+                                                                                value={rule.section_id.toString()}
+                                                                                onValueChange={(v) => {
+                                                                                    const newRules = [...dynamicRules];
+                                                                                    newRules[idx].section_id = Number(v);
+                                                                                    setDynamicRules(newRules);
+                                                                                }}
+                                                                            >
+                                                                                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    {sections.map(s => <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>)}
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                        </div>
+                                                                        <div className="space-y-1">
+                                                                            <Label className="text-[10px]">Độ khó</Label>
+                                                                            <Select
+                                                                                value={rule.difficulty}
+                                                                                onValueChange={(v) => {
+                                                                                    const newRules = [...dynamicRules];
+                                                                                    newRules[idx].difficulty = v;
+                                                                                    setDynamicRules(newRules);
+                                                                                }}
+                                                                            >
+                                                                                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    <SelectItem value="easy">Dễ</SelectItem>
+                                                                                    <SelectItem value="medium">Trung bình</SelectItem>
+                                                                                    <SelectItem value="hard">Khó</SelectItem>
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <Label className="text-[10px]">Số lượng câu hỏi</Label>
+                                                                        <Input
+                                                                            type="number"
+                                                                            className="h-8 text-xs"
+                                                                            value={rule.count}
+                                                                            onChange={(e) => {
+                                                                                const newRules = [...dynamicRules];
+                                                                                newRules[idx].count = Number(e.target.value);
+                                                                                setDynamicRules(newRules);
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
                                             <div className="flex justify-between items-center border p-2 rounded"><Label className="text-xs">Trộn câu hỏi</Label><Switch checked={settings.shuffle_questions} onCheckedChange={v => setSettings({ ...settings, shuffle_questions: v })} /></div>
                                             <div className="flex justify-between items-center border p-2 rounded"><Label className="text-xs">Xem đáp án ngay</Label><Switch checked={settings.show_result_immediately} onCheckedChange={v => setSettings({ ...settings, show_result_immediately: v })} /></div>
                                             <div className="flex justify-between items-center border p-2 rounded"><Label className="text-xs">Duyệt tham gia</Label><Switch checked={settings.requires_approval} onCheckedChange={v => setSettings({ ...settings, requires_approval: v })} /></div>

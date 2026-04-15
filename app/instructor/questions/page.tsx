@@ -43,7 +43,9 @@ import { AddQuestionDialog } from "@/components/AddQuestionDialog";
 import { ExcelImportDialog } from "@/components/ExcelImportDialog";
 import { AddTopicDialog } from "@/components/AddTopicDialog";
 import { AddSectionDialog } from "@/components/AddSectionDialog";
+import { ManageBankDialog } from "@/components/ManageBankDialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Settings2 } from "lucide-react";
 import RichTextDisplay from "@/components/RichTextDisplay";
 
 // ===== INTERFACES =====
@@ -71,12 +73,14 @@ interface Question {
 interface Section {
   id: number;
   name: string;
+  description?: string;
   topic_id: number;
 }
 
 interface Topic {
   id: number;
   name: string;
+  description?: string;
 }
 
 export default function QuestionBankPage() {
@@ -109,6 +113,7 @@ export default function QuestionBankPage() {
   const [questionToView, setQuestionToView] = useState<Question | null>(null);
   const [isAddTopicDialogOpen, setIsAddTopicDialogOpen] = useState(false);
   const [isAddSectionDialogOpen, setIsAddSectionDialogOpen] = useState(false);
+  const [isManageBankDialogOpen, setIsManageBankDialogOpen] = useState(false);
 
   // ===== BULK ACTION STATE =====
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -377,6 +382,14 @@ export default function QuestionBankPage() {
           {/* DESKTOP ACTIONS */}
           <div className="hidden md:flex items-center gap-2">
             <Button
+              variant="outline"
+              onClick={() => setIsManageBankDialogOpen(true)}
+              className="border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-medium"
+            >
+              <Settings2 className="mr-2 h-4 w-4" />
+              Quản lý
+            </Button>
+            <Button
               variant="secondary"
               onClick={() => setIsAddTopicDialogOpen(true)}
               className="border"
@@ -411,6 +424,9 @@ export default function QuestionBankPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsManageBankDialogOpen(true)}>
+                  <Settings2 className="mr-2 h-4 w-4" /> Quản lý Chủ đề/Chương
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsAddTopicDialogOpen(true)}>
                   <Library className="mr-2 h-4 w-4" /> Thêm chủ đề
                 </DropdownMenuItem>
@@ -717,6 +733,15 @@ export default function QuestionBankPage() {
         onOpenChange={setIsAddSectionDialogOpen}
         onSuccess={handleSectionCreated}
         defaultTopicId={selectedTopic !== "all" ? Number(selectedTopic) : undefined}
+      />
+
+      <ManageBankDialog 
+        open={isManageBankDialogOpen}
+        onOpenChange={setIsManageBankDialogOpen}
+        onRefresh={() => {
+          fetchTopics();
+          fetchQuestions();
+        }}
       />
 
       <AddQuestionDialog

@@ -27,6 +27,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import RichTextDisplay from "@/components/RichTextDisplay";
+import { MediaRenderer } from "@/components/MediaRenderer";
 
 // --- Interfaces ---
 interface Choice {
@@ -63,20 +64,6 @@ const formatTime = (seconds: number) => {
 };
 
 // Hàm xáo trộn (Bị xoá do đã làm ở Backend để bảo mật hơn)
-
-const MediaContent = ({ url }: { url?: string }) => {
-  if (!url) return null;
-  const isVideo = url.match(/\.(mp4|webm|mov)$/i);
-  return (
-    <div className="my-3 flex justify-center">
-      {isVideo ? (
-        <video src={url} controls className="max-h-[300px] rounded-lg border bg-black" />
-      ) : (
-        <img src={url} alt="Minh họa" className="max-h-[300px] rounded-lg border object-contain" />
-      )}
-    </div>
-  );
-};
 
 export default function ExamTakingPage() {
   const params = useParams();
@@ -679,7 +666,7 @@ export default function ExamTakingPage() {
                 </CardHeader>
                 <CardContent className="space-y-6 px-0 md:px-6">
                   <RichTextDisplay content={currentQuestion.content} className="text-base leading-relaxed" />
-                  <MediaContent url={currentQuestion.attachment_url} />
+                  <MediaRenderer url={currentQuestion.attachment_url} />
 
                   <div className="space-y-3">
                     {currentQuestion.choices.map((choice) => {
@@ -692,7 +679,7 @@ export default function ExamTakingPage() {
                               {isMultiple ? (isSelected ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-muted-foreground" />) : (isSelected ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Circle className="h-5 w-5 text-muted-foreground" />)}
                                <RichTextDisplay content={choice.content} className="text-base" />
                             </div>
-                            <MediaContent url={choice.attachment_url} />
+                            <MediaRenderer url={choice.attachment_url} />
                           </Label>
                         </div>
                       );

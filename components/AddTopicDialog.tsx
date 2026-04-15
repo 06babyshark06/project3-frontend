@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,20 +17,39 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
+interface Topic {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 interface AddTopicDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  topicToEdit?: Topic | null;
 }
 
 export function AddTopicDialog({
   open,
   onOpenChange,
   onSuccess,
+  topicToEdit,
 }: AddTopicDialogProps) {
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+
+  // Update form when topicToEdit changes
+  useEffect(() => {
+    if (topicToEdit) {
+      setName(topicToEdit.name);
+      setDescription(topicToEdit.description || "");
+    } else {
+      setName("");
+      setDescription("");
+    }
+  }, [topicToEdit, open]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -39,12 +58,21 @@ export function AddTopicDialog({
 
     setLoading(true);
     try {
-      await api.post("/topics", {
-        name: name.trim(),
-        description: description.trim(),
-      });
+      if (topicToEdit) {
+        await api.put(`/topics/${topicToEdit.id}`, {
+          id: topicToEdit.id,
+          name: name.trim(),
+          description: description.trim(),
+        });
+        toast.success("Cập nhật chủ đề thành công!");
+      } else {
+        await api.post("/topics", {
+          name: name.trim(),
+          description: description.trim(),
+        });
+        toast.success("Tạo chủ đề thành công!");
+      }
       
-      toast.success("Tạo chủ đề thành công!");
       setName("");
       setDescription("");
       onSuccess(); // Refresh danh sách topic bên ngoài
@@ -61,9 +89,9 @@ export function AddTopicDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Tạo chủ đề mới</DialogTitle>
+          <DialogTitle>{topicToEdit ? "Cập nhật chủ đề" : "Tạo chủ đề mới"}</DialogTitle>
           <DialogDescription>
-            Tạo các chủ đề lớn (ví dụ: Toán cao cấp, Lập trình C++) để quản lý các chương và câu hỏi.
+            {topicToEdit ? "Chỉnh sửa thông tin chủ đề kiến thức." : "Tạo các chủ đề lớn (ví dụ: Toán cao cấp, Lập trình C++) để quản lý các chương và câu hỏi."}
           </DialogDescription>
         </DialogHeader>
 
@@ -102,12 +130,12 @@ export function AddTopicDialog({
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Đang tạo...
+                {topicToEdit ? "Đang cập nhật..." : "Đang tạo..."}
               </>
             ) : (
               <>
-                <Plus className="mr-2 h-4 w-4" />
-                Tạo chủ đề
+                {topicToEdit ? <Save className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
+                {topicToEdit ? "Cập nhật chủ đề" : "Tạo chủ đề mới"}
               </>
             )}
           </Button>

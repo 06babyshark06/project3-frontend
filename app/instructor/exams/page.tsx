@@ -4,12 +4,24 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { PlusCircle, Eye, Edit, ArrowLeft, Loader2, Clock, Activity, BarChart3, Users, FileQuestion } from "lucide-react";
+import { PlusCircle, Eye, Edit, Trash2, ArrowLeft, Loader2, Clock, Activity, BarChart3, Users, FileQuestion } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import ExamPreviewDialog from "@/components/ExamPreviewDialog";
 
 interface Exam {
@@ -26,20 +38,32 @@ export default function InstructorExamsPage() {
   const [previewExamId, setPreviewExamId] = useState<number | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
+  const fetchExams = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get("/instructor/exams");
+      setExams(res.data.data.exams || []);
+    } catch (error) {
+      console.error("Lỗi tải danh sách bài thi:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchExams = async () => {
-      try {
-        setIsLoading(true);
-        const res = await api.get("/instructor/exams");
-        setExams(res.data.data.exams || []);
-      } catch (error) {
-        console.error("Lỗi tải danh sách bài thi:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchExams();
   }, []);
+
+  const handleDeleteExam = async (id: number) => {
+    try {
+      await api.delete(`/exams/${id}`);
+      toast.success("Xóa bài thi thành công");
+      fetchExams();
+    } catch (error) {
+      toast.error("Lỗi khi xóa bài thi");
+      console.error(error);
+    }
+  };
 
   const publishedExams = exams.filter(e => e.status === 'public' || e.status === 'private');
   const draftExams = exams.filter(e => e.status === 'draft' || !e.status);
@@ -138,6 +162,28 @@ export default function InstructorExamsPage() {
                     <Link href={`/instructor/exams/edit/${exam.id}`}><Edit className="h-4 w-4" /></Link>
                   </Button>
 
+                  {/* 5. Nút Xóa (Delete) */}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" title="Xóa" className="text-red-500 hover:text-red-600 hover:bg-red-50">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Hành động này không thể hoàn tác. Bài thi "<strong>{exam.title}</strong>" và tất cả các kết quả làm bài của sinh viên sẽ bị xóa vĩnh viễn.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Hủy</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteExam(exam.id)} className="bg-red-600 hover:bg-red-700">
+                          Xác nhận xóa
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </TableCell>
             </TableRow>

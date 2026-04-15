@@ -180,13 +180,15 @@ export default function DashboardPage() {
           icon={<CheckCircle className="h-6 w-6 text-green-600" />}
           loading={isLoading}
         />
-        <StatsCard 
-          title="Bài thi" 
-          value={stats.examsTaken} 
-          label="đã làm"
-          icon={<Edit className="h-6 w-6 text-yellow-600" />}
-          loading={isLoading}
-        />
+        <Link href="/dashboard/exams" className="block transform transition-transform hover:scale-105">
+          <StatsCard 
+            title="Bài thi" 
+            value={stats.examsTaken} 
+            label="đã làm (Bấm để xem lịch sử)"
+            icon={<Edit className="h-6 w-6 text-yellow-600" />}
+            loading={isLoading}
+          />
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

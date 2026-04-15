@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import RichTextDisplay from "@/components/RichTextDisplay";
+import { MediaRenderer } from "@/components/MediaRenderer";
 
 // --- Interfaces ---
 interface ChoiceReview {
@@ -117,19 +118,7 @@ export default function ExamResultPage() {
   const isPass = score >= 5.0;
   const submittedDate = result.submitted_at ? new Date(result.submitted_at).toLocaleString('vi-VN') : "N/A";
 
-  const MediaContent = ({ url }: { url?: string }) => {
-    if (!url) return null;
-    const isVideo = url.match(/\.(mp4|webm|mov)$/i);
-    return (
-      <div className="my-2">
-        {isVideo ? (
-          <video src={url} controls className="max-h-[200px] rounded-lg border bg-black" />
-        ) : (
-          <img src={url} alt="Media" className="max-h-[200px] rounded-lg border object-contain bg-muted" />
-        )}
-      </div>
-    );
-  };
+  // const MediaContent removed, using MediaRenderer instead
 
   return (
     <div className="min-h-screen w-full bg-muted/30 py-8 px-4 flex flex-col items-center">
@@ -228,7 +217,7 @@ export default function ExamResultPage() {
                   </span>
                   <div className="flex-1">
                     <RichTextDisplay content={item.question_content} className="text-lg font-medium leading-relaxed" />
-                    <MediaContent url={item.attachment_url} />
+                    <MediaRenderer url={item.attachment_url} />
                   </div>
                   {item.is_correct ? (
                     <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 shrink-0"><Check className="w-3 h-3 mr-1" /> Đúng</Badge>
@@ -265,7 +254,7 @@ export default function ExamResultPage() {
                         <div className="shrink-0">{icon}</div>
                         <div className="flex-1">
                           <RichTextDisplay content={choice.content} className={choice.is_correct ? "font-bold" : ""} />
-                          <MediaContent url={choice.attachment_url} />
+                          <MediaRenderer url={choice.attachment_url} />
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           {choice.user_selected && <span className="text-[10px] font-bold uppercase tracking-wider bg-black/5 px-2 py-0.5 rounded">Bạn chọn</span>}

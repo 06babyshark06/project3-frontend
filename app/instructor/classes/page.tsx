@@ -16,17 +16,36 @@ import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AddClassDialog } from "@/components/AddClassDialog";
 
+interface Class {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  student_count?: number;
+}
+
 export default function ClassListPage() {
-  const [classes, setClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [classToDelete, setClassToDelete] = useState<Class | null>(null);
 
   const fetchClasses = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/classes"); // API này đã tạo ở Backend
+      const res = await api.get("/classes");
       setClasses(res.data.data.classes || []);
     } catch (error) {
       toast.error("Lỗi tải danh sách lớp");
@@ -39,14 +58,16 @@ export default function ClassListPage() {
     fetchClasses();
   }, []);
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa lớp này? Mọi dữ liệu thành viên sẽ bị mất.")) return;
+  const handleDelete = async () => {
+    if (!classToDelete) return;
     try {
-        await api.delete(`/classes/${id}`);
+        await api.delete(`/classes/${classToDelete.id}`);
         toast.success("Đã xóa lớp học");
         fetchClasses();
     } catch (error) {
         toast.error("Xóa thất bại");
+    } finally {
+        setClassToDelete(null);
     }
   };
 
@@ -91,7 +112,7 @@ export default function ClassListPage() {
                             <DropdownMenuItem asChild>
                                 <Link href={`/instructor/classes/${cls.id}`}><Edit className="mr-2 h-4 w-4"/> Chi tiết</Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(cls.id)}>
+                            <DropdownMenuItem className="text-red-600" onClick={() => setClassToDelete(cls)}>
                                 <Trash2 className="mr-2 h-4 w-4"/> Xóa lớp
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -121,6 +142,28 @@ export default function ClassListPage() {
       )}
 
       <AddClassDialog open={isAddOpen} onOpenChange={setIsAddOpen} onSuccess={fetchClasses} />
+
+      <AlertDialog open={!!classToDelete} onOpenChange={(open) => !open && setClassToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Xác nhận xóa lớp học?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn đang chuẩn bị xóa lớp <strong>"{classToDelete?.name}"</strong>. 
+              Mọi dữ liệu thành viên và kết quả học tập trong lớp này sẽ bị mất. 
+              Hành động này không thể hoàn tác!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 text-white">
+              Tôi hiểu, xóa lớp này
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

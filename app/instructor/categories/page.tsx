@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
+    DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -40,7 +40,8 @@ export default function CategoryManagementPage() {
     const [selectedTopicId, setSelectedTopicId] = useState<number | undefined>();
 
     // Edit/Delete States
-    const [editingItem, setEditingItem] = useState<{ type: 'topic' | 'section', data: any } | null>(null);
+    const [topicToEdit, setTopicToEdit] = useState<Topic | null>(null);
+    const [sectionToEdit, setSectionToEdit] = useState<Section | null>(null);
     const [deletingItem, setDeletingItem] = useState<{ type: 'topic' | 'section', id: number, name: string } | null>(null);
 
     const fetchTopics = async () => {
@@ -78,29 +79,9 @@ export default function CategoryManagementPage() {
         fetchTopics();
     }, []);
 
-    const handleEdit = async (data: any) => {
-        if (!data.name.trim()) return toast.error("Tên không được để trống");
-
-        try {
-            const url = editingItem?.type === 'topic' ? `/topics/${data.id}` : `/exam-sections/${data.id}`;
-            await api.put(url, { name: data.name, description: data.description });
-
-            toast.success("Cập nhật thành công!");
-            setEditingItem(null);
-
-            // Refresh data
-            if (editingItem?.type === 'topic') {
-                fetchTopics();
-            } else {
-                // Force reload section của topic đó
-                const topicId = data.topic_id;
-                const res = await api.get(`/exam-sections?topic_id=${topicId}`);
-                setSectionsMap(prev => ({ ...prev, [topicId]: res.data.data.sections || [] }));
-            }
-        } catch (error) {
-            toast.error("Cập nhật thất bại");
-        }
-    };
+    useEffect(() => {
+        fetchTopics();
+    }, []);
 
     const handleDelete = async () => {
         if (!deletingItem) return;
@@ -161,7 +142,7 @@ export default function CategoryManagementPage() {
                                         <Button variant="ghost" size="sm" onClick={() => { setSelectedTopicId(topic.id); setIsAddSectionOpen(true); }}>
                                             <Plus className="h-4 w-4 mr-1" /> Thêm chương
                                         </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => setEditingItem({ type: 'topic', data: topic })}>
+                                        <Button variant="ghost" size="icon" onClick={() => setTopicToEdit(topic)}>
                                             <Edit className="h-4 w-4 text-orange-500" />
                                         </Button>
                                         <Button variant="ghost" size="icon" onClick={() => setDeletingItem({ type: 'topic', id: topic.id, name: topic.name })}>
@@ -184,7 +165,7 @@ export default function CategoryManagementPage() {
                                                         {sec.description && <span className="text-xs text-muted-foreground">- {sec.description}</span>}
                                                     </div>
                                                     <div className="flex gap-1">
-                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem({ type: 'section', data: sec })}>
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSectionToEdit(sec)}>
                                                             <Edit className="h-3 w-3" />
                                                         </Button>
                                                         <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => setDeletingItem({ type: 'section', id: sec.id, name: sec.name })}>
@@ -202,58 +183,55 @@ export default function CategoryManagementPage() {
                 </div>
             )}
 
-            {/* EDIT DIALOG */}
-            <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Chỉnh sửa {editingItem?.type === 'topic' ? 'Chủ đề' : 'Chương'}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>Tên</Label>
-                            <Input
-                                value={editingItem?.data.name || ''}
-                                onChange={(e) => setEditingItem(prev => prev ? { ...prev, data: { ...prev.data, name: e.target.value } } : null)}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Mô tả</Label>
-                            <Textarea
-                                value={editingItem?.data.description || ''}
-                                onChange={(e) => setEditingItem(prev => prev ? { ...prev, data: { ...prev.data, description: e.target.value } } : null)}
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setEditingItem(null)}>Hủy</Button>
-                        <Button onClick={() => handleEdit(editingItem?.data)}>Lưu thay đổi</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
             {/* DELETE ALERT */}
             <AlertDialog open={!!deletingItem} onOpenChange={(open) => !open && setDeletingItem(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Xác nhận xóa?</AlertDialogTitle>
+                        <AlertDialogTitle className="text-destructive flex items-center gap-2">
+                            <Trash2 className="h-5 w-5" />
+                            Xác nhận xóa {deletingItem?.type === 'topic' ? 'chủ đề' : 'chương'}?
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bạn đang xóa <strong>{deletingItem?.name}</strong>.
+                            Bạn đang xóa <strong>"{deletingItem?.name}"</strong>.
                             <br />
-                            <span className="text-red-600 font-bold">CẢNH BÁO:</span> Hành động này sẽ xóa tất cả dữ liệu con (Câu hỏi, bài thi...) liên quan. Không thể hoàn tác.
+                            Hành động này sẽ xóa <strong>TẤT CẢ</strong> các dữ liệu liên quan (Câu hỏi, bài thi...).
+                            <br className="mb-2" />
+                            <span className="text-destructive font-bold underline">CẢNH BÁO:</span> Điều này không thể hoàn tác!
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Hủy</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Xóa vĩnh viễn</AlertDialogAction>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 text-white">Tôi hiểu, xóa vĩnh viễn</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
 
-            <AddTopicDialog open={isAddTopicOpen} onOpenChange={setIsAddTopicOpen} onSuccess={fetchTopics} />
+            <AddTopicDialog 
+                open={isAddTopicOpen || !!topicToEdit} 
+                onOpenChange={(open) => {
+                    setIsAddTopicOpen(open);
+                    if (!open) setTopicToEdit(null);
+                }} 
+                topicToEdit={topicToEdit}
+                onSuccess={fetchTopics} 
+            />
+            
             <AddSectionDialog
-                open={isAddSectionOpen}
-                onOpenChange={setIsAddSectionOpen}
-                onSuccess={() => { if (selectedTopicId) fetchSections(selectedTopicId); }}
+                open={isAddSectionOpen || !!sectionToEdit}
+                onOpenChange={(open) => {
+                    setIsAddSectionOpen(open);
+                    if (!open) setSectionToEdit(null);
+                }}
+                sectionToEdit={sectionToEdit}
+                onSuccess={() => { 
+                    if (sectionToEdit) {
+                        const tId = sectionToEdit.topic_id;
+                        api.get(`/exam-sections?topic_id=${tId}`)
+                            .then(res => setSectionsMap(prev => ({ ...prev, [tId]: res.data.data.sections || [] })));
+                    } else if (selectedTopicId) {
+                        fetchSections(selectedTopicId); 
+                    }
+                }}
                 defaultTopicId={selectedTopicId}
             />
         </div>
