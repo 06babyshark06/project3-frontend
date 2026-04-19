@@ -4,7 +4,6 @@ import AuthGuard from "@/components/AuthGuard";
 import RoleGuard from "@/components/RoleGuard";
 import { InstructorSidebar } from "@/components/instructor-sidebar";
 import { MobileNav } from "@/components/mobile-nav";
-import { NotificationListener } from "@/components/NotificationListener";
 
 export default function InstructorLayout({
   children,
@@ -14,7 +13,6 @@ export default function InstructorLayout({
   return (
     <AuthGuard>
       <RoleGuard allowedRoles={["admin", "instructor"]}>
-        <NotificationListener />
         <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)]">
           {/* Mobile Navigation Trigger */}
           <div className="md:hidden p-4 border-b flex items-center">

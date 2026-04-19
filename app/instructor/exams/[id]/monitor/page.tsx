@@ -96,13 +96,57 @@ export default function ExamMonitorPage() {
     setStudentMap(map);
   };
 
-  // Auto-refresh mỗi 15 giây
   useEffect(() => {
-    if (examId) {
-      fetchViolations();
-      const interval = setInterval(fetchViolations, 15000);
-      return () => clearInterval(interval);
-    }
+    if (!examId) return;
+
+    fetchViolations();
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1";
+    const wsBaseUrl = baseUrl.replace(/^http/, "ws");
+    const token = localStorage.getItem("accessToken") || "";
+    const wsUrl = `${wsBaseUrl}/exams/${examId}/monitor/ws?token=${token}`;
+
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log("Giám sát phòng thi: Đã kết nối WebSocket mượt mà.");
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "VIOLATION") {
+          const newMsg: Violation = {
+            id: Date.now(),
+            user_id: data.user_id,
+            violation_type: data.violation_type,
+            violation_time: data.timestamp,
+          };
+
+          setViolations((prev) => {
+            const updated = [newMsg, ...prev];
+            processData(updated); 
+            return updated;
+          });
+          setLastUpdated(new Date());
+
+          toast.error(`⚠️ Thí sinh #${data.user_id} vừa vi phạm: ${data.violation_type}`, {
+            position: 'top-right',
+            duration: 5000,
+          });
+        }
+      } catch (err) {
+        console.error("Lỗi parse WS:", err);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("Lỗi WebSocket giám sát:", error);
+    };
+
+    return () => {
+      ws.close();
+    };
   }, [examId]);
 
   const getStatusBadge = (status: string) => {

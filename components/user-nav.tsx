@@ -63,14 +63,19 @@ export function UserNav() {
           )}
           {(user.role === "instructor" || user.role === "admin") && (
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link href="/dashboard/instructor">Dashboard (Giáo viện)</Link>
+              <Link href="/instructor/dashboard">Dashboard (Giáo viện)</Link>
             </DropdownMenuItem>
           )}
 
           {(user.role === "student" || user.role === "instructor" || user.role === "admin") && (
-            <DropdownMenuItem asChild className="cursor-pointer">
-              <Link href="/dashboard">Dashboard (Học viên)</Link>
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link href="/dashboard">Dashboard (Học viên)</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link href="/dashboard/exams">Lịch sử bài thi</Link>
+              </DropdownMenuItem>
+            </>
           )}
 
           <DropdownMenuItem asChild className="cursor-pointer">

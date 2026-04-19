@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ModeToggle } from "./mode-toggle";
-import { UserNav } from "./user-nav"; // Component mới
+import { UserNav } from "./user-nav";
+import { NotificationBell } from "./notification-bell";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -40,6 +41,7 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-4">
+          {user && <NotificationBell />}
           <ModeToggle />
           {renderNav()}
         </div>

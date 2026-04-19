@@ -7,7 +7,7 @@ import Link from "next/link";
 import confetti from "canvas-confetti";
 import {
   Loader2, CheckCircle, XCircle, Trophy, ArrowRight,
-  RefreshCcw, Calendar, Check, X, AlertCircle
+  RefreshCcw, Calendar, Check, X, AlertCircle, Sparkles, MessageSquare, Send
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,11 @@ interface ChoiceReview {
   is_correct: boolean;
   user_selected: boolean;
   attachment_url?: string;
+}
+
+interface ChatTurn {
+  role: 'user' | 'model';
+  content: string;
 }
 
 interface SubmissionDetail {
@@ -55,6 +60,11 @@ export default function ExamResultPage() {
 
   const [result, setResult] = useState<SubmissionResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [aiExplanations, setAiExplanations] = useState<Record<number, string>>({});
+  const [loadingAI, setLoadingAI] = useState<Record<number, boolean>>({});
+  const [chatHistories, setChatHistories] = useState<Record<number, ChatTurn[]>>({});
+  const [inputTexts, setInputTexts] = useState<Record<number, string>>({});
+  const [isChatLoading, setIsChatLoading] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     const fetchResult = async () => {
@@ -83,6 +93,89 @@ export default function ExamResultPage() {
 
     if (submissionId) fetchResult();
   }, [submissionId, router]);
+
+  const handleAskAI = async (item: SubmissionDetail) => {
+    const qId = item.question_id;
+    if (aiExplanations[qId]) return;
+
+    try {
+      setLoadingAI(prev => ({ ...prev, [qId]: true }));
+      
+      const payload = {
+        question_content: item.question_content,
+        choices: item.choices.map(c => c.content),
+        correct_choice: item.choices.find(c => c.is_correct)?.content || "",
+        user_choice: item.choices.find(c => c.user_selected)?.content || "Không chọn"
+      };
+
+      const response = await api.post("/ai/explain", payload);
+      
+      if (response.data.success) {
+        const explanation = response.data.data.explanation;
+        setAiExplanations(prev => ({
+          ...prev,
+          [qId]: explanation
+        }));
+        // Initialize chat history with the explanation
+        setChatHistories(prev => ({
+          ...prev,
+          [qId]: [{ role: 'model', content: explanation }]
+        }));
+      } else {
+        toast.error("Không thể lấy giải thích từ AI");
+      }
+    } catch (error) {
+      console.error("AI Explain Error:", error);
+      toast.error("Lỗi khi kết nối với dịch vụ AI");
+    } finally {
+      setLoadingAI(prev => ({ ...prev, [qId]: false }));
+    }
+  };
+
+  const handleSendMessage = async (item: SubmissionDetail) => {
+    const qId = item.question_id;
+    const message = inputTexts[qId]?.trim();
+    if (!message || isChatLoading[qId]) return;
+
+    // Clear input
+    setInputTexts(prev => ({ ...prev, [qId]: "" }));
+
+    const newUserTurn: ChatTurn = { role: 'user', content: message };
+    const currentHistory = chatHistories[qId] || [];
+    const updatedHistory = [...currentHistory, newUserTurn];
+
+    setChatHistories(prev => ({ ...prev, [qId]: updatedHistory }));
+
+    try {
+      setIsChatLoading(prev => ({ ...prev, [qId]: true }));
+      
+      const payload = {
+        question_content: item.question_content,
+        choices: item.choices.map(c => c.content),
+        correct_choice: item.choices.find(c => c.is_correct)?.content || "",
+        user_choice: item.choices.find(c => c.user_selected)?.content || "Không chọn",
+        history: currentHistory, // History before the new message
+        new_message: message
+      };
+
+      const response = await api.post("/ai/chat", payload);
+      
+      if (response.data.success) {
+        const reply = response.data.data.reply;
+        setChatHistories(prev => ({
+          ...prev,
+          [qId]: [...updatedHistory, { role: 'model', content: reply }]
+        }));
+      } else {
+        toast.error("AI không thể phản hồi lúc này.");
+      }
+    } catch (error) {
+      console.error("AI Chat Error:", error);
+      toast.error("Lỗi kết nối khi chat với AI");
+    } finally {
+      setIsChatLoading(prev => ({ ...prev, [qId]: false }));
+    }
+  };
 
   const triggerConfetti = () => {
     const duration = 3 * 1000;
@@ -265,16 +358,94 @@ export default function ExamResultPage() {
                   })}
                 </div>
 
-                {/* Giải thích */}
+                {/* Giải thích gốc của giáo viên */}
                 {item.explanation && (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg text-blue-900 flex gap-3 items-start">
+                  <div className="mt-4 p-4 bg-blue-50/50 border border-blue-100 rounded-lg text-blue-900 flex gap-3 items-start">
                     <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-blue-700 block mb-1">Giải thích chi tiết:</span>
+                      <span className="font-bold text-blue-700 block mb-1 text-xs uppercase tracking-wider">Giải thích từ giáo viên:</span>
                       <RichTextDisplay content={item.explanation} className="text-sm leading-relaxed opacity-90" />
                     </div>
                   </div>
                 )}
+
+                {/* AI Explanation Section */}
+                <div className="mt-4 pt-4 border-t border-dashed">
+                  {!aiExplanations[item.question_id] ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleAskAI(item)}
+                      disabled={loadingAI[item.question_id]}
+                      className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 hover:border-indigo-400 text-indigo-700 transition-all duration-300 group shadow-sm"
+                    >
+                      {loadingAI[item.question_id] ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 mr-2 text-purple-600 group-hover:scale-110 transition-transform" />
+                      )}
+                      Hỏi AI Trợ Giảng giải thích
+                    </Button>
+                  ) : (
+                    <div className="bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 border border-indigo-100 rounded-xl p-5 shadow-sm relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Sparkles className="w-12 h-12 text-indigo-600" />
+                      </div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="bg-indigo-600 p-1.5 rounded-lg shadow-indigo-200 shadow-lg">
+                          <MessageSquare className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="font-bold text-indigo-900 text-sm uppercase tracking-tighter">AI Tutor Conversation</span>
+                        <Badge variant="secondary" className="ml-auto text-[10px] bg-indigo-100 text-indigo-700 border-indigo-200">✨ Interactive</Badge>
+                      </div>
+                      
+                      <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar mb-4">
+                        {chatHistories[item.question_id]?.map((chat, cIdx) => (
+                          <div key={cIdx} className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
+                              chat.role === 'user' 
+                                ? 'bg-indigo-600 text-white rounded-tr-none' 
+                                : 'bg-white border border-indigo-100 text-slate-700 rounded-tl-none'
+                            }`}>
+                              <RichTextDisplay content={chat.content} className={chat.role === 'user' ? 'text-white' : ''} />
+                            </div>
+                          </div>
+                        ))}
+                        {isChatLoading[item.question_id] && (
+                           <div className="flex justify-start">
+                             <div className="bg-white border border-indigo-100 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm flex items-center gap-2">
+                               <div className="flex gap-1">
+                                 <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                 <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                 <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-bounce" />
+                               </div>
+                               <span className="text-xs text-muted-foreground font-medium italic">Gia sư đang gõ...</span>
+                             </div>
+                           </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 relative mt-2 pt-3 border-t border-indigo-100/50">
+                        <input
+                          type="text"
+                          placeholder="Hỏi thêm gia sư về câu này..."
+                          value={inputTexts[item.question_id] || ""}
+                          onChange={(e) => setInputTexts(prev => ({ ...prev, [item.question_id]: e.target.value }))}
+                          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(item)}
+                          className="flex-1 bg-white/50 border border-indigo-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-slate-400"
+                        />
+                        <Button 
+                          size="icon" 
+                          onClick={() => handleSendMessage(item)}
+                          disabled={isChatLoading[item.question_id] || !inputTexts[item.question_id]?.trim()}
+                          className="rounded-full bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 shrink-0"
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}

@@ -7,7 +7,7 @@ export function StudentSidebar({ className }: { className?: string }) {
     const items = [
         { title: "Tổng quan", href: "/dashboard", icon: LayoutDashboard },
         { title: "Lớp học của tôi", href: "/dashboard/classes", icon: BookOpen },
-        // { title: "Kết quả thi", href: "/dashboard/results", icon: FileText },
+        { title: "Lịch sử thi", href: "/dashboard/exams", icon: FileText },
     ];
 
     return (

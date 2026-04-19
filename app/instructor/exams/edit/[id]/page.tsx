@@ -47,7 +47,7 @@ interface ExamSettings {
 }
 
 interface SectionConfig {
-    section_id: number;
+    section_id: number | string;
     count: number;
     difficulty: string;
 }
@@ -148,7 +148,11 @@ export default function EditExamPage() {
 
                 try {
                     const rules = JSON.parse(examData.settings?.dynamic_config || "[]");
-                    setDynamicRules(rules);
+                    const normalizedRules = rules.map((r: any) => ({
+                        ...r,
+                        section_id: r.section_id === 0 ? 'all' : r.section_id
+                    }));
+                    setDynamicRules(normalizedRules);
                 } catch {
                     setDynamicRules([]);
                 }
@@ -186,13 +190,19 @@ export default function EditExamPage() {
     const handleSave = async () => {
         setIsSaving(true);
         try {
+            const configArray = dynamicRules.map(c => ({
+                section_id: c.section_id === 'all' ? 0 : Number(c.section_id),
+                count: Number(c.count),
+                difficulty: c.difficulty
+            }));
+
             await api.put(`/exams/${examId}`, {
                 title,
                 description,
                 topic_id: Number(topicId),
                 settings: {
                     ...settings,
-                    dynamic_config: JSON.stringify(dynamicRules)
+                    dynamic_config: JSON.stringify(configArray)
                 },
                 question_ids: settings.is_dynamic ? [] : (exam?.questions?.map(q => q.id) || [])
             });
@@ -546,7 +556,7 @@ export default function EditExamPage() {
                                                 <div className="mt-4 space-y-4 border-t pt-4">
                                                     <div className="flex items-center justify-between">
                                                         <Label className="text-sm font-bold">Quy tắc sinh đề</Label>
-                                                        <Button size="sm" variant="outline" onClick={() => setDynamicRules([...dynamicRules, { section_id: Number(sections[0]?.id) || 0, count: 5, difficulty: 'medium' }])}>
+                                                        <Button size="sm" variant="outline" onClick={() => setDynamicRules([...dynamicRules, { section_id: 'all', count: 5, difficulty: 'all' }])}>
                                                             <Plus className="h-3 w-3 mr-1" /> Thêm quy tắc
                                                         </Button>
                                                     </div>
@@ -574,12 +584,13 @@ export default function EditExamPage() {
                                                                                 value={rule.section_id.toString()}
                                                                                 onValueChange={(v) => {
                                                                                     const newRules = [...dynamicRules];
-                                                                                    newRules[idx].section_id = Number(v);
+                                                                                    newRules[idx].section_id = v === 'all' ? 'all' : Number(v);
                                                                                     setDynamicRules(newRules);
                                                                                 }}
                                                                             >
                                                                                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                                                                                 <SelectContent>
+                                                                                    <SelectItem value="all">Tất cả chương</SelectItem>
                                                                                     {sections.map(s => <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>)}
                                                                                 </SelectContent>
                                                                             </Select>
@@ -596,6 +607,7 @@ export default function EditExamPage() {
                                                                             >
                                                                                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                                                                                 <SelectContent>
+                                                                                    <SelectItem value="all">Tất cả</SelectItem>
                                                                                     <SelectItem value="easy">Dễ</SelectItem>
                                                                                     <SelectItem value="medium">Trung bình</SelectItem>
                                                                                     <SelectItem value="hard">Khó</SelectItem>
