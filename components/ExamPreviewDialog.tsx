@@ -112,22 +112,35 @@ export default function ExamPreviewDialog({ examId, isOpen, onClose }: ExamPrevi
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline">{q.difficulty === 'easy' ? 'Dễ' : q.difficulty === 'hard' ? 'Khó' : 'Trung bình'}</Badge>
                           <Badge variant="secondary">{q.section_name || 'Chung'}</Badge>
-                          <Badge variant="outline" className="opacity-70">{q.question_type === 'multiple_choice' ? 'Nhiều lựa chọn' : 'Một lựa chọn'}</Badge>
+                          <Badge variant="outline" className="opacity-70">
+                            {q.question_type === 'multiple_choice' ? 'Nhiều lựa chọn' :
+                              q.question_type === 'single_choice' ? 'Một lựa chọn' :
+                                q.question_type === 'short_answer' ? 'Trả lời ngắn' :
+                                  q.question_type === 'essay' ? 'Tự luận' : 'Điền vào chỗ trống'}
+                          </Badge>
                         </div>
                         <div className="text-base font-medium">
                           <RichTextDisplay content={q.content} />
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                          {q.choices.map((choice) => (
-                            <div key={choice.id} className="flex items-start gap-3 p-3 rounded-md border bg-card/50">
-                              <Circle className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                              <div className="text-sm">
-                                <RichTextDisplay content={choice.content} />
+                        {q.question_type !== 'essay' && q.question_type !== 'short_answer' ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                            {q.choices.map((choice) => (
+                              <div key={choice.id} className="flex items-start gap-3 p-3 rounded-md border bg-card/50">
+                                <Circle className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                                <div className="text-sm">
+                                  <RichTextDisplay content={choice.content} />
+                                </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="mt-4 p-4 border rounded-md bg-muted/20 border-dashed">
+                            <p className="text-sm text-muted-foreground italic">
+                              Học sinh sẽ nhập câu trả lời văn bản cho loại câu hỏi này.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

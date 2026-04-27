@@ -17,6 +17,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import RichTextDisplay from "@/components/RichTextDisplay";
 import { MediaRenderer } from "@/components/MediaRenderer";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 
 // --- Interfaces ---
 interface ChoiceReview {
@@ -40,6 +43,7 @@ interface SubmissionDetail {
   is_correct: boolean;
   choices: ChoiceReview[];
   attachment_url?: string;
+  text_answer?: string;
 }
 
 interface SubmissionResult {
@@ -104,8 +108,8 @@ export default function ExamResultPage() {
       const payload = {
         question_content: item.question_content,
         choices: item.choices.map(c => c.content),
-        correct_choice: item.choices.find(c => c.is_correct)?.content || "",
-        user_choice: item.choices.find(c => c.user_selected)?.content || "Không chọn"
+        correct_choice: (item.question_type === "short_answer") ? item.choices.map(c => c.content).join(" hoặc ") : (item.choices.find(c => c.is_correct)?.content || ""),
+        user_choice: (item.question_type === "short_answer" || item.question_type === "essay") ? (item.text_answer || "Không chọn") : (item.choices.find(c => c.user_selected)?.content || "Không chọn")
       };
 
       const response = await api.post("/ai/explain", payload);
@@ -152,8 +156,8 @@ export default function ExamResultPage() {
       const payload = {
         question_content: item.question_content,
         choices: item.choices.map(c => c.content),
-        correct_choice: item.choices.find(c => c.is_correct)?.content || "",
-        user_choice: item.choices.find(c => c.user_selected)?.content || "Không chọn",
+        correct_choice: (item.question_type === "short_answer") ? item.choices.map(c => c.content).join(" hoặc ") : (item.choices.find(c => c.is_correct)?.content || ""),
+        user_choice: (item.question_type === "short_answer" || item.question_type === "essay") ? (item.text_answer || "Không chọn") : (item.choices.find(c => c.user_selected)?.content || "Không chọn"),
         history: currentHistory, // History before the new message
         new_message: message
       };
@@ -322,6 +326,35 @@ export default function ExamResultPage() {
 
               <CardContent className="pt-4 space-y-4">
                 {/* Danh sách đáp án */}
+                {(item.question_type === "short_answer" || item.question_type === "essay") ? (
+                  <div className="space-y-4">
+                     <div className={`p-4 rounded-lg border ${item.question_type === "essay" ? "bg-background/50 border-border" : (item.is_correct ? "border-green-500 bg-green-50 text-green-900" : "border-red-500 bg-red-50 text-red-900")}`}>
+                        <span className={`text-sm font-semibold uppercase mb-2 block ${item.question_type === "essay" ? "text-muted-foreground" : (item.is_correct ? "text-green-700" : "text-red-700")}`}>Câu trả lời của bạn:</span>
+                        <div className="text-base whitespace-pre-wrap">{item.text_answer || (item.choices && item.choices.some(c => c.user_selected) ? "" : <span className="italic opacity-70">Không có câu trả lời văn bản</span>)}</div>
+                        
+                        {/* Hiển thị lựa chọn nếu student chọn thay vì nhập text cho Short Answer */}
+                        {item.choices && item.choices.some(c => c.user_selected) && (
+                           <div className="mt-3 pt-3 border-t border-dashed border-muted-foreground/20 space-y-2">
+                              <span className="text-xs font-semibold text-muted-foreground uppercase block">Lựa chọn đã chọn:</span>
+                              {item.choices.filter(c => c.user_selected).map(c => (
+                                 <div key={c.id} className={`p-2 rounded flex items-center gap-2 text-sm ${c.is_correct ? "bg-green-100/50 text-green-800" : "bg-red-100/50 text-red-800"}`}>
+                                    {c.is_correct ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-red-600" />}
+                                    <RichTextDisplay content={c.content} />
+                                 </div>
+                              ))}
+                           </div>
+                        )}
+                     </div>
+                     {item.question_type !== "essay" && (
+                         <div className="p-4 rounded-lg border border-green-500 bg-green-50/40 text-green-900">
+                            <span className="text-sm font-semibold text-green-700 uppercase mb-2 block">Đáp án được chấp nhận:</span>
+                            <ul className="list-disc list-inside space-y-1 text-sm">
+                               {item.choices?.map(c => <li key={c.id} className="font-medium">{c.content}</li>)}
+                            </ul>
+                         </div>
+                     )}
+                  </div>
+                ) : (
                 <div className="space-y-2">
                   {item.choices?.map((choice) => {
                     let styleClass = "border bg-background/50";
@@ -357,6 +390,7 @@ export default function ExamResultPage() {
                     )
                   })}
                 </div>
+                )}
 
                 {/* Giải thích gốc của giáo viên */}
                 {item.explanation && (
@@ -407,7 +441,15 @@ export default function ExamResultPage() {
                                 ? 'bg-indigo-600 text-white rounded-tr-none' 
                                 : 'bg-white border border-indigo-100 text-slate-700 rounded-tl-none'
                             }`}>
-                              <RichTextDisplay content={chat.content} className={chat.role === 'user' ? 'text-white' : ''} />
+                              {chat.role === 'user' ? (
+                                <RichTextDisplay content={chat.content} className="text-white" />
+                              ) : (
+                                <div className="prose prose-sm prose-indigo max-w-none break-words">
+                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {chat.content}
+                                  </ReactMarkdown>
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}

@@ -285,7 +285,8 @@ export default function AIGeneratePage() {
         questions: questions.map(q => ({
           section_id: parseInt(selectedSection), 
           content: q.question_text,
-          question_type: questionType === "Một đáp án đúng" ? "single_choice" : "multiple_choice",
+          question_type: questionType === "Một đáp án đúng" ? "single_choice" : 
+                         questionType === "Nhiều đáp án đúng" ? "multiple_choice" : "short_answer",
           difficulty: q.difficulty.toLowerCase(),
           explanation: q.explanation,
           attachment_url: q.attachment_url || "",
@@ -428,6 +429,7 @@ export default function AIGeneratePage() {
                   <SelectContent>
                     <SelectItem value="Một đáp án đúng">Một đáp án đúng</SelectItem>
                     <SelectItem value="Nhiều đáp án đúng">Nhiều đáp án đúng</SelectItem>
+                    <SelectItem value="Trả lời ngắn">Trả lời ngắn</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

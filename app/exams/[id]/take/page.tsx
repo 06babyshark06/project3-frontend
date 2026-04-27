@@ -7,13 +7,15 @@ import { toast } from "sonner";
 import {
   Loader2, Clock, AlertTriangle, ChevronLeft, ChevronRight,
   Circle, CheckCircle2, Square, CheckSquare, Lock, Maximize,
-  Image as ImageIcon, Calendar, Ban, UserPlus, Hourglass, Menu, Flag
+  Image as ImageIcon, Calendar, Ban, UserPlus, Hourglass, Menu, Flag,
+  MessageSquare, FileSignature
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -81,6 +83,7 @@ export default function ExamTakingPage() {
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, number[]>>({});
+  const [userTextAnswers, setUserTextAnswers] = useState<Record<number, string>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<number[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -219,14 +222,20 @@ export default function ExamTakingPage() {
 
       if (current_answers) {
         let formattedAnswers: Record<number, number[]> = {};
-        Object.entries(current_answers).forEach(([key, val]: [string, any]) => {
-          const choices = val.values ? val.values : val;
-          if (Array.isArray(choices)) {
-            formattedAnswers[Number(key)] = choices.map(Number);
+        let formattedTextAnswers: Record<number, string> = {};
+
+        // Parse from Server
+        current_answers.forEach((ans: any) => {
+          const qId = Number(ans.question_id);
+          if (ans.choice_ids && ans.choice_ids.length > 0) {
+            formattedAnswers[qId] = ans.choice_ids.map(Number);
+          }
+          if (ans.text_answer) {
+            formattedTextAnswers[qId] = ans.text_answer;
           }
         });
 
-        // Offline Fallback: Load saved draft from localStorage
+        // Merge with Local Drafts (Offline Fallback)
         const localDraft = localStorage.getItem(`exam_draft_${examId}_${user?.id}`);
         if (localDraft) {
           try {
@@ -234,7 +243,17 @@ export default function ExamTakingPage() {
             formattedAnswers = { ...formattedAnswers, ...parsedDraft };
           } catch (e) {}
         }
+        
+        const localTextDraft = localStorage.getItem(`exam_text_draft_${examId}_${user?.id}`);
+        if (localTextDraft) {
+          try {
+            const parsedTextDraft = JSON.parse(localTextDraft);
+            formattedTextAnswers = { ...formattedTextAnswers, ...parsedTextDraft };
+          } catch(e) {}
+        }
+
         setUserAnswers(formattedAnswers);
+        setUserTextAnswers(formattedTextAnswers);
 
         // Load Flagged Questions
         const localFlags = localStorage.getItem(`exam_flags_${examId}_${user?.id}`);
@@ -384,10 +403,10 @@ export default function ExamTakingPage() {
   useEffect(() => {
     if (!submissionId || isSubmitting) return;
     const saveAnswers = async () => {
-      const currentAnswersStr = JSON.stringify(userAnswers);
+      const currentAnswersStr = JSON.stringify({ userAnswers, userTextAnswers });
       if (currentAnswersStr === lastSavedAnswers.current) return;
       try {
-        const promises = Object.entries(userAnswers).flatMap(([qId, cIds]) =>
+        const choicePromises = Object.entries(userAnswers).flatMap(([qId, cIds]) =>
           cIds.map(cId =>
             api.post("/exams/save-answer", {
               exam_id: Number(examId),
@@ -397,7 +416,17 @@ export default function ExamTakingPage() {
             })
           )
         );
-        await Promise.all(promises);
+
+        const textPromises = Object.entries(userTextAnswers).map(([qId, text]) =>
+          api.post("/exams/save-answer", {
+            exam_id: Number(examId),
+            question_id: Number(qId),
+            text_answer: text,
+            submission_id: submissionId
+          })
+        );
+
+        await Promise.all([...choicePromises, ...textPromises]);
         lastSavedAnswers.current = currentAnswersStr;
       } catch (err: any) {
         if (err.response?.data?.error?.includes("gian lận thi hộ")) {
@@ -427,6 +456,15 @@ export default function ExamTakingPage() {
     });
   };
 
+  const handleTextAnswerChange = (questionId: number, text: string) => {
+    if (isSubmitting) return;
+    setUserTextAnswers(prev => {
+      const next = { ...prev, [questionId]: text };
+      localStorage.setItem(`exam_text_draft_${examId}_${user?.id}`, JSON.stringify(next));
+      return next;
+    });
+  };
+
   const toggleFlag = (questionId: number) => {
     setFlaggedQuestions(prev => {
       const nextFlags = prev.includes(questionId) ? prev.filter(id => id !== questionId) : [...prev, questionId];
@@ -439,7 +477,25 @@ export default function ExamTakingPage() {
     if (isSubmitting || !exam) return;
     setIsSubmitting(true);
     try {
-      const formattedAnswers = Object.entries(userAnswers).flatMap(([qId, cIds]) => cIds.map(cId => ({ question_id: Number(qId), chosen_choice_id: Number(cId) })));
+      const formattedAnswers: any[] = [];
+      exam.questions.forEach(q => {
+          if (q.question_type === "short_answer" || q.question_type === "essay") {
+            const text = userTextAnswers[q.id];
+            if (text && text.trim() !== "") {
+              formattedAnswers.push({ question_id: q.id, text_answer: text });
+            }
+            // For short_answer, they might also have chosen a choice if options were provided
+            const choices = userAnswers[q.id] || [];
+            choices.forEach(cId => {
+              formattedAnswers.push({ question_id: q.id, chosen_choice_id: cId });
+            });
+          } else {
+            const choices = userAnswers[q.id] || [];
+            choices.forEach(cId => {
+              formattedAnswers.push({ question_id: q.id, chosen_choice_id: cId });
+            });
+          }
+      });
       const response = await api.post("/exams/submit", { exam_id: Number(examId), submission_id: submissionId, answers: formattedAnswers });
       if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
       router.replace(`/exams/result/${response.data.data.submission_id || submissionId}`);
@@ -452,7 +508,7 @@ export default function ExamTakingPage() {
       setIsSubmitting(false);
       toast.error("Nộp bài thất bại, vui lòng thử lại!");
     }
-  }, [exam, userAnswers, isSubmitting, examId, submissionId, router]);
+  }, [exam, userAnswers, userTextAnswers, isSubmitting, examId, submissionId, router]);
 
 
   // ===== RENDER =====
@@ -518,7 +574,12 @@ export default function ExamTakingPage() {
   }
 
   const currentQuestion = exam.questions[currentQuestionIndex];
-  const answeredCount = Object.values(userAnswers).filter(ans => ans.length > 0).length;
+  const answeredCount = exam.questions.filter(q => {
+     if (q.question_type === "short_answer" || q.question_type === "essay") {
+         return !!userTextAnswers[q.id] && userTextAnswers[q.id].trim() !== "";
+     }
+     return userAnswers[q.id]?.length > 0;
+  }).length;
   const progress = (answeredCount / exam.questions.length) * 100;
 
   return (
@@ -610,7 +671,13 @@ export default function ExamTakingPage() {
                           <div className="grid grid-cols-5 gap-2">
                             {exam.questions.map((_, idx) => {
                               const qId = exam.questions[idx].id;
-                              const hasAns = userAnswers[qId]?.length > 0;
+                              const qType = exam.questions[idx].question_type;
+                              let hasAns = false;
+                              if (qType === "short_answer" || qType === "essay") {
+                                hasAns = !!userTextAnswers[qId] && userTextAnswers[qId].trim() !== "";
+                              } else {
+                                hasAns = userAnswers[qId]?.length > 0;
+                              }
                               const isFlagged = flaggedQuestions.includes(qId);
                               
                               let btnVariant = currentQuestionIndex === idx ? "default" : hasAns ? "secondary" : "outline";
@@ -660,7 +727,12 @@ export default function ExamTakingPage() {
                           <Flag className="w-4 h-4 mr-1" />
                           <span className="hidden sm:inline">{flaggedQuestions.includes(currentQuestion.id) ? "Đã đánh dấu" : "Đánh dấu"}</span>
                        </Button>
-                       <Badge variant="outline">{currentQuestion.question_type === "multiple_choice" ? "Nhiều đáp án" : "Một đáp án"}</Badge>
+                       <Badge variant="outline">
+                         {currentQuestion.question_type === "multiple_choice" ? "Nhiều đáp án" : 
+                          currentQuestion.question_type === "single_choice" ? "Một đáp án" : 
+                          currentQuestion.question_type === "essay" ? "Tự luận" : 
+                          currentQuestion.question_type === "short_answer" ? "Trả lời ngắn" : "Điền vào chỗ trống"}
+                       </Badge>
                     </div>
                   </div>
                 </CardHeader>
@@ -669,21 +741,44 @@ export default function ExamTakingPage() {
                   <MediaRenderer url={currentQuestion.attachment_url} />
 
                   <div className="space-y-3">
-                    {currentQuestion.choices.map((choice) => {
-                      const isSelected = userAnswers[currentQuestion.id]?.includes(choice.id);
-                      const isMultiple = currentQuestion.question_type === "multiple_choice";
-                      return (
-                        <div key={choice.id} onClick={() => handleSelectAnswer(currentQuestion, choice.id)} className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
-                          <Label className="flex flex-col gap-2 cursor-pointer pointer-events-none">
-                            <div className="flex items-center gap-3">
-                              {isMultiple ? (isSelected ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-muted-foreground" />) : (isSelected ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Circle className="h-5 w-5 text-muted-foreground" />)}
-                               <RichTextDisplay content={choice.content} className="text-base" />
-                            </div>
-                            <MediaRenderer url={choice.attachment_url} />
-                          </Label>
+                    {currentQuestion.question_type === "essay" ? (
+                       <Textarea 
+                          placeholder="Nhập bài làm của bạn..."
+                          value={userTextAnswers[currentQuestion.id] || ""}
+                          onChange={(e) => handleTextAnswerChange(currentQuestion.id, e.target.value)}
+                          className="min-h-[250px] text-base p-4 focus:ring-2 focus:ring-primary/20 transition-all"
+                       />
+                    ) : currentQuestion.question_type === "short_answer" ? (
+                      <div className="space-y-4 pt-4 border-t border-dashed">
+                        <div className="flex items-center gap-2 text-primary">
+                           <MessageSquare className="w-5 h-5" />
+                           <Label className="text-base font-semibold">Trả lời câu hỏi:</Label>
                         </div>
-                      );
-                    })}
+                        <Input 
+                           placeholder="Nhập câu trả lời của bạn..."
+                           value={userTextAnswers[currentQuestion.id] || ""}
+                           onChange={(e) => handleTextAnswerChange(currentQuestion.id, e.target.value)}
+                           className="h-14 text-lg border-2 focus:border-primary shadow-sm bg-background"
+                        />
+                        <p className="text-xs text-muted-foreground italic">Lưu ý: Hệ thống sẽ so khớp đáp án của bạn với bộ đáp án đúng.</p>
+                      </div>
+                    ) : (
+                      currentQuestion.choices.map((choice) => {
+                        const isSelected = userAnswers[currentQuestion.id]?.includes(choice.id);
+                        const isMultiple = currentQuestion.question_type === "multiple_choice";
+                        return (
+                          <div key={choice.id} onClick={() => handleSelectAnswer(currentQuestion, choice.id)} className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+                            <Label className="flex flex-col gap-2 cursor-pointer pointer-events-none">
+                              <div className="flex items-center gap-3">
+                                {isMultiple ? (isSelected ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-muted-foreground" />) : (isSelected ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Circle className="h-5 w-5 text-muted-foreground" />)}
+                                 <RichTextDisplay content={choice.content} className="text-base" />
+                              </div>
+                              <MediaRenderer url={choice.attachment_url} />
+                            </Label>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -705,7 +800,13 @@ export default function ExamTakingPage() {
                 <div className="grid grid-cols-5 gap-2">
                   {exam.questions.map((_, idx) => {
                     const qId = exam.questions[idx].id;
-                    const hasAns = userAnswers[qId]?.length > 0;
+                    const qType = exam.questions[idx].question_type;
+                    let hasAns = false;
+                    if (qType === "short_answer" || qType === "essay") {
+                      hasAns = !!userTextAnswers[qId] && userTextAnswers[qId].trim() !== "";
+                    } else {
+                      hasAns = userAnswers[qId]?.length > 0;
+                    }
                     const isFlagged = flaggedQuestions.includes(qId);
                     
                     let btnVariant = currentQuestionIndex === idx ? "default" : hasAns ? "secondary" : "outline";

@@ -199,6 +199,7 @@ export function AddQuestionDialog({
     const newChoices = [...choices]; newChoices[index].content = val; setChoices(newChoices);
   };
   const toggleCorrectAnswer = (index: number) => {
+    if (questionType === "short_answer" || questionType === "essay") return;
     const newChoices = [...choices];
     if (questionType === "single_choice") newChoices.forEach((c, i) => c.isCorrect = i === index);
     else newChoices[index].isCorrect = !newChoices[index].isCorrect;
@@ -210,7 +211,16 @@ export function AddQuestionDialog({
   const handleSubmit = async () => {
     if (!selectedSection) return toast.error("Vui lòng chọn Chương/Phần");
     if (!content.trim()) return toast.error("Chưa nhập nội dung câu hỏi");
-    if (choices.filter(c => c.isCorrect).length === 0) return toast.error("Phải có ít nhất 1 đáp án đúng");
+    
+    let finalChoices = [...choices];
+    if (questionType === "essay") {
+      finalChoices = [];
+    } else if (questionType === "short_answer") {
+      finalChoices = finalChoices.filter(c => c.content.trim() !== "").map(c => ({...c, isCorrect: true}));
+      if (finalChoices.length === 0) return toast.error("Vui lòng nhập ít nhất 1 đáp án chấp nhận được");
+    } else {
+      if (choices.filter(c => c.isCorrect).length === 0) return toast.error("Phải có ít nhất 1 đáp án đúng");
+    }
     
     setLoading(true);
     try {
@@ -221,7 +231,7 @@ export function AddQuestionDialog({
         difficulty,
         explanation,
         attachment_url: attachmentUrl,
-        choices: choices.map(c => ({ 
+        choices: finalChoices.map(c => ({ 
             content: c.content, 
             is_correct: c.isCorrect,
             attachment_url: c.attachmentUrl 
@@ -302,7 +312,12 @@ export function AddQuestionDialog({
                 <Label>Loại câu hỏi</Label>
                 <Select value={questionType} onValueChange={setQuestionType}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="single_choice">Một đáp án đúng</SelectItem><SelectItem value="multiple_choice">Nhiều đáp án đúng</SelectItem></SelectContent>
+                    <SelectContent>
+                      <SelectItem value="single_choice">Một đáp án đúng</SelectItem>
+                      <SelectItem value="multiple_choice">Nhiều đáp án đúng</SelectItem>
+                      <SelectItem value="short_answer">Trả lời ngắn</SelectItem>
+                      <SelectItem value="essay">Tự luận</SelectItem>
+                    </SelectContent>
                 </Select>
             </div>
             <div className="space-y-2">
@@ -315,25 +330,39 @@ export function AddQuestionDialog({
           </div>
 
           {/* CHOICES LIST */}
+          {questionType !== "essay" && (
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Các lựa chọn <span className="text-red-500">*</span></Label>
+            <Label className="text-base font-semibold">
+              {questionType === "short_answer" 
+                ? "Các đáp án được chấp nhận (Acceptable Answers)" 
+                : "Các lựa chọn"} <span className="text-red-500">*</span>
+            </Label>
             <div className="space-y-4">
               {choices.map((choice, index) => (
                 <div key={index} className="space-y-2 p-3 border rounded-lg bg-card hover:bg-accent/5 transition-colors shadow-sm">
                     <div className="flex gap-3 items-center">
-                        <button type="button" onClick={() => toggleCorrectAnswer(index)} className="shrink-0 pt-1" title="Đánh dấu đáp án đúng">
-                            {choice.isCorrect ? 
-                                (questionType === "single_choice" ? <CheckCircle2 className="h-6 w-6 text-green-600" /> : <CheckSquare className="h-6 w-6 text-green-600" />) : 
-                                (questionType === "single_choice" ? <Circle className="h-6 w-6 text-gray-300 hover:text-green-400" /> : <Square className="h-6 w-6 text-gray-300 hover:text-green-400" />)
-                            }
-                        </button>
+                        {(questionType === "single_choice" || questionType === "multiple_choice") && (
+                            <button type="button" onClick={() => toggleCorrectAnswer(index)} className="shrink-0 pt-1" title="Đánh dấu đáp án đúng">
+                                {choice.isCorrect ? 
+                                    (questionType === "single_choice" ? <CheckCircle2 className="h-6 w-6 text-green-600" /> : <CheckSquare className="h-6 w-6 text-green-600" />) : 
+                                    (questionType === "single_choice" ? <Circle className="h-6 w-6 text-gray-300 hover:text-green-400" /> : <Square className="h-6 w-6 text-gray-300 hover:text-green-400" />)
+                                }
+                            </button>
+                        )}
+                        {questionType === "short_answer" && (
+                            <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
+                        )}
                         
                         <div className="flex-1">
                             <Input 
                                 value={choice.content} 
                                 onChange={(e) => handleChoiceChange(index, e.target.value)} 
-                                placeholder={`Nội dung đáp án ${String.fromCharCode(65 + index)}`} 
-                                className={choice.isCorrect ? "border-green-500 bg-green-50/20 font-medium" : ""}
+                                placeholder={
+                                  questionType === "short_answer" 
+                                  ? `Nhập đáp án hợp lệ ${index + 1}` 
+                                  : `Nội dung đáp án ${String.fromCharCode(65 + index)}`
+                                } 
+                                className={choice.isCorrect || questionType === "short_answer" ? "border-green-500 bg-green-50/20 font-medium" : ""}
                             />
                         </div>
 
@@ -367,6 +396,7 @@ export function AddQuestionDialog({
             </div>
             <Button type="button" variant="outline" size="sm" onClick={addChoice} className="w-full border-dashed"><Plus className="h-4 w-4 mr-2" /> Thêm lựa chọn</Button>
           </div>
+          )}
 
           {/* === EXPLANATION (TEXTAREA ĐƠN GIẢN) === */}
           <div className="space-y-2">

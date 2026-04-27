@@ -31,6 +31,7 @@ interface SubmissionDetail {
   is_correct: boolean;
   choices: ChoiceReview[];
   attachment_url?: string;
+  text_answer?: string;
 }
 
 interface Submission {
@@ -70,6 +71,22 @@ export default function SubmissionDetailPage() {
 
     if (submissionId) fetchSubmission();
   }, [submissionId]);
+
+  const handleGrade = async (questionId: number, isCorrect: boolean) => {
+    try {
+      await api.post(`/submissions/${submissionId}/grade`, {
+        question_id: questionId,
+        is_correct: isCorrect,
+      });
+      toast.success("Đã cập nhật kết quả.");
+      // Refresh data
+      const res = await api.get(`/submissions/${submissionId}`);
+      setSubmission(res.data.data);
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể chấm điểm.");
+    }
+  };
 
   // ===== LOADING =====
   if (isLoading) {
@@ -166,58 +183,98 @@ export default function SubmissionDetailPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {detail.choices.map((choice) => {
-                    const isChosen = choice.user_selected;
-                    const isCorrectChoice = choice.is_correct;
+                  {detail.question_type !== "single_choice" && detail.question_type !== "multiple_choice" && (
+                    <div className="mb-4 p-4 rounded-lg bg-muted/50 border">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Câu trả lời của học sinh:</p>
+                      <div className="text-sm italic">
+                        {detail.text_answer || <span className="text-muted-foreground text-xs">(Không có nội dung)</span>}
+                      </div>
+                    </div>
+                  )}
 
-                    let bgColor = "";
-                    let borderColor = "";
-                    let textColor = "";
-
-                    if (isChosen && isCorrectChoice) {
-                      bgColor = "bg-green-50 dark:bg-green-950";
-                      borderColor = "border-green-500";
-                      textColor = "text-green-700 dark:text-green-300";
-                    } else if (isChosen && !isCorrectChoice) {
-                      bgColor = "bg-red-50 dark:bg-red-950";
-                      borderColor = "border-red-500";
-                      textColor = "text-red-700 dark:text-red-300";
-                    } else if (!isChosen && isCorrectChoice) {
-                      bgColor = "bg-blue-50 dark:bg-blue-950";
-                      borderColor = "border-blue-500";
-                      textColor = "text-blue-700 dark:text-blue-300";
-                    } else {
-                      bgColor = "bg-muted/30";
-                      borderColor = "border-border";
-                      textColor = "text-muted-foreground";
-                    }
-
-                    return (
-                      <div
-                        key={choice.id}
-                        className={`p-3 border-2 rounded-lg ${bgColor} ${borderColor}`}
+                  {(detail.question_type === "essay" || detail.question_type === "short_answer") && (
+                    <div className="flex items-center gap-3 mt-4 pt-4 border-t border-dashed">
+                      <p className="text-sm font-medium text-muted-foreground">Chấm điểm thủ công:</p>
+                      <Button 
+                        size="sm" 
+                        variant={detail.is_correct ? "default" : "outline"}
+                        className={detail.is_correct ? "bg-green-600 hover:bg-green-700 border-green-200" : ""}
+                        onClick={() => handleGrade(detail.question_id, true)}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 mt-0.5">
-                            {isChosen && isCorrectChoice && <CheckCircle className="h-5 w-5 text-green-600" />}
-                            {isChosen && !isCorrectChoice && <XCircle className="h-5 w-5 text-red-600" />}
-                            {!isChosen && isCorrectChoice && <CheckCircle className="h-5 w-5 text-blue-600" />}
-                          </div>
-                          <div className="flex-1">
-                             <RichTextDisplay content={choice.content} className={`text-sm ${textColor}`} />
-                            {isChosen && <Badge variant="outline" className="mt-1">Đã chọn</Badge>}
-                            {!isChosen && isCorrectChoice && (
-                              <Badge variant="outline" className="mt-1 border-blue-500 text-blue-600">
-                                Đáp án đúng
-                              </Badge>
-                            )}
+                        <CheckCircle className="mr-1 h-3 w-3" /> Đạt (Đúng)
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={!detail.is_correct ? "destructive" : "outline"}
+                        className={!detail.is_correct ? "bg-red-600 hover:bg-red-700 border-red-200" : ""}
+                        onClick={() => handleGrade(detail.question_id, false)}
+                      >
+                        <XCircle className="mr-1 h-3 w-3" /> Chưa đạt (Sai)
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground italic ml-auto">
+                        * Tự luận luôn cần chấm thủ công. Trả lời ngắn đã được tự động chấm nhưng bạn vẫn có thể thay đổi.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {detail.choices.length > 0 && (
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">
+                        {detail.question_type === "single_choice" || detail.question_type === "multiple_choice" ? "Các lựa chọn:" : "Các đáp án chấp nhận được:"}
+                      </p>
+                    )}
+                    {detail.choices.map((choice) => {
+                      const isChosen = choice.user_selected;
+                      const isCorrectChoice = choice.is_correct;
+
+                      let bgColor = "";
+                      let borderColor = "";
+                      let textColor = "";
+
+                      if (isChosen && isCorrectChoice) {
+                        bgColor = "bg-green-50 dark:bg-green-950";
+                        borderColor = "border-green-500";
+                        textColor = "text-green-700 dark:text-green-300";
+                      } else if (isChosen && !isCorrectChoice) {
+                        bgColor = "bg-red-50 dark:bg-red-950";
+                        borderColor = "border-red-500";
+                        textColor = "text-red-700 dark:text-red-300";
+                      } else if (!isChosen && isCorrectChoice) {
+                        bgColor = "bg-blue-50 dark:bg-blue-950";
+                        borderColor = "border-blue-500";
+                        textColor = "text-blue-700 dark:text-blue-300";
+                      } else {
+                        bgColor = "bg-muted/30";
+                        borderColor = "border-border";
+                        textColor = "text-muted-foreground";
+                      }
+
+                      return (
+                        <div
+                          key={choice.id}
+                          className={`p-3 border-2 rounded-lg ${bgColor} ${borderColor}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 mt-0.5">
+                              {isChosen && isCorrectChoice && <CheckCircle className="h-5 w-5 text-green-600" />}
+                              {isChosen && !isCorrectChoice && <XCircle className="h-5 w-5 text-red-600" />}
+                              {!isChosen && isCorrectChoice && <CheckCircle className="h-5 w-5 text-blue-600" />}
+                            </div>
+                            <div className="flex-1">
+                               <RichTextDisplay content={choice.content} className={`text-sm ${textColor}`} />
+                              {isChosen && <Badge variant="outline" className="mt-1">Đã chọn</Badge>}
+                              {!isChosen && isCorrectChoice && (
+                                <Badge variant="outline" className="mt-1 border-blue-500 text-blue-600">
+                                  Đáp án đúng
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+
               </CardContent>
             </Card>
           );

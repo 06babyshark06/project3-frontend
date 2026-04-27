@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
     ArrowLeft, Users, UserPlus, Trash2, Mail, Loader2,
-    FileText, Clock, BookOpen
+    FileText, Clock, BookOpen, Download, TrendingUp
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,10 @@ export default function ClassDetailPage() {
     // Dialog state for unassigning exam
     const [examIdToRemove, setExamIdToRemove] = useState<number | null>(null);
 
+    // Gradebook State
+    const [gradebook, setGradebook] = useState<{exams: any[], students: any[]}>({exams: [], students: []});
+    const [loadingGradebook, setLoadingGradebook] = useState(false);
+
     const fetchData = async () => {
         try {
             setLoading(true);
@@ -70,8 +74,23 @@ export default function ClassDetailPage() {
     };
 
     useEffect(() => {
-        if (classId) fetchData();
+        if (classId) {
+            fetchData();
+            fetchGradebook();
+        }
     }, [classId]);
+
+    const fetchGradebook = async () => {
+        try {
+            setLoadingGradebook(true);
+            const res = await api.get(`/classes/${classId}/gradebook`);
+            setGradebook(res.data.data);
+        } catch (error) {
+            toast.error("Không thể tải bảng điểm");
+        } finally {
+            setLoadingGradebook(false);
+        }
+    };
 
     const handleAddMembers = async () => {
         if (!emailsInput.trim()) return;
@@ -123,11 +142,38 @@ export default function ClassDetailPage() {
             await api.delete(`/classes/${classId}/exams/${examIdToRemove}`);
             toast.success("Đã gỡ bài thi khỏi lớp");
             setExams(prev => prev.filter(e => e.id !== examIdToRemove));
+            fetchGradebook(); // Refresh gradebook too
         } catch (error) {
             toast.error("Gỡ bài thi thất bại");
         } finally {
             setExamIdToRemove(null);
         }
+    };
+
+    const exportToCSV = () => {
+        if (!gradebook.students.length) return;
+
+        // Header
+        let csv = "Họ và tên," + gradebook.exams.map(e => e.title).join(",") + "\n";
+        
+        // Rows
+        gradebook.students.forEach(s => {
+            csv += s.full_name;
+            gradebook.exams.forEach(e => {
+                const score = s.scores[e.id];
+                csv += "," + (s.completed[e.id] ? score : "-");
+            });
+            csv += "\n";
+        });
+
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Bang_diem_${classData?.name || "lop"}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     if (loading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -177,9 +223,10 @@ export default function ClassDetailPage() {
                 {/* RIGHT: TABS CONTENT */}
                 <div className="lg:col-span-2">
                     <Tabs defaultValue="exams" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 mb-4">
+                        <TabsList className="grid w-full grid-cols-3 mb-4">
                             <TabsTrigger value="exams">Bài thi & Kiểm tra</TabsTrigger>
-                            <TabsTrigger value="students">Danh sách học viên</TabsTrigger>
+                            <TabsTrigger value="students">Học viên</TabsTrigger>
+                            <TabsTrigger value="gradebook">Bảng điểm</TabsTrigger>
                         </TabsList>
 
                         {/* TAB 1: BÀI THI */}
@@ -238,7 +285,6 @@ export default function ClassDetailPage() {
                             </div>
                         </TabsContent>
 
-                        {/* TAB 2: HỌC VIÊN (Code cũ của bạn chuyển vào đây) */}
                         <TabsContent value="students">
                             <Card>
                                 <CardHeader>
@@ -279,6 +325,80 @@ export default function ClassDetailPage() {
                                             )}
                                         </TableBody>
                                     </Table>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        {/* TAB 3: BẢNG ĐIỂM */}
+                        <TabsContent value="gradebook">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle>Bảng điểm tổng hợp</CardTitle>
+                                        <CardDescription>Theo dõi kết quả học tập của cả lớp</CardDescription>
+                                    </div>
+                                    <Button variant="outline" size="sm" onClick={exportToCSV} disabled={!gradebook.students.length}>
+                                        <Download className="mr-2 h-4 w-4" /> Xuất Excel (CSV)
+                                    </Button>
+                                </CardHeader>
+                                <CardContent>
+                                    {loadingGradebook ? (
+                                        <div className="flex justify-center py-12"><Loader2 className="animate-spin" /></div>
+                                    ) : gradebook.exams.length === 0 ? (
+                                        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
+                                            <TrendingUp className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                                            Chưa có bài thi nào được giao để thống kê điểm.
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-md border overflow-x-auto">
+                                            <Table>
+                                                <TableHeader className="bg-muted/50">
+                                                    <TableRow>
+                                                        <TableHead className="w-[200px] font-bold sticky left-0 bg-muted/50 z-10">Học sinh</TableHead>
+                                                        {gradebook.exams.map(e => (
+                                                            <TableHead key={e.id} className="text-center min-w-[120px] font-bold">
+                                                                <div className="line-clamp-1" title={e.title}>{e.title}</div>
+                                                            </TableHead>
+                                                        ))}
+                                                        <TableHead className="text-center font-bold bg-primary/5">Trung bình</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {gradebook.students.map(s => {
+                                                        let total = 0;
+                                                        let count = 0;
+                                                        return (
+                                                            <TableRow key={s.student_id}>
+                                                                <TableCell className="font-medium sticky left-0 bg-background z-10 border-r">{s.full_name}</TableCell>
+                                                                {gradebook.exams.map(e => {
+                                                                    const hasScore = s.completed[e.id];
+                                                                    const score = s.scores[e.id];
+                                                                    if (hasScore) {
+                                                                        total += score;
+                                                                        count++;
+                                                                    }
+                                                                    return (
+                                                                        <TableCell key={e.id} className="text-center">
+                                                                            {hasScore ? (
+                                                                                <Badge variant="outline" className={`${score >= 8 ? "border-green-500 text-green-700 bg-green-50" : score >= 5 ? "border-yellow-500 text-yellow-700 bg-yellow-50" : "border-red-500 text-red-700 bg-red-50"}`}>
+                                                                                    {score.toFixed(1)}
+                                                                                </Badge>
+                                                                            ) : (
+                                                                                <span className="text-muted-foreground text-xs italic">-</span>
+                                                                            )}
+                                                                        </TableCell>
+                                                                    );
+                                                                })}
+                                                                <TableCell className="text-center font-bold bg-primary/5">
+                                                                    {count > 0 ? (total / count).toFixed(1) : "-"}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </TabsContent>

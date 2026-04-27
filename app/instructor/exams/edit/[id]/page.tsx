@@ -694,7 +694,12 @@ export default function EditExamPage() {
                                                                         <p className={`line-clamp-2 ${isSelected ? "text-blue-700 font-medium" : "text-muted-foreground"}`}>{q.content}</p>
                                                                         <div className="flex gap-1 mt-1">
                                                                             <span className={`text-[10px] px-1 rounded border ${q.difficulty === 'easy' ? 'text-green-600 border-green-200' : q.difficulty === 'medium' ? 'text-yellow-600 border-yellow-200' : 'text-red-600 border-red-200'}`}>{q.difficulty}</span>
-                                                                            <span className="text-[10px] px-1 rounded border bg-muted">{q.question_type === 'single_choice' ? '1 Đ.A' : 'Nhiều Đ.A'}</span>
+                                                                            <span className="text-[10px] px-1 rounded border bg-muted">
+                                                                                {q.question_type === 'single_choice' ? '1 Đ.A' :
+                                                                                    q.question_type === 'multiple_choice' ? 'Nhiều Đ.A' :
+                                                                                        q.question_type === 'short_answer' ? 'T.L Ngắn' :
+                                                                                            q.question_type === 'essay' ? 'Tự luận' : 'Điền khuyết'}
+                                                                            </span>
                                                                         </div>
                                                                     </div>
                                                                 </div>

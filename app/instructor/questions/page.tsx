@@ -58,7 +58,7 @@ interface Choice {
 interface Question {
   id: number;
   content: string;
-  question_type: "single_choice" | "multiple_choice";
+  question_type: "single_choice" | "multiple_choice" | "short_answer" | "essay";
   difficulty: "easy" | "medium" | "hard";
   section_id: number;
   section_name?: string;
@@ -655,8 +655,14 @@ export default function QuestionBankPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={q.question_type === "multiple_choice" ? "secondary" : "outline"}>
-                        {q.question_type === "multiple_choice" ? "Nhiều Đ.A" : "1 Đ.A"}
+                      <Badge variant={
+                        q.question_type === "multiple_choice" ? "secondary" : 
+                        q.question_type === "essay" ? "destructive" :
+                        q.question_type === "short_answer" ? "default" : "outline"
+                      }>
+                        {q.question_type === "multiple_choice" ? "Nhiều Đ.A" : 
+                         q.question_type === "single_choice" ? "1 Đ.A" :
+                         q.question_type === "short_answer" ? "T.L Ngắn" : "Tự luận"}
                       </Badge>
                     </TableCell>
                     <TableCell>{getDifficultyBadge(q.difficulty)}</TableCell>
@@ -790,22 +796,28 @@ export default function QuestionBankPage() {
                   {isLoadingDetail && <Loader2 className="h-4 w-4 animate-spin" />}
                 </h5>
                 <div className="grid gap-3">
-                  {questionToView.choices?.map((c, i) => (
-                    <div key={c.id || i} className={`flex flex-col p-3 rounded-md border transition-colors ${c.is_correct ? "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800" : "bg-card"}`}>
-                      <div className="flex items-start gap-3">
-                        <div className={`shrink-0 h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 ${c.is_correct ? "bg-green-600 text-white" : "bg-muted text-muted-foreground"}`}>
-                          {String.fromCharCode(65 + i)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <RichTextDisplay content={c.content} className={c.is_correct ? "font-medium text-green-700 dark:text-green-400" : ""} />
-
-                          {/* ẢNH/VIDEO CỦA ĐÁP ÁN */}
-                          <MediaDisplay url={c.attachment_url} />
-                        </div>
-                        {c.is_correct && <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />}
-                      </div>
+                  {questionToView.question_type === "essay" ? (
+                    <div className="p-4 rounded-md border bg-muted/20 italic text-muted-foreground text-sm">
+                      Đây là câu hỏi tự luận. Học sinh sẽ nhập câu trả lời dưới dạng văn bản.
                     </div>
-                  ))}
+                  ) : (
+                    questionToView.choices?.map((c, i) => (
+                      <div key={c.id || i} className={`flex flex-col p-3 rounded-md border transition-colors ${c.is_correct ? "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800" : "bg-card"}`}>
+                        <div className="flex items-start gap-3">
+                          <div className={`shrink-0 h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 ${c.is_correct ? "bg-green-600 text-white" : "bg-muted text-muted-foreground"}`}>
+                            {questionToView.question_type === "short_answer" ? "✓" : String.fromCharCode(65 + i)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <RichTextDisplay content={c.content} className={c.is_correct ? "font-medium text-green-700 dark:text-green-400" : ""} />
+                            
+                            {/* ẢNH/VIDEO CỦA ĐÁP ÁN */}
+                            <MediaDisplay url={c.attachment_url} />
+                          </div>
+                          {c.is_correct && <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 

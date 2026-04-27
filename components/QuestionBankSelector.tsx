@@ -196,8 +196,14 @@ export function QuestionBankSelector({
                         <p className="text-sm font-medium line-clamp-2">{q.content}</p>
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline" className="text-xs bg-background">{q.section_name}</Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            {q.question_type === "single_choice" ? "1 Đ.A" : "Nhiều Đ.A"}
+                          <Badge variant={
+                            q.question_type === "multiple_choice" ? "secondary" : 
+                            q.question_type === "essay" ? "destructive" :
+                            q.question_type === "short_answer" ? "default" : "outline"
+                          } className="text-[10px]">
+                            {q.question_type === "multiple_choice" ? "Nhiều Đ.A" : 
+                             q.question_type === "single_choice" ? "1 Đ.A" :
+                             q.question_type === "short_answer" ? "T.L Ngắn" : "Tự luận"}
                           </Badge>
                           <Badge 
                             variant="outline" 
