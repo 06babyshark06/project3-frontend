@@ -218,12 +218,12 @@ export default function SubmissionDetailPage() {
                   )}
 
                   <div className="space-y-2">
-                    {detail.choices.length > 0 && (
+                    {(detail.choices || []).length > 0 && (
                       <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">
                         {detail.question_type === "single_choice" || detail.question_type === "multiple_choice" ? "Các lựa chọn:" : "Các đáp án chấp nhận được:"}
                       </p>
                     )}
-                    {detail.choices.map((choice) => {
+                    {(detail.choices || []).map((choice) => {
                       const isChosen = choice.user_selected;
                       const isCorrectChoice = choice.is_correct;
 
