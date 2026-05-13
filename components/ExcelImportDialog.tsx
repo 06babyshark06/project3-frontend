@@ -170,7 +170,7 @@ export function ExcelImportDialog({
               </div>
               <div className="flex justify-between border-b border-dashed pb-1">
                 <span>Cột D</span>
-                <span className="font-medium text-foreground">Loại (single/multiple_choice)</span>
+                <span className="font-medium text-foreground">Loại (single_choice/multiple_choice/short_answer/essay)</span>
               </div>
               <div className="flex justify-between border-b border-dashed pb-1">
                 <span>Cột E</span>
@@ -192,6 +192,12 @@ export function ExcelImportDialog({
                 <span>Cột I, J, K, L...</span>
                 <span className="font-medium text-foreground">Nội dung các lựa chọn A, B, C, D...</span>
               </div>
+            </div>
+            <div className="p-4 bg-muted/20 border-t text-xs text-muted-foreground space-y-2">
+              <ul className="list-disc pl-4 space-y-1">
+                <li><strong className="text-foreground">Trả lời ngắn (short_answer):</strong> Điền các đáp án được chấp nhận vào các Cột I, J... và ghi tương ứng A, B... vào Cột H (Đáp án đúng).</li>
+                <li><strong className="text-foreground">Tự luận (essay):</strong> Để trống Cột H (Đáp án đúng) và các Cột I, J... (Lựa chọn).</li>
+              </ul>
             </div>
           </div>
         </div>

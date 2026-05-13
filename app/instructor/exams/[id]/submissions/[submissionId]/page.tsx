@@ -32,6 +32,8 @@ interface SubmissionDetail {
   choices: ChoiceReview[];
   attachment_url?: string;
   text_answer?: string;
+  awarded_points?: number;
+  points?: number;
 }
 
 interface Submission {
@@ -53,6 +55,7 @@ export default function SubmissionDetailPage() {
 
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pointsInput, setPointsInput] = useState<Record<number, string>>({});
 
   // ===== FETCH SUBMISSION =====
   useEffect(() => {
@@ -61,6 +64,24 @@ export default function SubmissionDetailPage() {
       try {
         const res = await api.get(`/submissions/${submissionId}`);
         setSubmission(res.data.data);
+        
+        // Init input state with current points
+        if (res.data.data && res.data.data.details) {
+          const initPoints: Record<number, string> = {};
+          const totalMaxPoints = res.data.data.details.reduce((acc: number, d: any) => acc + (d.points || 1.0), 0) || 1.0;
+          res.data.data.details.forEach((d: any) => {
+             const qPts = d.points || 1.0;
+             const maxPts = (qPts / totalMaxPoints) * 10.0;
+             if (d.awarded_points !== undefined && d.awarded_points !== null) {
+               initPoints[d.question_id] = (d.awarded_points * maxPts).toFixed(2);
+             } else if (d.is_correct) {
+               initPoints[d.question_id] = maxPts.toFixed(2);
+             } else {
+               initPoints[d.question_id] = "0";
+             }
+          });
+          setPointsInput(initPoints);
+        }
       } catch (error) {
         console.error(error);
         toast.error("Không thể tải chi tiết bài làm.");
@@ -72,11 +93,12 @@ export default function SubmissionDetailPage() {
     if (submissionId) fetchSubmission();
   }, [submissionId]);
 
-  const handleGrade = async (questionId: number, isCorrect: boolean) => {
+  const handleGrade = async (questionId: number, isCorrect: boolean, scoreRatio?: number) => {
     try {
       await api.post(`/submissions/${submissionId}/grade`, {
         question_id: questionId,
         is_correct: isCorrect,
+        score_ratio: scoreRatio !== undefined ? scoreRatio : (isCorrect ? 1.0 : 0.0),
       });
       toast.success("Đã cập nhật kết quả.");
       // Refresh data
@@ -157,11 +179,15 @@ export default function SubmissionDetailPage() {
 
       {/* QUESTIONS & ANSWERS */}
       <div className="space-y-6">
-        {(submission.details || []).map((detail, idx) => {
-          const isCorrect = detail.is_correct;
+        {(() => {
+          const totalMaxPoints = (submission.details || []).reduce((acc, d) => acc + (d.points || 1.0), 0) || 1.0;
+          return (submission.details || []).map((detail, idx) => {
+            const isCorrect = detail.is_correct;
+            const qPts = detail.points || 1.0;
+            const maxPtsForQuestion = (qPts / totalMaxPoints) * 10.0;
 
-          return (
-            <Card key={detail.question_id} className={isCorrect ? "border-green-500" : "border-red-500"}>
+            return (
+              <Card key={detail.question_id} className={isCorrect ? "border-green-500" : "border-red-500"}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -193,27 +219,45 @@ export default function SubmissionDetailPage() {
                   )}
 
                   {(detail.question_type === "essay" || detail.question_type === "short_answer") && (
-                    <div className="flex items-center gap-3 mt-4 pt-4 border-t border-dashed">
-                      <p className="text-sm font-medium text-muted-foreground">Chấm điểm thủ công:</p>
-                      <Button 
-                        size="sm" 
-                        variant={detail.is_correct ? "default" : "outline"}
-                        className={detail.is_correct ? "bg-green-600 hover:bg-green-700 border-green-200" : ""}
-                        onClick={() => handleGrade(detail.question_id, true)}
-                      >
-                        <CheckCircle className="mr-1 h-3 w-3" /> Đạt (Đúng)
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant={!detail.is_correct ? "destructive" : "outline"}
-                        className={!detail.is_correct ? "bg-red-600 hover:bg-red-700 border-red-200" : ""}
-                        onClick={() => handleGrade(detail.question_id, false)}
-                      >
-                        <XCircle className="mr-1 h-3 w-3" /> Chưa đạt (Sai)
-                      </Button>
-                      <p className="text-[10px] text-muted-foreground italic ml-auto">
-                        * Tự luận luôn cần chấm thủ công. Trả lời ngắn đã được tự động chấm nhưng bạn vẫn có thể thay đổi.
-                      </p>
+                    <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-dashed">
+                      <div className="flex items-center gap-3">
+                        <p className="text-sm font-medium text-muted-foreground">Chấm điểm thủ công:</p>
+                        
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max={maxPtsForQuestion.toFixed(2)} 
+                            step="0.01"
+                            className="w-20 px-2 py-1 text-sm border rounded"
+                            value={pointsInput[detail.question_id] !== undefined ? pointsInput[detail.question_id] : ""}
+                            onChange={(e) => setPointsInput({...pointsInput, [detail.question_id]: e.target.value})}
+                          />
+                          <span className="text-sm text-muted-foreground">/ {maxPtsForQuestion.toFixed(2)}</span>
+                        </div>
+
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          className="bg-primary"
+                          onClick={() => {
+                            const val = parseFloat(pointsInput[detail.question_id]);
+                            if (isNaN(val) || val < 0 || val > maxPtsForQuestion) {
+                              toast.error(`Điểm không hợp lệ. Vui lòng nhập từ 0 đến ${maxPtsForQuestion.toFixed(2)}`);
+                              return;
+                            }
+                            const ratio = val / maxPtsForQuestion;
+                            handleGrade(detail.question_id, ratio > 0, ratio);
+                          }}
+                        >
+                          Lưu điểm
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                         <p className="text-[10px] text-muted-foreground italic">
+                          * Tự luận luôn cần chấm thủ công. Trả lời ngắn đã được tự động chấm nhưng bạn vẫn có thể thay đổi số điểm đạt được (chấm điểm một phần).
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -278,7 +322,7 @@ export default function SubmissionDetailPage() {
               </CardContent>
             </Card>
           );
-        })}
+        })})()}
       </div>
     </div>
   );

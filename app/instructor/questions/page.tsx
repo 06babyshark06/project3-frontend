@@ -67,6 +67,7 @@ interface Question {
   created_at: string;
   explanation?: string;
   attachment_url?: string;
+  points?: number;
   choices?: Choice[];
 }
 
@@ -613,7 +614,7 @@ export default function QuestionBankPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
+                  <TableCell colSpan={6} className="h-32 text-center">
                     <div className="flex justify-center items-center gap-2 text-muted-foreground">
                       <Loader2 className="h-5 w-5 animate-spin" />
                       <span>Đang tải dữ liệu...</span>
@@ -622,7 +623,7 @@ export default function QuestionBankPage() {
                 </TableRow>
               ) : questions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                     Không tìm thấy câu hỏi nào phù hợp.
                   </TableCell>
                 </TableRow>

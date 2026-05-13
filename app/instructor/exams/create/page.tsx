@@ -41,6 +41,7 @@ interface Question {
     question_type: string;
     difficulty: string;
     section_name?: string;
+    points: number;
 }
 
 // ===== COMPONENT CHÍNH =====
@@ -75,6 +76,7 @@ export default function CreateExamPage() {
         sectionId: number | string;
         difficulty: string;
         count: number;
+        points: number;
     }
     const [dynamicConfigs, setDynamicConfigs] = useState<DynamicConfig[]>([]);
 
@@ -106,7 +108,7 @@ export default function CreateExamPage() {
         try {
             const res = await api.get("/questions", { params: { topic_id: topicId, limit: 1000 } });
             const allQuestions = res.data.data.questions as Question[];
-            const questionsToAdd = allQuestions.filter(q => newIds.includes(q.id));
+            const questionsToAdd = allQuestions.filter(q => newIds.includes(q.id)).map(q => ({ ...q, points: 1.0 }));
             setSelectedQuestions(prev => [...prev, ...questionsToAdd]);
             toast.success(`Đã thêm ${questionsToAdd.length} câu hỏi`);
         } catch (e) {
@@ -140,7 +142,7 @@ export default function CreateExamPage() {
             }
 
             const shuffled = pool.sort(() => 0.5 - Math.random());
-            const selected = shuffled.slice(0, config.count);
+            const selected = shuffled.slice(0, config.count).map(q => ({ ...q, points: 1.0 }));
 
             if (selected.length === 0) {
                 toast.error("Không tìm thấy câu hỏi nào phù hợp tiêu chí");
@@ -159,6 +161,10 @@ export default function CreateExamPage() {
         setSelectedQuestions(prev => prev.filter(q => q.id !== id));
     };
 
+    const updateQuestionPoints = (id: number, points: number) => {
+        setSelectedQuestions(prev => prev.map(q => q.id === id ? { ...q, points } : q));
+    };
+
     const handleSubmit = async () => {
         if (!title || !topicId) return toast.error("Thiếu thông tin bắt buộc");
         if (!isDynamic && selectedQuestions.length === 0) return toast.error("Đề thi chưa có câu hỏi nào (chọn chế độ thủ công)");
@@ -169,14 +175,15 @@ export default function CreateExamPage() {
             const configArray = dynamicConfigs.map(c => ({
                 section_id: c.sectionId === 'all' ? 0 : Number(c.sectionId),
                 count: Number(c.count),
-                difficulty: c.difficulty
+                difficulty: c.difficulty,
+                points: Number(c.points) || 1.0
             }));
 
             const payload = {
                 title,
                 description,
                 topic_id: Number(topicId),
-                question_ids: selectedQuestions.map(q => q.id),
+                questions: selectedQuestions.map(q => ({ question_id: q.id, points: q.points })),
                 settings: {
                     duration_minutes: duration,
                     max_attempts: maxAttempts,
@@ -371,13 +378,14 @@ export default function CreateExamPage() {
                                             <TableHead>Nội dung</TableHead>
                                             <TableHead className="w-[120px]">Chương</TableHead>
                                             <TableHead className="w-[100px]">Độ khó</TableHead>
+                                            <TableHead className="w-[100px]">Điểm số</TableHead>
                                             <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {selectedQuestions.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                                                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                                                     Chưa có câu hỏi nào được chọn.
                                                 </TableCell>
                                             </TableRow>
@@ -394,6 +402,16 @@ export default function CreateExamPage() {
                                                         }>
                                                             {q.difficulty}
                                                         </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Input 
+                                                            type="number" 
+                                                            min={0} 
+                                                            step={0.5} 
+                                                            value={q.points} 
+                                                            onChange={(e) => updateQuestionPoints(q.id, parseFloat(e.target.value) || 0)}
+                                                            className="h-8 w-20 px-2"
+                                                        />
                                                     </TableCell>
                                                     <TableCell>
                                                         <Button variant="ghost" size="icon" onClick={() => removeQuestion(q.id)}>
@@ -416,7 +434,7 @@ export default function CreateExamPage() {
                                     <h2 className="text-lg font-semibold">Cấu hình ma trận sinh đề động</h2>
                                     <p className="text-sm text-muted-foreground">Thêm các luồng quy tắc để hệ thống bốc câu hỏi cho từng học sinh</p>
                                 </div>
-                                <Button onClick={() => setDynamicConfigs([...dynamicConfigs, { id: Math.random().toString(), sectionId: 'all', difficulty: 'all', count: 5 }])}>
+                                <Button onClick={() => setDynamicConfigs([...dynamicConfigs, { id: Math.random().toString(), sectionId: 'all', difficulty: 'all', count: 5, points: 1.0 }])}>
                                     <Plus className="mr-2 h-4 w-4" /> Thêm quy tắc
                                 </Button>
                             </div>
@@ -427,7 +445,8 @@ export default function CreateExamPage() {
                                         <TableRow>
                                             <TableHead>Chương / Phần</TableHead>
                                             <TableHead className="w-[150px]">Độ khó</TableHead>
-                                            <TableHead className="w-[120px]">Số lượng</TableHead>
+                                            <TableHead className="w-[100px]">Số lượng</TableHead>
+                                            <TableHead className="w-[100px]">Điểm/câu</TableHead>
                                             <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -475,6 +494,13 @@ export default function CreateExamPage() {
                                                             newCfgs[i].count = Number(e.target.value);
                                                             setDynamicConfigs(newCfgs);
                                                         }} />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Input type="number" step={0.25} min={0} value={cfg.points} onChange={(e) => {
+                                                            const newCfgs = [...dynamicConfigs];
+                                                            newCfgs[i].points = Number(e.target.value);
+                                                            setDynamicConfigs(newCfgs);
+                                                        }} className="h-9" />
                                                     </TableCell>
                                                     <TableCell>
                                                         <Button variant="ghost" size="icon" onClick={() => setDynamicConfigs(dynamicConfigs.filter(c => c.id !== cfg.id))}>

@@ -50,6 +50,7 @@ interface SectionConfig {
     section_id: number | string;
     count: number;
     difficulty: string;
+    points: number;
 }
 
 interface Question {
@@ -59,6 +60,7 @@ interface Question {
     difficulty: string;
     section_id?: number;
     section_name?: string;
+    points: number;
 }
 
 interface Section {
@@ -150,7 +152,8 @@ export default function EditExamPage() {
                     const rules = JSON.parse(examData.settings?.dynamic_config || "[]");
                     const normalizedRules = rules.map((r: any) => ({
                         ...r,
-                        section_id: r.section_id === 0 ? 'all' : r.section_id
+                        section_id: r.section_id === 0 ? 'all' : r.section_id,
+                        points: r.points || 1.0 // Mặc định 1.0 cho các bài thi cũ
                     }));
                     setDynamicRules(normalizedRules);
                 } catch {
@@ -193,7 +196,8 @@ export default function EditExamPage() {
             const configArray = dynamicRules.map(c => ({
                 section_id: c.section_id === 'all' ? 0 : Number(c.section_id),
                 count: Number(c.count),
-                difficulty: c.difficulty
+                difficulty: c.difficulty,
+                points: Number(c.points) || 1.0
             }));
 
             await api.put(`/exams/${examId}`, {
@@ -204,7 +208,7 @@ export default function EditExamPage() {
                     ...settings,
                     dynamic_config: JSON.stringify(configArray)
                 },
-                question_ids: settings.is_dynamic ? [] : (exam?.questions?.map(q => q.id) || [])
+                questions: exam?.questions?.map(q => ({ question_id: q.id, points: q.points })) || []
             });
             toast.success("Đã lưu thay đổi!");
             const res = await api.get(`/exams/${examId}`);
@@ -230,29 +234,28 @@ export default function EditExamPage() {
     const toggleQuestionInExam = async (question: Question) => {
         if (!exam) return;
         const currentQuestions = exam.questions || [];
-        const currentIds = currentQuestions.map(q => q.id);
-        const isExists = currentIds.includes(question.id);
-
-        let newIds;
-        if (isExists) {
-            newIds = currentIds.filter(id => id !== question.id);
-        } else {
-            newIds = [...currentIds, question.id];
-        }
+        const isExists = currentQuestions.some(q => q.id === question.id);
 
         const newQuestions = isExists
             ? currentQuestions.filter(q => q.id !== question.id)
-            : [...currentQuestions, question];
+            : [...currentQuestions, { ...question, points: 1.0 }];
 
         setExam({ ...exam, questions: newQuestions });
 
         try {
             await api.put(`/exams/${examId}`, {
-                title, topic_id: Number(topicId), settings, question_ids: newIds
+                title, topic_id: Number(topicId), settings, 
+                questions: newQuestions.map(q => ({ question_id: q.id, points: q.points }))
             });
         } catch (e) {
             toast.error("Lỗi cập nhật câu hỏi");
         }
+    };
+
+    const updateQuestionPoints = (questionId: number, points: number) => {
+        if (!exam) return;
+        const newQuestions = exam.questions.map(q => q.id === questionId ? { ...q, points } : q);
+        setExam({ ...exam, questions: newQuestions });
     };
 
     // ✅ 2. Xử lý sự kiện kéo thả (Drag End)
@@ -277,17 +280,16 @@ export default function EditExamPage() {
 
         // Gọi API để lưu thứ tự mới
         try {
-            const questionIds = newQuestions.map(q => q.id);
+            const assignments = newQuestions.map(q => ({ question_id: q.id, points: q.points }));
             await api.put(`/exams/${examId}`, {
                 title,
                 topic_id: Number(topicId),
                 settings,
-                question_ids: questionIds
+                questions: assignments
             });
             toast.success("Đã cập nhật thứ tự câu hỏi");
         } catch (error) {
             toast.error("Lỗi khi lưu thứ tự");
-            // Rollback nếu cần (ở đây đơn giản ta không rollback state để UX mượt, nhưng nên reload nếu lỗi)
         }
     };
 
@@ -305,10 +307,10 @@ export default function EditExamPage() {
 
             const res = await api.get("/questions", { params });
             let pool = res.data.data.questions as Question[];
-            const currentIds = exam?.questions?.map(q => q.id) || [];
+            const currentQuestions = exam?.questions || [];
 
             if (!config.replace) {
-                pool = pool.filter(q => !currentIds.includes(q.id));
+                pool = pool.filter(q => !currentQuestions.find(cq => cq.id === q.id));
             }
 
             if (pool.length === 0) return toast.warning("Không tìm thấy câu hỏi mới nào phù hợp.");
@@ -317,12 +319,13 @@ export default function EditExamPage() {
             const shuffled = pool.sort(() => 0.5 - Math.random());
             const selected = shuffled.slice(0, config.count);
 
-            const finalIds = config.replace
-                ? selected.map(q => q.id)
-                : [...currentIds, ...selected.map(q => q.id)];
+            const finalQuestions = config.replace
+                ? selected.map(q => ({ ...q, points: 1.0 }))
+                : [...currentQuestions, ...selected.map(q => ({ ...q, points: 1.0 }))];
 
             await api.put(`/exams/${examId}`, {
-                title, topic_id: Number(topicId), settings, question_ids: finalIds
+                title, topic_id: Number(topicId), settings, 
+                questions: finalQuestions.map(q => ({ question_id: q.id, points: q.points }))
             });
 
             const updatedExam = await api.get(`/exams/${examId}`);
@@ -458,7 +461,18 @@ export default function EditExamPage() {
                                                                                     }`}>
                                                                                     {q.difficulty}
                                                                                 </Badge>
-                                                                                <span className="text-xs text-muted-foreground truncate max-w-[200px]">{q.section_name}</span>
+                                                                                <span className="text-xs text-muted-foreground truncate max-w-[150px]">{q.section_name}</span>
+                                                                                <div className="flex items-center gap-1 ml-auto">
+                                                                                    <Label className="text-[10px] text-muted-foreground">Điểm:</Label>
+                                                                                    <Input 
+                                                                                        type="number" 
+                                                                                        min={0} 
+                                                                                        step={0.5} 
+                                                                                        value={q.points} 
+                                                                                        onChange={(e) => updateQuestionPoints(q.id, parseFloat(e.target.value) || 0)}
+                                                                                        className="h-6 w-14 px-1 text-[10px]"
+                                                                                    />
+                                                                                </div>
                                                                             </div>
                                                                             <p className="text-sm line-clamp-2 font-medium">{q.content}</p>
                                                                         </div>
@@ -556,7 +570,7 @@ export default function EditExamPage() {
                                                 <div className="mt-4 space-y-4 border-t pt-4">
                                                     <div className="flex items-center justify-between">
                                                         <Label className="text-sm font-bold">Quy tắc sinh đề</Label>
-                                                        <Button size="sm" variant="outline" onClick={() => setDynamicRules([...dynamicRules, { section_id: 'all', count: 5, difficulty: 'all' }])}>
+                                                        <Button size="sm" variant="outline" onClick={() => setDynamicRules([...dynamicRules, { section_id: 'all', count: 5, difficulty: 'all', points: 1.0 }])}>
                                                             <Plus className="h-3 w-3 mr-1" /> Thêm quy tắc
                                                         </Button>
                                                     </div>
@@ -615,18 +629,34 @@ export default function EditExamPage() {
                                                                             </Select>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="space-y-1">
-                                                                        <Label className="text-[10px]">Số lượng câu hỏi</Label>
-                                                                        <Input
-                                                                            type="number"
-                                                                            className="h-8 text-xs"
-                                                                            value={rule.count}
-                                                                            onChange={(e) => {
-                                                                                const newRules = [...dynamicRules];
-                                                                                newRules[idx].count = Number(e.target.value);
-                                                                                setDynamicRules(newRules);
-                                                                            }}
-                                                                        />
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <div className="space-y-1">
+                                                                            <Label className="text-[10px]">Số lượng câu hỏi</Label>
+                                                                            <Input
+                                                                                type="number"
+                                                                                className="h-8 text-xs"
+                                                                                value={rule.count}
+                                                                                onChange={(e) => {
+                                                                                    const newRules = [...dynamicRules];
+                                                                                    newRules[idx].count = Number(e.target.value);
+                                                                                    setDynamicRules(newRules);
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                        <div className="space-y-1">
+                                                                            <Label className="text-[10px]">Điểm mỗi câu</Label>
+                                                                            <Input
+                                                                                type="number"
+                                                                                step={0.25}
+                                                                                className="h-8 text-xs"
+                                                                                value={rule.points}
+                                                                                onChange={(e) => {
+                                                                                    const newRules = [...dynamicRules];
+                                                                                    newRules[idx].points = Number(e.target.value);
+                                                                                    setDynamicRules(newRules);
+                                                                                }}
+                                                                            />
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             ))}

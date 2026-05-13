@@ -43,6 +43,7 @@ interface Question {
   question_type: string;
   attachment_url?: string;
   choices: Choice[];
+  points?: number;
 }
 interface ExamSettings {
   duration_minutes: number;
@@ -721,7 +722,12 @@ export default function ExamTakingPage() {
               <Card className="max-w-3xl mx-auto shadow-none md:shadow-sm border-0 md:border">
                 <CardHeader className="px-0 md:px-6">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Câu {currentQuestionIndex + 1}/{exam.questions.length}</CardTitle>
+                    <CardTitle className="text-lg">
+                      Câu {currentQuestionIndex + 1}/{exam.questions.length}
+                      {currentQuestion.points && (
+                        <span className="ml-2 text-sm font-normal text-muted-foreground">({currentQuestion.points} điểm)</span>
+                      )}
+                    </CardTitle>
                     <div className="flex items-center gap-2">
                        <Button variant="ghost" size="sm" onClick={() => toggleFlag(currentQuestion.id)} className={flaggedQuestions.includes(currentQuestion.id) ? "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30" : "text-muted-foreground"}>
                           <Flag className="w-4 h-4 mr-1" />
