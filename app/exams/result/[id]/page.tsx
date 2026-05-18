@@ -44,6 +44,7 @@ interface SubmissionDetail {
   choices: ChoiceReview[];
   attachment_url?: string;
   text_answer?: string;
+  is_graded?: boolean;
 }
 
 interface SubmissionResult {
@@ -211,8 +212,10 @@ export default function ExamResultPage() {
   const score = result.score ?? 0;
   const correctCount = result.correct_count ?? 0;
   const totalQuestions = result.total_questions ?? 0;
-  const wrongCount = totalQuestions - correctCount;
+  const ungradedCount = result.details?.filter(item => item.question_type === "essay" && !item.is_graded).length ?? 0;
+  const wrongCount = Math.max(0, totalQuestions - correctCount - ungradedCount);
   const isPass = score >= 5.0;
+  const isAwaitingGrading = ungradedCount > 0 && score < 5.0;
   const submittedDate = result.submitted_at ? new Date(result.submitted_at).toLocaleString('vi-VN') : "N/A";
 
   // const MediaContent removed, using MediaRenderer instead
@@ -222,17 +225,19 @@ export default function ExamResultPage() {
 
       {/* === 1. CARD TỔNG KẾT (Chỉ hiện khi có chi tiết - tức là đã được công bố kết quả) === */}
       {result.details && result.details.length > 0 && (
-        <Card className={`w-full max-w-2xl shadow-xl border-t-8 ${isPass ? "border-t-green-500" : "border-t-red-500"} mb-8`}>
+        <Card className={`w-full max-w-2xl shadow-xl border-t-8 ${isAwaitingGrading ? "border-t-amber-500" : (isPass ? "border-t-green-500" : "border-t-red-500")} mb-8`}>
           <CardHeader className="text-center pb-2">
-            <div className={`mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full ${isPass ? "bg-green-100" : "bg-red-100"}`}>
-              {isPass ? (
+            <div className={`mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full ${isAwaitingGrading ? "bg-amber-100" : (isPass ? "bg-green-100" : "bg-red-100")}`}>
+              {isAwaitingGrading ? (
+                <AlertCircle className="h-12 w-12 text-amber-600 drop-shadow-sm" />
+              ) : isPass ? (
                 <Trophy className="h-12 w-12 text-green-600 drop-shadow-sm" />
               ) : (
                 <XCircle className="h-12 w-12 text-red-600 drop-shadow-sm" />
               )}
             </div>
-            <CardTitle className={`text-4xl font-black tracking-tight ${isPass ? "text-green-700" : "text-red-700"}`}>
-              {isPass ? "XIN CHÚC MỪNG!" : "CỐ GẮNG LẦN SAU NHÉ!"}
+            <CardTitle className={`text-4xl font-black tracking-tight ${isAwaitingGrading ? "text-amber-700" : (isPass ? "text-green-700" : "text-red-700")}`}>
+              {isAwaitingGrading ? "ĐANG CHỜ CHẤM ĐIỂM" : (isPass ? "XIN CHÚC MỪNG!" : "CỐ GẮNG LẦN SAU NHÉ!")}
             </CardTitle>
             <p className="text-muted-foreground text-xl mt-2 font-medium">
               {result.exam_title || "Bài thi không tên"}
@@ -249,29 +254,49 @@ export default function ExamResultPage() {
                 </span>
                 <span className="text-3xl text-muted-foreground font-medium">/10</span>
               </div>
+              {ungradedCount > 0 && (
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs font-semibold max-w-md text-center flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                  <span>
+                    Bài thi có <strong>{ungradedCount} câu tự luận chưa được chấm điểm</strong>. Điểm số hiện tại là tạm thời và có thể thay đổi sau khi giáo viên chấm bài.
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Thống kê chi tiết */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col items-center p-5 bg-green-50/50 border border-green-100 rounded-xl">
+            <div className={`grid ${ungradedCount > 0 ? "grid-cols-3" : "grid-cols-2"} gap-4`}>
+              <div className="flex flex-col items-center p-5 bg-green-50/50 border border-green-100 rounded-xl justify-center text-center">
                 <div className="flex items-center gap-2 mb-1">
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="text-sm font-bold text-green-700 uppercase">Câu Đúng</span>
+                  <span className="text-xs sm:text-sm font-bold text-green-700 uppercase">Câu Đúng</span>
                 </div>
                 <span className="text-3xl font-bold text-foreground">
                   {correctCount}
                 </span>
               </div>
 
-              <div className="flex flex-col items-center p-5 bg-red-50/50 border border-red-100 rounded-xl">
+              <div className="flex flex-col items-center p-5 bg-red-50/50 border border-red-100 rounded-xl justify-center text-center">
                 <div className="flex items-center gap-2 mb-1">
                   <XCircle className="h-5 w-5 text-red-600" />
-                  <span className="text-sm font-bold text-red-700 uppercase">Câu Sai</span>
+                  <span className="text-xs sm:text-sm font-bold text-red-700 uppercase">Câu Sai</span>
                 </div>
                 <span className="text-3xl font-bold text-foreground">
                   {wrongCount >= 0 ? wrongCount : 0}
                 </span>
               </div>
+
+              {ungradedCount > 0 && (
+                <div className="flex flex-col items-center p-5 bg-amber-50/50 border border-amber-100 rounded-xl justify-center text-center">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertCircle className="h-5 w-5 text-amber-600" />
+                    <span className="text-xs sm:text-sm font-bold text-amber-700 uppercase">Chờ Chấm</span>
+                  </div>
+                  <span className="text-3xl font-bold text-foreground">
+                    {ungradedCount}
+                  </span>
+                </div>
+              )}
             </div>
 
             <Separator />
@@ -306,17 +331,19 @@ export default function ExamResultPage() {
           </div>
 
           {result.details.map((item, idx) => (
-            <Card key={item.question_id || idx} className={`overflow-hidden border-l-4 ${item.is_correct ? "border-l-green-500" : "border-l-red-500"}`}>
+            <Card key={item.question_id || idx} className={`overflow-hidden border-l-4 ${(item.question_type === "essay" && !item.is_graded) ? "border-l-amber-500 bg-amber-50/5" : (item.is_correct ? "border-l-green-500" : "border-l-red-500")}`}>
               <CardHeader className="pb-3 bg-muted/5">
                 <div className="flex items-start gap-4">
-                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${item.is_correct ? "bg-green-600" : "bg-red-600"}`}>
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${(item.question_type === "essay" && !item.is_graded) ? "bg-amber-500" : (item.is_correct ? "bg-green-600" : "bg-red-600")}`}>
                     {idx + 1}
                   </span>
                   <div className="flex-1">
                     <RichTextDisplay content={item.question_content} className="text-lg font-medium leading-relaxed" />
                     <MediaRenderer url={item.attachment_url} />
                   </div>
-                  {item.is_correct ? (
+                  {(item.question_type === "essay" && !item.is_graded) ? (
+                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-amber-200 shrink-0"><AlertCircle className="w-3 h-3 mr-1" /> Chờ chấm</Badge>
+                  ) : item.is_correct ? (
                     <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 shrink-0"><Check className="w-3 h-3 mr-1" /> Đúng</Badge>
                   ) : (
                     <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100 border-red-200 shrink-0"><X className="w-3 h-3 mr-1" /> Sai</Badge>
