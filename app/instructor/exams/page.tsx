@@ -111,7 +111,7 @@ export default function InstructorExamsPage() {
                     </Button>
                   )}
 
-                  {/* 1. Nút Giám sát (Monitor) - Chỉ hiện khi không phải nháp */}
+                  {}
                   {exam.status !== 'draft' && (
                     <Button variant="ghost" size="icon" asChild className="text-red-600 hover:text-red-700 hover:bg-red-50" title="Giám sát phòng thi">
                       <Link href={`/instructor/exams/${exam.id}/monitor`}>
@@ -120,7 +120,7 @@ export default function InstructorExamsPage() {
                     </Button>
                   )}
 
-                  {/* 2. Nút Thống kê (Stats) - Chỉ hiện khi không phải nháp */}
+                  {}
                   {exam.status !== 'draft' && (
                     <Button variant="ghost" size="icon" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Xem thống kê">
                       <Link href={`/instructor/exams/${exam.id}/stats`}>
@@ -129,7 +129,7 @@ export default function InstructorExamsPage() {
                     </Button>
                   )}
 
-                  {/* NEW: Nút Chấm bài/Xem bài nộp */}
+                  {}
                   {exam.status !== 'draft' && (
                     <Button
                       variant="ghost"
@@ -144,10 +144,10 @@ export default function InstructorExamsPage() {
                     </Button>
                   )}
 
-                  {/* 3. Nút Xem thử (Preview) */}
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  {}
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     title="Xem thử đề thi"
                     onClick={() => {
                       setPreviewExamId(exam.id);
@@ -157,12 +157,12 @@ export default function InstructorExamsPage() {
                     <Eye className="h-4 w-4" />
                   </Button>
 
-                  {/* 4. Nút Sửa (Edit) */}
+                  {}
                   <Button variant="ghost" size="icon" asChild title="Chỉnh sửa">
                     <Link href={`/instructor/exams/edit/${exam.id}`}><Edit className="h-4 w-4" /></Link>
                   </Button>
 
-                  {/* 5. Nút Xóa (Delete) */}
+                  {}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="icon" title="Xóa" className="text-red-500 hover:text-red-600 hover:bg-red-50">
@@ -190,10 +190,10 @@ export default function InstructorExamsPage() {
           ))}
         </TableBody>
       </Table>
-      <ExamPreviewDialog 
-        examId={previewExamId} 
-        isOpen={isPreviewOpen} 
-        onClose={() => setIsPreviewOpen(false)} 
+      <ExamPreviewDialog
+        examId={previewExamId}
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
       />
     </div>
   );
@@ -204,7 +204,7 @@ export default function InstructorExamsPage() {
 
   return (
     <div className="container mx-auto max-w-6xl p-6">
-      {/* === TOP BAR === */}
+      {}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-4 border-b">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Quản lý bài thi</h1>

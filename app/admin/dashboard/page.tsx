@@ -9,7 +9,7 @@ import Link from "next/link";
 import {
   Users, BookCopy, Edit, Loader2, ShieldAlert,
   FileQuestion, FolderCog, PlusCircle, ListChecks,
-  UserCog, Library, Layers, School // ✅ Đã thêm icon School
+  UserCog, Library, Layers, School
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
         Chào mừng, <span className="font-semibold text-primary">{user?.full_name}</span> ({user?.role}).
       </p>
 
-      {/* Thống kê */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -88,7 +88,7 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Navigation moved to Sidebar */}
+      {}
     </div>
   );
 }

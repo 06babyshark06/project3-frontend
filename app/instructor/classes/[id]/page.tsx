@@ -27,7 +27,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 
-// Import Component thêm bài thi mới tạo
 import { AddExamToClassDialog } from "@/components/AddExamToClassDialog";
 
 export default function ClassDetailPage() {
@@ -37,37 +36,33 @@ export default function ClassDetailPage() {
 
     const [classData, setClassData] = useState<any>(null);
     const [members, setMembers] = useState<any[]>([]);
-    const [exams, setExams] = useState<any[]>([]); // State cho danh sách bài thi
+    const [exams, setExams] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Add Member State
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
     const [emailsInput, setEmailsInput] = useState("");
     const [isAdding, setIsAdding] = useState(false);
 
-    // Dialog state for unassigning exam
     const [examIdToRemove, setExamIdToRemove] = useState<number | null>(null);
 
-    // Gradebook State
     const [gradebook, setGradebook] = useState<{exams: any[], students: any[]}>({exams: [], students: []});
     const [loadingGradebook, setLoadingGradebook] = useState(false);
 
     const fetchData = async () => {
         try {
             setLoading(true);
-            // 1. Lấy thông tin lớp và thành viên
+
             const resClass = await api.get(`/classes/${classId}`);
             setClassData(resClass.data.data.class);
             setMembers(resClass.data.data.members || []);
 
-            // 2. Lấy danh sách bài thi của lớp
             const resExams = await api.get(`/classes/${classId}/exams`);
             setExams(resExams.data.data || []);
 
         } catch (error) {
             console.error(error);
             toast.error("Không tìm thấy thông tin lớp học");
-            // router.push("/instructor/classes"); // Có thể bật lại nếu muốn redirect khi lỗi
+
         } finally {
             setLoading(false);
         }
@@ -142,7 +137,7 @@ export default function ClassDetailPage() {
             await api.delete(`/classes/${classId}/exams/${examIdToRemove}`);
             toast.success("Đã gỡ bài thi khỏi lớp");
             setExams(prev => prev.filter(e => e.id !== examIdToRemove));
-            fetchGradebook(); // Refresh gradebook too
+            fetchGradebook();
         } catch (error) {
             toast.error("Gỡ bài thi thất bại");
         } finally {
@@ -153,10 +148,8 @@ export default function ClassDetailPage() {
     const exportToCSV = () => {
         if (!gradebook.students.length) return;
 
-        // Header
         let csv = "Họ và tên," + gradebook.exams.map(e => e.title).join(",") + "\n";
-        
-        // Rows
+
         gradebook.students.forEach(s => {
             csv += s.full_name;
             gradebook.exams.forEach(e => {
@@ -186,7 +179,7 @@ export default function ClassDetailPage() {
             </Button>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* LEFT: INFO CARD */}
+                {}
                 <Card className="h-fit">
                     <CardHeader>
                         <CardTitle>Thông tin lớp học</CardTitle>
@@ -220,7 +213,7 @@ export default function ClassDetailPage() {
                     </CardContent>
                 </Card>
 
-                {/* RIGHT: TABS CONTENT */}
+                {}
                 <div className="lg:col-span-2">
                     <Tabs defaultValue="exams" className="w-full">
                         <TabsList className="grid w-full grid-cols-3 mb-4">
@@ -229,14 +222,14 @@ export default function ClassDetailPage() {
                             <TabsTrigger value="gradebook">Bảng điểm</TabsTrigger>
                         </TabsList>
 
-                        {/* TAB 1: BÀI THI */}
+                        {}
                         <TabsContent value="exams" className="space-y-4">
                             <div className="flex justify-between items-center bg-card p-4 rounded-lg border shadow-sm">
                                 <div>
                                     <h3 className="font-semibold">Bài tập đã giao</h3>
                                     <p className="text-sm text-muted-foreground">Quản lý các bài thi của lớp</p>
                                 </div>
-                                {/* Nút thêm bài thi */}
+                                {}
                                 <AddExamToClassDialog
                                     classId={classId as string}
                                     onSuccess={fetchData}
@@ -329,7 +322,7 @@ export default function ClassDetailPage() {
                             </Card>
                         </TabsContent>
 
-                        {/* TAB 3: BẢNG ĐIỂM */}
+                        {}
                         <TabsContent value="gradebook">
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between">
@@ -406,7 +399,7 @@ export default function ClassDetailPage() {
                 </div>
             </div>
 
-            {/* DIALOG ADD MEMBER (Giữ nguyên) */}
+            {}
             <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
                 <DialogContent>
                     <DialogHeader>

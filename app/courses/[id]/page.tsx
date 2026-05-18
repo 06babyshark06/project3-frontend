@@ -33,7 +33,7 @@ interface Lesson {
 interface Section {
   id: number;
   title: string;
-  lessons: Lesson[]; // Có thể là null/undefined từ API
+  lessons: Lesson[];
 }
 
 export default function CourseDetailPage() {
@@ -96,8 +96,8 @@ export default function CourseDetailPage() {
   return (
     <div className="container mx-auto max-w-7xl p-4 md:p-8">
       <div className="grid md:grid-cols-3 gap-8">
-        
-        {/* CỘT TRÁI: Nội dung khóa học (70%) */}
+
+        {}
         <div className="md:col-span-2">
           <h1 className="text-4xl font-extrabold tracking-tight mb-4">
             {courseInfo.title}
@@ -107,7 +107,7 @@ export default function CourseDetailPage() {
           </p>
 
           <h2 className="text-3xl font-bold mb-4">Nội dung khóa học</h2>
-          
+
           {sections.length === 0 ? (
              <p className="text-muted-foreground">Nội dung đang được cập nhật.</p>
           ) : (
@@ -118,8 +118,8 @@ export default function CourseDetailPage() {
                     {section.title}
                     </AccordionTrigger>
                     <AccordionContent>
-                        {/* === SỬA LỖI Ở ĐÂY === */}
-                        {/* Kiểm tra section.lessons tồn tại và có độ dài > 0 */}
+                        {}
+                        {}
                         {section.lessons && section.lessons.length > 0 ? (
                             <ul className="space-y-3">
                                 {section.lessons.map((lesson) => (
@@ -148,7 +148,7 @@ export default function CourseDetailPage() {
           )}
         </div>
 
-        {/* CỘT PHẢI: Card thông tin (30%) */}
+        {}
         <div className="md:col-span-1">
           <Card className="sticky top-24 shadow-lg border-muted/60">
             <CardHeader className="p-0">
@@ -161,7 +161,7 @@ export default function CourseDetailPage() {
                   className="rounded-t-lg"
                 />
               </div>
-              
+
               <div className="p-6 pb-2">
                   {courseInfo.price > 0 ? (
                     <Badge className="text-2xl font-bold w-full justify-center p-3 bg-primary hover:bg-primary/90">
@@ -175,9 +175,9 @@ export default function CourseDetailPage() {
               </div>
             </CardHeader>
             <CardContent className="p-6 pt-2">
-              <CourseEnrollButton 
-                courseId={courseInfo.id} 
-                isEnrolled={isEnrolled} 
+              <CourseEnrollButton
+                courseId={courseInfo.id}
+                isEnrolled={isEnrolled}
               />
               <p className="text-xs text-center text-muted-foreground mt-4">
                 Truy cập trọn đời • Học mọi lúc mọi nơi
@@ -185,7 +185,7 @@ export default function CourseDetailPage() {
             </CardContent>
           </Card>
         </div>
-        
+
       </div>
     </div>
   );

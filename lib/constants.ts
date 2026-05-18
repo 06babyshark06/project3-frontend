@@ -4,7 +4,7 @@ export const APP_CONFIG = {
         DEBOUNCE_DELAY: 300,
     },
     UPLOAD: {
-        MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+        MAX_FILE_SIZE: 5 * 1024 * 1024,
         ACCEPTED_IMAGE_TYPES: ["image/jpeg", "image/png", "image/webp", "image/gif"],
     },
     TOAST: {

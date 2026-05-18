@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { PlusCircle, Eye, Edit, Trash2, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -32,9 +32,9 @@ interface Course {
 }
 
 export default function InstructorCoursesPage() {
-  const router = useRouter(); // Hook điều hướng
+  const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Thêm state loading
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchCourses = async () => {
     try {
@@ -95,7 +95,7 @@ export default function InstructorCoursesPage() {
                 <Button variant="ghost" size="icon" asChild title="Chỉnh sửa">
                   <Link href={`/instructor/courses/edit/${course.id}`}><Edit className="h-4 w-4" /></Link>
                 </Button>
-                
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon" title="Xóa" className="text-red-500 hover:text-red-600 hover:bg-red-50">
@@ -131,7 +131,7 @@ export default function InstructorCoursesPage() {
 
   return (
     <div className="container mx-auto max-w-6xl p-6">
-      {/* === TOP BAR ĐIỀU HƯỚNG === */}
+      {}
       <div className="flex items-center justify-between mb-8 pb-4 border-b">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Quản lý khóa học</h1>

@@ -28,15 +28,13 @@ export default function ManageAllClassesPage() {
     const [classes, setClasses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // State xoa
     const [classToDelete, setClassToDelete] = useState<any | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchClasses = async () => {
         try {
             setLoading(true);
-            // Admin fetch all classes
-            // API backend can xu ly logic Admin de tra ve toan bo
+
             const res = await api.get("/classes?limit=100");
             setClasses(res.data.data.classes || []);
         } catch (error) {
@@ -72,10 +70,8 @@ export default function ManageAllClassesPage() {
                     <h1 className="text-2xl font-bold tracking-tight">Quản Lý Tất Cả Lớp Học</h1>
                     <p className="text-sm text-muted-foreground">Kiểm soát toàn bộ lớp học trên hệ thống.</p>
                 </div>
-                {/* Admin co the tao lop hoac khong, hien tai de button o day */}
-                {/* <Button onClick={() => setIsAddOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Tạo lớp mới
-        </Button> */}
+                {}
+                {}
             </div>
 
             <Card>
@@ -146,7 +142,7 @@ export default function ManageAllClassesPage() {
                 </CardContent>
             </Card>
 
-            {/* Alert Dialog Xóa */}
+            {}
             <AlertDialog open={!!classToDelete} onOpenChange={(open) => !open && setClassToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>

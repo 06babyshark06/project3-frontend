@@ -34,12 +34,10 @@ export default function CategoryManagementPage() {
     const [loading, setLoading] = useState(true);
     const [expandedTopics, setExpandedTopics] = useState<number[]>([]);
 
-    // Dialog States
     const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
     const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
     const [selectedTopicId, setSelectedTopicId] = useState<number | undefined>();
 
-    // Edit/Delete States
     const [topicToEdit, setTopicToEdit] = useState<Topic | null>(null);
     const [sectionToEdit, setSectionToEdit] = useState<Section | null>(null);
     const [deletingItem, setDeletingItem] = useState<{ type: 'topic' | 'section', id: number, name: string } | null>(null);
@@ -57,7 +55,7 @@ export default function CategoryManagementPage() {
     };
 
     const fetchSections = async (topicId: number) => {
-        if (sectionsMap[topicId]) return; // Đã tải rồi thì thôi
+        if (sectionsMap[topicId]) return;
         try {
             const res = await api.get(`/exam-sections?topic_id=${topicId}`);
             setSectionsMap(prev => ({ ...prev, [topicId]: res.data.data.sections || [] }));
@@ -93,10 +91,9 @@ export default function CategoryManagementPage() {
             if (deletingItem.type === 'topic') {
                 fetchTopics();
             } else {
-                // Tìm topic cha để reload (hơi khó vì chỉ có ID, nhưng ta có thể reload all hoặc trick UI)
-                // Đơn giản nhất: Reload lại trang hoặc reload topics
-                fetchTopics(); // Reload topics để reset tree
-                setSectionsMap({}); // Clear cache sections
+
+                fetchTopics();
+                setSectionsMap({});
                 setExpandedTopics([]);
             }
         } catch (error) {
@@ -151,7 +148,7 @@ export default function CategoryManagementPage() {
                                     </div>
                                 </div>
 
-                                {/* SECTIONS LIST */}
+                                {}
                                 {expandedTopics.includes(topic.id) && (
                                     <div className="border-t bg-muted/20 p-2 pl-10 space-y-1">
                                         {(!sectionsMap[topic.id] || sectionsMap[topic.id].length === 0) ? (
@@ -183,7 +180,7 @@ export default function CategoryManagementPage() {
                 </div>
             )}
 
-            {/* DELETE ALERT */}
+            {}
             <AlertDialog open={!!deletingItem} onOpenChange={(open) => !open && setDeletingItem(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -206,16 +203,16 @@ export default function CategoryManagementPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <AddTopicDialog 
-                open={isAddTopicOpen || !!topicToEdit} 
+            <AddTopicDialog
+                open={isAddTopicOpen || !!topicToEdit}
                 onOpenChange={(open) => {
                     setIsAddTopicOpen(open);
                     if (!open) setTopicToEdit(null);
-                }} 
+                }}
                 topicToEdit={topicToEdit}
-                onSuccess={fetchTopics} 
+                onSuccess={fetchTopics}
             />
-            
+
             <AddSectionDialog
                 open={isAddSectionOpen || !!sectionToEdit}
                 onOpenChange={(open) => {
@@ -223,13 +220,13 @@ export default function CategoryManagementPage() {
                     if (!open) setSectionToEdit(null);
                 }}
                 sectionToEdit={sectionToEdit}
-                onSuccess={() => { 
+                onSuccess={() => {
                     if (sectionToEdit) {
                         const tId = sectionToEdit.topic_id;
                         api.get(`/exam-sections?topic_id=${tId}`)
                             .then(res => setSectionsMap(prev => ({ ...prev, [tId]: res.data.data.sections || [] })));
                     } else if (selectedTopicId) {
-                        fetchSections(selectedTopicId); 
+                        fetchSections(selectedTopicId);
                     }
                 }}
                 defaultTopicId={selectedTopicId}

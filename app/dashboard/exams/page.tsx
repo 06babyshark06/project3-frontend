@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { 
-  Loader2, Calendar, Award, ArrowRight, 
+import {
+  Loader2, Calendar, Award, ArrowRight,
   History, Search, AlertCircle, CheckCircle,
   FileText, Clock
 } from "lucide-react";
@@ -46,7 +46,7 @@ export default function ExamHistoryPage() {
     }
   };
 
-  const filteredSubmissions = submissions.filter(sub => 
+  const filteredSubmissions = submissions.filter(sub =>
     sub.exam_title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -60,7 +60,7 @@ export default function ExamHistoryPage() {
 
   return (
     <div className="container mx-auto max-w-5xl p-6 md:p-8 space-y-8 animate-in fade-in duration-500">
-      {/* Header */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6">
         <div>
           <div className="flex items-center gap-2 text-primary mb-2">
@@ -74,16 +74,16 @@ export default function ExamHistoryPage() {
             Xem lại kết quả và chi tiết các bài thi bạn đã hoàn thành.
           </p>
         </div>
-        
+
         <Button variant="outline" asChild className="rounded-full px-6">
           <Link href="/dashboard">Về Dashboard</Link>
         </Button>
       </div>
 
-      {/* Search & Filter */}
+      {}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input 
+        <Input
           className="pl-10 h-11 rounded-full border-muted-foreground/20 focus:ring-primary/20"
           placeholder="Tìm kiếm theo tên bài thi..."
           value={searchTerm}
@@ -91,7 +91,7 @@ export default function ExamHistoryPage() {
         />
       </div>
 
-      {/* Content */}
+      {}
       {filteredSubmissions.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
           {filteredSubmissions.map((sub) => {
@@ -102,21 +102,19 @@ export default function ExamHistoryPage() {
               hour: "2-digit",
               minute: "2-digit"
             }) : "N/A";
-            
-            const isReleased = sub.score > 0 || sub.status === "completed"; // Temporary check, backend logic hides score if not released
-            // Actually, we should probably hide the score if it's 0 and not released yet.
-            // But let's follow the standard pattern.
+
+            const isReleased = sub.score > 0 || sub.status === "completed";
 
             return (
               <Card key={sub.submission_id} className="overflow-hidden hover:shadow-lg transition-all border-l-4 border-l-primary/40 group">
                 <CardContent className="p-0">
                   <div className="flex flex-col md:flex-row items-center p-6 gap-6">
-                    {/* Icon section */}
+                    {}
                     <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                       <FileText className="h-8 w-8 text-primary" />
                     </div>
 
-                    {/* Main info */}
+                    {}
                     <div className="flex-1 text-center md:text-left">
                       <h3 className="text-xl font-bold line-clamp-1 mb-1">
                         {sub.exam_title}
@@ -133,7 +131,7 @@ export default function ExamHistoryPage() {
                       </div>
                     </div>
 
-                    {/* Score section */}
+                    {}
                     <div className="flex flex-col items-center justify-center px-8 border-x border-muted hidden md:flex min-w-[140px]">
                       {sub.score > 0 ? (
                         <>
@@ -153,7 +151,7 @@ export default function ExamHistoryPage() {
                       )}
                     </div>
 
-                    {/* Action */}
+                    {}
                     <div className="shrink-0 w-full md:w-auto">
                       <Button asChild className="w-full rounded-xl h-12 px-6 font-bold group-hover:translate-x-1 transition-transform">
                         <Link href={`/exams/result/${sub.submission_id}`}>

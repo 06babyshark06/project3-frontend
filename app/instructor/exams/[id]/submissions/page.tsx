@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { 
-  Loader2, ArrowLeft, Search, Eye, 
-  FileCheck, Clock, User, ChevronLeft, ChevronRight 
+import {
+  Loader2, ArrowLeft, Search, Eye,
+  FileCheck, Clock, User, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -88,7 +88,7 @@ export default function ExamSubmissionsPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
-      {/* HEADER */}
+      {}
       <div className="flex items-center gap-4 mb-8">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
@@ -102,7 +102,7 @@ export default function ExamSubmissionsPage() {
         </div>
       </div>
 
-      {/* FILTERS */}
+      {}
       <Card className="mb-6">
         <CardContent className="pt-6">
           <form onSubmit={handleSearch} className="flex gap-2">
@@ -120,7 +120,7 @@ export default function ExamSubmissionsPage() {
         </CardContent>
       </Card>
 
-      {/* TABLE */}
+      {}
       <Card>
         <Table>
           <TableHeader>
@@ -176,9 +176,9 @@ export default function ExamSubmissionsPage() {
                   </TableCell>
                   <TableCell>{getStatusBadge(sub.status)}</TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => router.push(`/instructor/exams/${examId}/submissions/${sub.submission_id}`)}
                     >
                       <Eye className="h-4 w-4 mr-1" /> Chi tiết
@@ -189,25 +189,25 @@ export default function ExamSubmissionsPage() {
             )}
           </TableBody>
         </Table>
-        
-        {/* PAGINATION */}
+
+        {}
         {totalPages > 1 && (
           <div className="p-4 border-t flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Trang {page} / {totalPages} (Tổng {total} bản ghi)
             </p>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" /> Trước
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
               >

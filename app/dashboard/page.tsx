@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { 
-  BookOpen, CheckCircle, Edit, ArrowRight, 
+import {
+  BookOpen, CheckCircle, Edit, ArrowRight,
   Clock, TrendingUp, Users, GraduationCap
 } from "lucide-react";
 
@@ -16,7 +16,6 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 
-// Import component tham gia lớp học
 import { JoinClassDialog } from "@/components/JoinClassDialog";
 
 interface EnrolledCourse {
@@ -39,13 +38,13 @@ interface EnrolledClass {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  
+
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
-  const [classes, setClasses] = useState<EnrolledClass[]>([]); // State cho danh sách lớp
+  const [classes, setClasses] = useState<EnrolledClass[]>([]);
   const [stats, setStats] = useState({
     enrolledCourses: 0,
     completedLessons: 0,
-    examsTaken: 0, 
+    examsTaken: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -55,17 +54,13 @@ export default function DashboardPage() {
 
       try {
         setIsLoading(true);
-        
-        // 1. Lấy danh sách khóa học
+
         const resCourses = await api.get("/my-courses");
         const basicCourses = resCourses.data?.data?.courses || [];
 
-        // 2. Lấy danh sách lớp học (Mới thêm)
-        // API /classes tự động lọc theo student_id nếu là học sinh
-        const resClasses = await api.get("/classes?limit=4"); 
+        const resClasses = await api.get("/classes?limit=4");
         setClasses(resClasses.data?.data?.classes || []);
 
-        // 3. Lấy thống kê bài thi
         let examsTakenCount = 0;
         try {
             const resExamStats = await api.get("/users/me/exam-stats");
@@ -79,7 +74,6 @@ export default function DashboardPage() {
 
         let totalCompletedLessons = 0;
 
-        // 4. Tính tiến độ khóa học
         const enrichedCourses = await Promise.all(
           basicCourses.map(async (course: any) => {
             try {
@@ -112,8 +106,7 @@ export default function DashboardPage() {
         );
 
         setCourses(enrichedCourses);
-        
-        // 5. Cập nhật state thống kê
+
         setStats({
             enrolledCourses: basicCourses.length || 0,
             completedLessons: totalCompletedLessons || 0,
@@ -129,7 +122,7 @@ export default function DashboardPage() {
 
     fetchData();
   }, [user]);
-  
+
   if (isLoading) {
     return (
       <div className="container mx-auto max-w-7xl p-6 md:p-8">
@@ -144,7 +137,7 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto max-w-7xl p-6 md:p-8 space-y-8">
-       {/* Header */}
+       {}
        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
@@ -154,36 +147,36 @@ export default function DashboardPage() {
             Hôm nay bạn muốn học gì?
           </p>
         </div>
-        
+
         <div className="flex flex-wrap gap-3">
           <JoinClassDialog />
-          
+
           <Button asChild size="lg" className="shadow-lg shadow-primary/20">
               <Link href="/courses">Khám phá khóa học mới</Link>
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatsCard 
-          title="Đang học" 
-          value={stats.enrolledCourses} 
+        <StatsCard
+          title="Đang học"
+          value={stats.enrolledCourses}
           label="khóa học"
           icon={<BookOpen className="h-6 w-6 text-blue-600" />}
           loading={isLoading}
         />
-        <StatsCard 
-          title="Hoàn thành" 
-          value={stats.completedLessons} 
+        <StatsCard
+          title="Hoàn thành"
+          value={stats.completedLessons}
           label="bài học"
           icon={<CheckCircle className="h-6 w-6 text-green-600" />}
           loading={isLoading}
         />
         <Link href="/dashboard/exams" className="block transform transition-transform hover:scale-105">
-          <StatsCard 
-            title="Bài thi" 
-            value={stats.examsTaken} 
+          <StatsCard
+            title="Bài thi"
+            value={stats.examsTaken}
             label="đã làm (Bấm để xem lịch sử)"
             icon={<Edit className="h-6 w-6 text-yellow-600" />}
             loading={isLoading}
@@ -192,7 +185,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* SECTION: KHÓA HỌC CỦA TÔI */}
+        {}
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
@@ -244,13 +237,13 @@ export default function DashboardPage() {
             )}
         </div>
 
-        {/* SECTION: LỚP HỌC CỦA TÔI (MỚI) */}
+        {}
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                     <GraduationCap className="h-6 w-6 text-primary" /> Lớp học của tôi
                 </h2>
-                {/* Link điều hướng đến trang danh sách lớp học (bạn cần tạo trang này nếu chưa có) */}
+                {}
                 <Link href="/dashboard/classes" className="text-sm font-medium text-primary hover:underline">
                     Xem tất cả
                 </Link>
@@ -259,8 +252,7 @@ export default function DashboardPage() {
             {classes.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {classes.map((cls) => (
-                        // Lưu ý: Link này trỏ đến trang chi tiết lớp học dành cho sinh viên
-                        // Bạn cần đảm bảo route /dashboard/classes/[id] tồn tại
+
                         <Link href={`/dashboard/classes/${cls.id}`} key={cls.id}>
                             <Card className="h-full hover:shadow-md transition-all border-l-4 border-l-primary/60 cursor-pointer">
                                 <CardHeader className="pb-2">
@@ -291,7 +283,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Gợi ý bài thi */}
+      {}
       <div className="bg-primary/5 rounded-2xl p-8 border border-primary/10 mt-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>

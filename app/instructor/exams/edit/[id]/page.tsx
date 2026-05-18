@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { toLocalISOString } from "@/lib/date-utils";
 
-// ✅ 1. Import thư viện kéo thả
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 import { Button } from "@/components/ui/button";
@@ -92,12 +91,10 @@ export default function EditExamPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Form States
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [topicId, setTopicId] = useState<string>("");
 
-    // Settings States
     const [settings, setSettings] = useState<ExamSettings>({
         duration_minutes: 60,
         max_attempts: 1,
@@ -117,7 +114,6 @@ export default function EditExamPage() {
     const [questionToDelete, setQuestionToDelete] = useState<number | null>(null);
     const [expandedSections, setExpandedSections] = useState<number[]>([]);
 
-    // ===== FETCH DATA (Giữ nguyên) =====
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -153,7 +149,7 @@ export default function EditExamPage() {
                     const normalizedRules = rules.map((r: any) => ({
                         ...r,
                         section_id: r.section_id === 0 ? 'all' : r.section_id,
-                        points: r.points || 1.0 // Mặc định 1.0 cho các bài thi cũ
+                        points: r.points || 1.0
                     }));
                     setDynamicRules(normalizedRules);
                 } catch {
@@ -189,7 +185,6 @@ export default function EditExamPage() {
         fetchTreeData();
     }, [topicId]);
 
-    // ===== ACTIONS =====
     const handleSave = async () => {
         setIsSaving(true);
         try {
@@ -244,7 +239,7 @@ export default function EditExamPage() {
 
         try {
             await api.put(`/exams/${examId}`, {
-                title, topic_id: Number(topicId), settings, 
+                title, topic_id: Number(topicId), settings,
                 questions: newQuestions.map(q => ({ question_id: q.id, points: q.points }))
             });
         } catch (e) {
@@ -258,9 +253,8 @@ export default function EditExamPage() {
         setExam({ ...exam, questions: newQuestions });
     };
 
-    // ✅ 2. Xử lý sự kiện kéo thả (Drag End)
     const onDragEnd = async (result: DropResult) => {
-        // Nếu thả ra ngoài danh sách hoặc vị trí không đổi -> bỏ qua
+
         if (!result.destination || !exam) return;
 
         const sourceIndex = result.source.index;
@@ -268,17 +262,14 @@ export default function EditExamPage() {
 
         if (sourceIndex === destinationIndex) return;
 
-        // Tạo bản sao danh sách câu hỏi
         const newQuestions = Array.from(exam.questions || []);
-        // Lấy phần tử đang kéo ra
+
         const [movedQuestion] = newQuestions.splice(sourceIndex, 1);
-        // Chèn vào vị trí mới
+
         newQuestions.splice(destinationIndex, 0, movedQuestion);
 
-        // Cập nhật State ngay lập tức (Optimistic UI)
         setExam({ ...exam, questions: newQuestions });
 
-        // Gọi API để lưu thứ tự mới
         try {
             const assignments = newQuestions.map(q => ({ question_id: q.id, points: q.points }));
             await api.put(`/exams/${examId}`, {
@@ -293,9 +284,8 @@ export default function EditExamPage() {
         }
     };
 
-    // ... (Các hàm handleGenerateRandom, toggleSection giữ nguyên) ...
     const handleGenerateRandom = async (config: { difficulty: string; count: number; sectionId: string; replace: boolean }) => {
-        // ... (Code cũ giữ nguyên)
+
         if (!topicId) return toast.error("Vui lòng chọn chủ đề trước");
         try {
             const params: any = {
@@ -324,7 +314,7 @@ export default function EditExamPage() {
                 : [...currentQuestions, ...selected.map(q => ({ ...q, points: 1.0 }))];
 
             await api.put(`/exams/${examId}`, {
-                title, topic_id: Number(topicId), settings, 
+                title, topic_id: Number(topicId), settings,
                 questions: finalQuestions.map(q => ({ question_id: q.id, points: q.points }))
             });
 
@@ -348,7 +338,7 @@ export default function EditExamPage() {
 
     return (
         <div className="container mx-auto max-w-[1600px] py-4 px-4 h-[calc(100vh-64px)] md:h-[calc(100vh-20px)] flex flex-col gap-4">
-            {/* HEADER AREA */}
+            {}
             <div className="flex flex-col md:flex-row md:items-center justify-between border-b pb-3 bg-background sticky top-0 z-10 shrink-0 gap-4">
                 <div className="flex items-center gap-3">
                     <Button variant="outline" size="icon" onClick={() => router.back()}>
@@ -389,7 +379,7 @@ export default function EditExamPage() {
             </div>
 
             <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 overflow-hidden min-h-0">
-                {/* LEFT PANE */}
+                {}
                 <div className="col-span-1 md:col-span-7 flex flex-col gap-4 overflow-hidden min-h-0">
                     <Tabs defaultValue="questions" className="flex-1 flex flex-col overflow-hidden min-h-0">
                         <TabsList className="w-full justify-start border-b rounded-none px-0 h-10 bg-transparent shrink-0 overflow-x-auto">
@@ -399,7 +389,7 @@ export default function EditExamPage() {
                             <TabsTrigger value="settings" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shrink-0"><Settings className="h-4 w-4 mr-2" /> Cấu hình & Thông tin</TabsTrigger>
                         </TabsList>
 
-                        {/* TAB QUESTIONS VỚI DRAG & DROP */}
+                        {}
                         <TabsContent value="questions" className="flex-1 overflow-hidden mt-4 min-h-0 flex flex-col">
                             <Card className="flex-1 flex flex-col border-none shadow-none bg-muted/10 overflow-hidden min-h-0">
                                 <div className="flex justify-between items-center p-2 bg-background border rounded-t-lg shrink-0 flex-wrap gap-2">
@@ -426,7 +416,7 @@ export default function EditExamPage() {
                                             </p>
                                         </div>
                                     ) : (
-                                        // ✅ 3. Bọc DragDropContext
+
                                         <DragDropContext onDragEnd={onDragEnd}>
                                             <Droppable droppableId="exam-questions-list">
                                                 {(provided) => (
@@ -445,7 +435,7 @@ export default function EditExamPage() {
                                                                             }`}
                                                                         style={provided.draggableProps.style}
                                                                     >
-                                                                        {/* Icon Grip để kéo */}
+                                                                        {}
                                                                         <div
                                                                             {...provided.dragHandleProps}
                                                                             className="mt-1 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-primary"
@@ -464,11 +454,11 @@ export default function EditExamPage() {
                                                                                 <span className="text-xs text-muted-foreground truncate max-w-[150px]">{q.section_name}</span>
                                                                                 <div className="flex items-center gap-1 ml-auto">
                                                                                     <Label className="text-[10px] text-muted-foreground">Điểm:</Label>
-                                                                                    <Input 
-                                                                                        type="number" 
-                                                                                        min={0} 
-                                                                                        step={0.5} 
-                                                                                        value={q.points} 
+                                                                                    <Input
+                                                                                        type="number"
+                                                                                        min={0}
+                                                                                        step={0.5}
+                                                                                        value={q.points}
                                                                                         onChange={(e) => updateQuestionPoints(q.id, parseFloat(e.target.value) || 0)}
                                                                                         className="h-6 w-14 px-1 text-[10px]"
                                                                                     />
@@ -676,7 +666,7 @@ export default function EditExamPage() {
                     </Tabs>
                 </div>
 
-                {/* RIGHT PANE: QUESTION BANK TREE (5 cols) */}
+                {}
                 <div className="hidden md:flex col-span-5 flex-col border-l pl-6 overflow-hidden min-h-0">
                     <div className="mb-4 shrink-0">
                         <h3 className="font-semibold flex items-center gap-2">
@@ -838,7 +828,6 @@ export default function EditExamPage() {
     );
 }
 
-// RandomGeneratorDialog (Giữ nguyên)
 function RandomGeneratorDialog({ open, onOpenChange, onGenerate, sections }: any) {
     const [difficulty, setDifficulty] = useState("all");
     const [sectionId, setSectionId] = useState("all");

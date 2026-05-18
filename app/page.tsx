@@ -6,10 +6,10 @@ import { BookOpen, Trophy, Users, ArrowRight, PlayCircle } from "lucide-react";
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-rose-50/30 font-sans selection:bg-rose-200 selection:text-rose-900">
-      
-      {/* --- HERO SECTION --- */}
+
+      {}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-        {/* Decorative Background Blobs */}
+        {}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none">
           <div className="absolute top-20 left-10 w-72 h-72 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
           <div className="absolute top-20 right-10 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
@@ -21,16 +21,16 @@ export default function HomePage() {
             <span className="flex h-2 w-2 rounded-full bg-rose-500 mr-2 animate-pulse"></span>
             Nền tảng học tập thế hệ mới
           </div>
-          
+
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6">
             Ươm mầm tri thức <br />
             <span className="text-transparent bg-clip-text bg-linear-to-r from-rose-500 to-pink-600">
               Kiến tạo tương lai
             </span>
           </h1>
-          
+
           <p className="mt-4 text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-            JQK Study mang đến trải nghiệm học tập trực tuyến mượt mà, hiện đại và đầy cảm hứng. 
+            JQK Study mang đến trải nghiệm học tập trực tuyến mượt mà, hiện đại và đầy cảm hứng.
             Hàng ngàn khóa học chất lượng đang chờ đón bạn.
           </p>
 
@@ -46,13 +46,11 @@ export default function HomePage() {
               </Link>
             </Button>
           </div>
-          
-          
 
         </div>
       </section>
 
-      {/* --- STATS SECTION --- */}
+      {}
       <section className="py-10 bg-white border-y border-rose-100">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-rose-100">
@@ -71,7 +69,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- FEATURES SECTION --- */}
+      {}
       <section className="py-24 bg-rose-50/50">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -80,7 +78,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
+            {}
             <Card className="border-none shadow-md hover:shadow-xl transition-shadow duration-300 bg-white">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 mx-auto bg-rose-100 rounded-2xl flex items-center justify-center mb-6 rotate-3 hover:rotate-6 transition-transform">
@@ -93,7 +91,7 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            {/* Feature 2 */}
+            {}
             <Card className="border-none shadow-md hover:shadow-xl transition-shadow duration-300 bg-white relative overflow-hidden group">
               <div className="absolute inset-0 bg-linear-to-br from-rose-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity" />
               <CardContent className="p-8 text-center">
@@ -107,7 +105,7 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            {/* Feature 3 */}
+            {}
             <Card className="border-none shadow-md hover:shadow-xl transition-shadow duration-300 bg-white">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 mx-auto bg-rose-100 rounded-2xl flex items-center justify-center mb-6 rotate-3 hover:rotate-6 transition-transform">
@@ -123,14 +121,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- CTA SECTION --- */}
+      {}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="bg-slate-900 rounded-3xl p-10 md:p-20 text-center relative overflow-hidden">
-            {/* Decorative circles */}
+            {}
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-rose-500 rounded-full opacity-20 blur-3xl"></div>
             <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-64 h-64 bg-indigo-500 rounded-full opacity-20 blur-3xl"></div>
-            
+
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 relative z-10">
               Sẵn sàng bắt đầu hành trình?
             </h2>
@@ -146,7 +144,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- FOOTER --- */}
+      {}
       <footer className="bg-white border-t border-rose-100 py-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-slate-500 text-sm">

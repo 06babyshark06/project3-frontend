@@ -20,7 +20,6 @@ export default function ExamRequestsPage() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Hàm tải danh sách
   const fetchRequests = async () => {
     try {
       setLoading(true);
@@ -37,7 +36,6 @@ export default function ExamRequestsPage() {
     fetchRequests();
   }, [examId]);
 
-  // Hàm xử lý duyệt/từ chối
   const handleApprove = async (studentId: number, isApproved: boolean) => {
     try {
       await api.put("/exams/access/approve", {
@@ -46,7 +44,7 @@ export default function ExamRequestsPage() {
         is_approved: isApproved
       });
       toast.success(isApproved ? "Đã duyệt yêu cầu" : "Đã từ chối yêu cầu");
-      fetchRequests(); // Reload lại danh sách
+      fetchRequests();
     } catch (error) {
       toast.error("Thao tác thất bại");
     }

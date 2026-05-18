@@ -31,7 +31,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import RichTextDisplay from "@/components/RichTextDisplay";
 import { MediaRenderer } from "@/components/MediaRenderer";
 
-// --- Interfaces ---
 interface Choice {
   id: number;
   content: string;
@@ -51,7 +50,7 @@ interface ExamSettings {
   shuffle_questions?: boolean;
   start_time?: string;
   end_time?: string;
-  requires_approval?: boolean; // ✅ Thêm trường này
+  requires_approval?: boolean;
 }
 interface ExamData {
   id: number;
@@ -66,19 +65,15 @@ const formatTime = (seconds: number) => {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
-// Hàm xáo trộn (Bị xoá do đã làm ở Backend để bảo mật hơn)
-
 export default function ExamTakingPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const examId = params.id as string;
 
-  // ===== STATE =====
   const [exam, setExam] = useState<ExamData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Trạng thái hiển thị (Blocker)
   const [examStatus, setExamStatus] = useState<"open" | "not_started" | "ended" | "need_approval" | "pending" | "rejected">("open");
   const [statusMessage, setStatusMessage] = useState("");
 
@@ -97,13 +92,12 @@ export default function ExamTakingPage() {
   const [isAntiCheatWarningOpen, setIsAntiCheatWarningOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
-  const [isRequesting, setIsRequesting] = useState(false); // State nút đăng ký
+  const [isRequesting, setIsRequesting] = useState(false);
 
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedAnswers = useRef<string>("");
   const hasStartedRef = useRef(false);
 
-  // ===== 1. FETCH EXAM & CHECK CONDITIONS =====
   useEffect(() => {
     const fetchExam = async () => {
       try {
@@ -112,12 +106,9 @@ export default function ExamTakingPage() {
 
         if (!data.questions) data.questions = [];
 
-        // Choices đã được Backend Shuffle (không cần Frontend Shuffle để tránh lặp)
-
         setExam(data);
         setTimeLeft(data.settings.duration_minutes * 60);
 
-        // 1.1 Check Thời gian
         const now = new Date();
         const start = data.settings.start_time ? new Date(data.settings.start_time) : null;
         const end = data.settings.end_time ? new Date(data.settings.end_time) : null;
@@ -135,9 +126,8 @@ export default function ExamTakingPage() {
           return;
         }
 
-        // 1.2 Check Quyền truy cập (Approval)
         if (data.settings?.requires_approval) {
-          // Gọi API check status
+
           try {
             const accessRes = await api.get("/exams/access/check", { params: { exam_id: examId } });
             const { can_access, message } = accessRes.data.data;
@@ -153,7 +143,7 @@ export default function ExamTakingPage() {
                 setExamStatus("rejected");
                 setStatusMessage("Yêu cầu tham gia của bạn đã bị từ chối.");
               } else {
-                // Các lỗi khác (max_attempts...)
+
                 setExamStatus("ended");
                 setStatusMessage("Bạn không đủ điều kiện tham gia (Hết lượt hoặc bị chặn).");
               }
@@ -165,7 +155,6 @@ export default function ExamTakingPage() {
           }
         }
 
-        // Nếu qua hết các cửa ải -> Check Password
         if (data.settings?.password) {
           setIsPasswordDialogOpen(true);
         } else {
@@ -182,7 +171,6 @@ export default function ExamTakingPage() {
     fetchExam();
   }, [examId, router]);
 
-  // ===== HANDLE REQUEST ACCESS =====
   const handleRequestAccess = async () => {
     setIsRequesting(true);
     try {
@@ -197,7 +185,6 @@ export default function ExamTakingPage() {
     }
   };
 
-  // ===== START / RESUME EXAM =====
   const startOrResumeExam = useCallback(async () => {
     if (hasStartedRef.current) return;
     hasStartedRef.current = true;
@@ -212,11 +199,10 @@ export default function ExamTakingPage() {
         setTimeLeft(remaining_seconds);
       }
 
-      // 🛠 CẬP NHẬT CÂU HỎI CHO ĐỀ THI ĐỘNG (Sinh ngẫu nhiên cho từng học sinh)
       if (questions && questions.length > 0) {
         setExam(prev => {
           if (!prev) return prev;
-          // Backend đã lo việc shuffle
+
           return { ...prev, questions: questions };
         });
       }
@@ -225,7 +211,6 @@ export default function ExamTakingPage() {
         let formattedAnswers: Record<number, number[]> = {};
         let formattedTextAnswers: Record<number, string> = {};
 
-        // Parse from Server
         current_answers.forEach((ans: any) => {
           const qId = Number(ans.question_id);
           if (ans.choice_ids && ans.choice_ids.length > 0) {
@@ -236,7 +221,6 @@ export default function ExamTakingPage() {
           }
         });
 
-        // Merge with Local Drafts (Offline Fallback)
         const localDraft = localStorage.getItem(`exam_draft_${examId}_${user?.id}`);
         if (localDraft) {
           try {
@@ -244,7 +228,7 @@ export default function ExamTakingPage() {
             formattedAnswers = { ...formattedAnswers, ...parsedDraft };
           } catch (e) {}
         }
-        
+
         const localTextDraft = localStorage.getItem(`exam_text_draft_${examId}_${user?.id}`);
         if (localTextDraft) {
           try {
@@ -256,7 +240,6 @@ export default function ExamTakingPage() {
         setUserAnswers(formattedAnswers);
         setUserTextAnswers(formattedTextAnswers);
 
-        // Load Flagged Questions
         const localFlags = localStorage.getItem(`exam_flags_${examId}_${user?.id}`);
         if (localFlags) {
           try { setFlaggedQuestions(JSON.parse(localFlags)); } catch (e) {}
@@ -272,11 +255,10 @@ export default function ExamTakingPage() {
       }
 
     } catch (error: any) {
-      // Fallback check lỗi từ backend
+
       const msg = error.response?.data?.error?.message || "";
       toast.error(msg || "Không thể bắt đầu bài thi");
 
-      // Nếu lỗi liên quan đến access, quay về màn hình chặn
       if (msg.includes("pending")) { setExamStatus("pending"); }
       else if (msg.includes("rejected")) { setExamStatus("rejected"); }
       else { router.push(`/exams`); }
@@ -300,7 +282,6 @@ export default function ExamTakingPage() {
     }
   }, [isPasswordCorrect, exam, examStatus, startOrResumeExam]);
 
-  // ... (Các hàm handlePasswordSubmit, requestFullscreen, handleFullscreenChange giữ nguyên) ...
   const handlePasswordSubmit = () => {
     if (!exam?.settings?.password) return;
     if (passwordInput === exam.settings.password) {
@@ -356,13 +337,13 @@ export default function ExamTakingPage() {
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Chặn F12
+
       if (e.key === "F12") {
         e.preventDefault();
         toast.error("Không được mở Developer Tools!");
         api.post("/exams/log-violation", { exam_id: Number(examId), violation_type: "devtools_opened" }).catch(console.error);
       }
-      // Chặn Ctrl/Cmd shortcuts
+
       if (e.ctrlKey || e.metaKey) {
         const key = e.key.toLowerCase();
         if (["c", "v", "x", "p", "u", "s"].includes(key)) {
@@ -393,7 +374,6 @@ export default function ExamTakingPage() {
     };
   }, [isPasswordCorrect, isSubmitting, violationCount, submissionId, examId]);
 
-  // ... (Các hàm Timer, AutoSave, SelectAnswer, Submit giữ nguyên) ...
   useEffect(() => {
     if (!submissionId || isSubmitting) return;
     if (timeLeft <= 0) { handleSubmit(true); return; }
@@ -485,7 +465,7 @@ export default function ExamTakingPage() {
             if (text && text.trim() !== "") {
               formattedAnswers.push({ question_id: q.id, text_answer: text });
             }
-            // For short_answer, they might also have chosen a choice if options were provided
+
             const choices = userAnswers[q.id] || [];
             choices.forEach(cId => {
               formattedAnswers.push({ question_id: q.id, chosen_choice_id: cId });
@@ -511,12 +491,9 @@ export default function ExamTakingPage() {
     }
   }, [exam, userAnswers, userTextAnswers, isSubmitting, examId, submissionId, router]);
 
-
-  // ===== RENDER =====
   if (isLoading) return <div className="flex h-screen w-full items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!exam) return null;
 
-  // ✅ UI CHẶN / YÊU CẦU THAM GIA
   if (examStatus !== "open") {
     let icon = <Ban className="h-16 w-16" />;
     let bgClass = "bg-red-100 text-red-600";
@@ -558,7 +535,6 @@ export default function ExamTakingPage() {
     );
   }
 
-  // ✅ RENDER BÀI THI (Giữ nguyên)
   if (!exam.questions || exam.questions.length === 0) {
     return (
       <div className="flex flex-col h-screen items-center justify-center bg-background p-6 text-center space-y-6">
@@ -645,10 +621,10 @@ export default function ExamTakingPage() {
 
       {isPasswordCorrect && (
         <div className="flex flex-col h-screen bg-background">
-          {/* HEADER */}
+          {}
           <header className="h-16 border-b px-4 md:px-6 flex items-center justify-between bg-card z-10 shadow-sm shrink-0">
             <div className="flex items-center gap-3 max-w-[70%]">
-              {/* MOBILE MENU TRIGGER */}
+              {}
               <div className="md:hidden">
                 <Sheet>
                   <SheetTrigger asChild>
@@ -661,7 +637,7 @@ export default function ExamTakingPage() {
                       <SheetHeader className="p-4 border-b">
                         <SheetTitle>Danh sách câu hỏi</SheetTitle>
                       </SheetHeader>
-                      {/* REUSE SIDEBAR CONTENT HERE */}
+                      {}
                       <div className="flex-1 flex flex-col overflow-hidden">
                         <div className="p-4 border-b">
                           <h3 className="font-semibold mb-2">Tiến độ</h3>
@@ -680,14 +656,14 @@ export default function ExamTakingPage() {
                                 hasAns = userAnswers[qId]?.length > 0;
                               }
                               const isFlagged = flaggedQuestions.includes(qId);
-                              
+
                               let btnVariant = currentQuestionIndex === idx ? "default" : hasAns ? "secondary" : "outline";
                               let className = "h-10";
                               if (isFlagged && currentQuestionIndex !== idx) {
                                 className += " bg-yellow-500 text-white hover:bg-yellow-600 border-0";
                                 btnVariant = "default";
                               }
-                              
+
                               return <Button key={idx} variant={btnVariant as any} size="sm" onClick={() => setCurrentQuestionIndex(idx)} className={className}>{idx + 1}</Button>;
                             })}
                           </div>
@@ -734,9 +710,9 @@ export default function ExamTakingPage() {
                           <span className="hidden sm:inline">{flaggedQuestions.includes(currentQuestion.id) ? "Đã đánh dấu" : "Đánh dấu"}</span>
                        </Button>
                        <Badge variant="outline">
-                         {currentQuestion.question_type === "multiple_choice" ? "Nhiều đáp án" : 
-                          currentQuestion.question_type === "single_choice" ? "Một đáp án" : 
-                          currentQuestion.question_type === "essay" ? "Tự luận" : 
+                         {currentQuestion.question_type === "multiple_choice" ? "Nhiều đáp án" :
+                          currentQuestion.question_type === "single_choice" ? "Một đáp án" :
+                          currentQuestion.question_type === "essay" ? "Tự luận" :
                           currentQuestion.question_type === "short_answer" ? "Trả lời ngắn" : "Điền vào chỗ trống"}
                        </Badge>
                     </div>
@@ -748,7 +724,7 @@ export default function ExamTakingPage() {
 
                   <div className="space-y-3">
                     {currentQuestion.question_type === "essay" ? (
-                       <Textarea 
+                       <Textarea
                           placeholder="Nhập bài làm của bạn..."
                           value={userTextAnswers[currentQuestion.id] || ""}
                           onChange={(e) => handleTextAnswerChange(currentQuestion.id, e.target.value)}
@@ -760,7 +736,7 @@ export default function ExamTakingPage() {
                            <MessageSquare className="w-5 h-5" />
                            <Label className="text-base font-semibold">Trả lời câu hỏi:</Label>
                         </div>
-                        <Input 
+                        <Input
                            placeholder="Nhập câu trả lời của bạn..."
                            value={userTextAnswers[currentQuestion.id] || ""}
                            onChange={(e) => handleTextAnswerChange(currentQuestion.id, e.target.value)}
@@ -795,7 +771,7 @@ export default function ExamTakingPage() {
               </div>
             </div>
 
-            {/* DESKTOP SIDEBAR */}
+            {}
             <aside className="hidden md:flex w-80 border-l bg-muted/30 flex-col">
               <div className="p-4 border-b">
                 <h3 className="font-semibold mb-2">Tiến độ</h3>
@@ -814,14 +790,14 @@ export default function ExamTakingPage() {
                       hasAns = userAnswers[qId]?.length > 0;
                     }
                     const isFlagged = flaggedQuestions.includes(qId);
-                    
+
                     let btnVariant = currentQuestionIndex === idx ? "default" : hasAns ? "secondary" : "outline";
                     let className = "h-10";
                     if (isFlagged && currentQuestionIndex !== idx) {
                       className += " bg-yellow-500 text-white hover:bg-yellow-600 border-0";
                       btnVariant = "default";
                     }
-                    
+
                     return <Button key={idx} variant={btnVariant as any} size="sm" onClick={() => setCurrentQuestionIndex(idx)} className={className}>{idx + 1}</Button>;
                   })}
                 </div>

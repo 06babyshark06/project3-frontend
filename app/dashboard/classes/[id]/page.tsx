@@ -20,7 +20,6 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 
-// Interface khớp với Backend
 interface ClassDetail {
   id: number;
   name: string;
@@ -67,19 +66,17 @@ export default function ClassDetailPage() {
         setLoading(true);
         const classId = params.id;
 
-        // 1. Gọi API lấy thông tin lớp & thành viên
         const resClass = await api.get(`/classes/${classId}`);
         setClassInfo(resClass.data.data.class);
         setMembers(resClass.data.data.members || []);
 
-        // 2. Gọi API lấy bài thi của lớp
         const resExams = await api.get(`/classes/${classId}/exams`);
         setExams(resExams.data.data || []);
 
       } catch (error: any) {
         console.error("Lỗi tải lớp học:", error);
         toast.error("Không thể tải thông tin lớp học.");
-        router.push("/dashboard/classes"); // Redirect về danh sách lớp
+        router.push("/dashboard/classes");
       } finally {
         setLoading(false);
       }
@@ -119,12 +116,12 @@ export default function ClassDetailPage() {
 
   return (
     <div className="container mx-auto max-w-6xl p-6 space-y-8">
-      {/* Nút quay lại */}
+      {}
       <Button variant="ghost" className="mb-4 pl-0 hover:pl-2 transition-all" onClick={() => router.back()}>
         <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại danh sách lớp
       </Button>
 
-      {/* Header thông tin lớp */}
+      {}
       <div className="flex flex-col md:flex-row gap-6 items-start justify-between bg-card p-6 rounded-xl border shadow-sm">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -146,14 +143,14 @@ export default function ClassDetailPage() {
         </div>
       </div>
 
-      {/* Nội dung chính: Tabs */}
+      {}
       <Tabs defaultValue="exams" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
           <TabsTrigger value="exams">Bài kiểm tra</TabsTrigger>
           <TabsTrigger value="members">Bạn cùng lớp</TabsTrigger>
         </TabsList>
 
-        {/* Tab: Bài kiểm tra */}
+        {}
         <TabsContent value="exams" className="mt-6 space-y-4">
           {exams.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -206,7 +203,7 @@ export default function ClassDetailPage() {
           )}
         </TabsContent>
 
-        {/* Tab: Thành viên */}
+        {}
         <TabsContent value="members" className="mt-6">
           <Card>
             <CardHeader>
@@ -257,7 +254,6 @@ export default function ClassDetailPage() {
   );
 }
 
-// Component Skeleton khi đang tải
 function ClassDetailSkeleton() {
   return (
     <div className="container mx-auto max-w-6xl p-6 space-y-8">

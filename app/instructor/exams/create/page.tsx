@@ -24,7 +24,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 
 import { QuestionBankSelector } from "@/components/QuestionBankSelector";
 
-// ===== INTERFACES =====
 interface Topic {
     id: number;
     name: string;
@@ -44,18 +43,15 @@ interface Question {
     points: number;
 }
 
-// ===== COMPONENT CHÍNH =====
 export default function CreateExamPage() {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // --- DATA STATES ---
     const [topics, setTopics] = useState<Topic[]>([]);
-    const [sections, setSections] = useState<Section[]>([]); // ✅ Thêm state sections
+    const [sections, setSections] = useState<Section[]>([]);
     const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
 
-    // --- FORM STATES ---
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [topicId, setTopicId] = useState<string>("");
@@ -83,12 +79,10 @@ export default function CreateExamPage() {
     const [isBankSelectorOpen, setIsBankSelectorOpen] = useState(false);
     const [isRandomDialogOpen, setIsRandomDialogOpen] = useState(false);
 
-    // Fetch Topics
     useEffect(() => {
         api.get("/topics").then(res => setTopics(res.data.data.topics || []));
     }, []);
 
-    // ✅ Fetch Sections khi chọn Topic
     useEffect(() => {
         if (topicId) {
             api.get(`/exam-sections?topic_id=${topicId}`)
@@ -98,8 +92,6 @@ export default function CreateExamPage() {
             setSections([]);
         }
     }, [topicId]);
-
-    // --- HANDLERS ---
 
     const handleSelectFromBank = async (selectedIds: number[]) => {
         const newIds = selectedIds.filter(id => !selectedQuestions.some(q => q.id === id));
@@ -116,7 +108,6 @@ export default function CreateExamPage() {
         }
     };
 
-    // ✅ Cập nhật handler sinh ngẫu nhiên
     const handleGenerateRandom = async (config: { difficulty: string; count: number; sectionId: string }) => {
         if (!topicId) return toast.error("Vui lòng chọn chủ đề trước");
 
@@ -127,7 +118,6 @@ export default function CreateExamPage() {
                 limit: 100
             };
 
-            // ✅ Thêm lọc theo section
             if (config.sectionId !== 'all') {
                 params.section_id = config.sectionId;
             }
@@ -230,7 +220,7 @@ export default function CreateExamPage() {
                 </div>
 
                 <div className="md:col-span-3 space-y-6">
-                    {/* STEP 1: INFO */}
+                    {}
                     {currentStep === 1 && (
                         <Card>
                             <CardHeader>
@@ -270,7 +260,7 @@ export default function CreateExamPage() {
                         </Card>
                     )}
 
-                    {/* STEP 2: SETTINGS (Giữ nguyên) */}
+                    {}
                     {currentStep === 2 && (
                         <Card>
                             <CardHeader>
@@ -355,7 +345,7 @@ export default function CreateExamPage() {
                         </Card>
                     )}
 
-                    {/* STEP 3: QUESTIONS */}
+                    {}
                     {currentStep === 3 && !isDynamic && (
                         <div className="space-y-4">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -404,11 +394,11 @@ export default function CreateExamPage() {
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Input 
-                                                            type="number" 
-                                                            min={0} 
-                                                            step={0.5} 
-                                                            value={q.points} 
+                                                        <Input
+                                                            type="number"
+                                                            min={0}
+                                                            step={0.5}
+                                                            value={q.points}
                                                             onChange={(e) => updateQuestionPoints(q.id, parseFloat(e.target.value) || 0)}
                                                             className="h-8 w-20 px-2"
                                                         />
@@ -516,7 +506,7 @@ export default function CreateExamPage() {
                         </div>
                     )}
 
-                    {/* NAVIGATION BUTTONS */}
+                    {}
                     <div className="flex justify-between pt-4">
                         <Button variant="outline" onClick={() => setCurrentStep(p => Math.max(1, p - 1))} disabled={currentStep === 1}>
                             Quay lại
@@ -539,7 +529,7 @@ export default function CreateExamPage() {
                 </div>
             </div>
 
-            {/* --- DIALOGS --- */}
+            {}
 
             {topicId && (
                 <QuestionBankSelector
@@ -551,7 +541,7 @@ export default function CreateExamPage() {
                 />
             )}
 
-            {/* ✅ Truyền sections vào dialog */}
+            {}
             <RandomGeneratorDialog
                 open={isRandomDialogOpen}
                 onOpenChange={setIsRandomDialogOpen}
@@ -562,8 +552,6 @@ export default function CreateExamPage() {
         </div>
     );
 }
-
-// --- SUB-COMPONENTS ---
 
 function StepItem({ step, current, label, icon: Icon }: any) {
     const isActive = step === current;
@@ -581,10 +569,9 @@ function StepItem({ step, current, label, icon: Icon }: any) {
     )
 }
 
-// ✅ Cập nhật Component Dialog
 function RandomGeneratorDialog({ open, onOpenChange, onGenerate, sections }: any) {
     const [difficulty, setDifficulty] = useState("all");
-    const [sectionId, setSectionId] = useState("all"); // State chọn Section
+    const [sectionId, setSectionId] = useState("all");
     const [count, setCount] = useState(10);
 
     return (
@@ -594,7 +581,7 @@ function RandomGeneratorDialog({ open, onOpenChange, onGenerate, sections }: any
                     <DialogTitle>Sinh câu hỏi ngẫu nhiên</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
-                    {/* Select Section */}
+                    {}
                     <div className="space-y-2">
                         <Label>Chương / Phần</Label>
                         <Select value={sectionId} onValueChange={setSectionId}>

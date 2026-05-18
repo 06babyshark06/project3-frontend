@@ -1,11 +1,11 @@
-// app/layout.tsx
+
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils"; // Import hàm 'cn'
-import { ThemeProvider } from "@/components/theme-provider"; // Import ThemeProvider
-import { Toaster } from "@/components/ui/sonner"; // Import Toaster
-import { Header } from "@/components/header"; // Import Header
+import { cn } from "@/lib/utils";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
+import { Header } from "@/components/header";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
@@ -28,7 +28,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          geistSans.variable // Áp dụng biến font
+          geistSans.variable
         )}
       >
         <ThemeProvider

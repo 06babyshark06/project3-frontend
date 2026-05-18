@@ -109,10 +109,8 @@ export default function AIGeneratePage() {
     fetchSections();
   }, [selectedTopic, fetchSections]);
 
-  // Thêm state cho chế độ xem trước form
   const [editingMode, setEditingMode] = useState<boolean>(true);
-  
-  // Drag and Drop state
+
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,11 +133,11 @@ export default function AIGeneratePage() {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const droppedFile = e.dataTransfer.files[0];
       const isExtensionValid = droppedFile.name.match(/\.(pdf|docx|txt|pptx)$/i);
-      
+
       if (isExtensionValid) {
         setFile(droppedFile);
         setError("");
@@ -245,7 +243,7 @@ export default function AIGeneratePage() {
         toast.success("Đã tải ảnh thành công!");
     }
     setUploadingImageIndex(null);
-    e.target.value = ""; 
+    e.target.value = "";
   };
 
   const handleOptionChange = (qIndex: number, optIndex: number, value: string) => {
@@ -268,7 +266,7 @@ export default function AIGeneratePage() {
 
   const handleSaveToDB = async () => {
     if (questions.length === 0) return;
-    
+
     setSaving(true);
     setError("");
 
@@ -280,12 +278,12 @@ export default function AIGeneratePage() {
 
     try {
       const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
-      
+
       const payload = {
         questions: questions.map(q => ({
-          section_id: parseInt(selectedSection), 
+          section_id: parseInt(selectedSection),
           content: q.question_text,
-          question_type: questionType === "Một đáp án đúng" ? "single_choice" : 
+          question_type: questionType === "Một đáp án đúng" ? "single_choice" :
                          questionType === "Nhiều đáp án đúng" ? "multiple_choice" : "short_answer",
           difficulty: q.difficulty.toLowerCase(),
           explanation: q.explanation,
@@ -310,11 +308,11 @@ export default function AIGeneratePage() {
           const errData = await response.json();
           throw new Error(errData.error || "Lỗi lưu câu hỏi hàng loạt");
       }
-      
+
       setSuccess(true);
       toast.success("Lưu bộ câu hỏi thành công!");
       setTimeout(() => {
-          router.push(`/instructor/questions`); 
+          router.push(`/instructor/questions`);
       }, 2000);
 
     } catch (err: unknown) {
@@ -336,21 +334,21 @@ export default function AIGeneratePage() {
           <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">AI Gemini</span>
         </h1>
         <p className="text-gray-500 mt-2">
-          Hệ thống sẽ tự động bóc tách tài liệu và tạo ra bộ câu hỏi bám sát nội dung. 
+          Hệ thống sẽ tự động bóc tách tài liệu và tạo ra bộ câu hỏi bám sát nội dung.
           Vui lòng kiểm tra lại cấu trúc câu hỏi trước khi lưu.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Upload Column */}
+        {}
         <div className="col-span-1 space-y-6">
           <div className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
             <h3 className="text-lg font-semibold mb-4">Cấu hình</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tài liệu tham khảo (PDF, DOCX, PPTX)</label>
-                <div 
+                <div
                   className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors ${
                     isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-500"
                   }`}
@@ -450,7 +448,7 @@ export default function AIGeneratePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Số lượng sinh ra</label>
-                  <Input 
+                  <Input
                     type="number" min="1" max="50"
                     className="mt-1 w-full bg-white"
                     placeholder="VD: 10"
@@ -459,7 +457,7 @@ export default function AIGeneratePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Số đáp án / câu</label>
-                  <Input 
+                  <Input
                     type="number" min="2" max="6"
                     className="mt-1 w-full bg-white"
                     placeholder="VD: 4"
@@ -485,7 +483,7 @@ export default function AIGeneratePage() {
                 {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <FileText className="w-5 h-5 mr-2" />}
                 {loading ? "AI Đang xử lý tài liệu..." : "Bắt Đầu Generate"}
               </button>
-              
+
               {error && (
                 <div className="flex items-center p-3 text-red-700 bg-red-50 rounded-lg">
                   <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
@@ -496,7 +494,7 @@ export default function AIGeneratePage() {
           </div>
         </div>
 
-        {/* Results Column */}
+        {}
         <div className="col-span-1 md:col-span-2 space-y-6">
           {questions.length === 0 && !loading && (
             <div className="p-12 bg-white border border-gray-200 border-dashed rounded-xl flex flex-col items-center justify-center text-gray-400">
@@ -546,10 +544,10 @@ export default function AIGeneratePage() {
                           rows={2}
                         />
 
-                        {/* Rendering Image Preview */}
-                        <AttachmentPreview 
-                          url={q.attachment_url || ""} 
-                          onRemove={() => handleQuestionChange(qIndex, 'attachment_url', '')} 
+                        {}
+                        <AttachmentPreview
+                          url={q.attachment_url || ""}
+                          onRemove={() => handleQuestionChange(qIndex, 'attachment_url', '')}
                         />
 
                         <div className="flex items-center gap-3 text-xs mt-2">
@@ -582,11 +580,11 @@ export default function AIGeneratePage() {
 
                     <div className="ml-12 grid grid-cols-1 md:grid-cols-2 gap-3">
                       {q.choices?.map((opt, optIndex) => (
-                        <div 
-                          key={optIndex} 
+                        <div
+                          key={optIndex}
                           className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
-                            opt.is_correct 
-                              ? 'border-green-500 bg-green-50' 
+                            opt.is_correct
+                              ? 'border-green-500 bg-green-50'
                               : 'border-gray-200 bg-white hover:border-gray-300'
                           }`}
                           onClick={() => toggleCorrectAnswer(qIndex, optIndex)}
@@ -597,8 +595,8 @@ export default function AIGeneratePage() {
                             opt.is_correct ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 bg-white'
                           }`}>
                             {opt.is_correct && (
-                              questionType === "Một đáp án đúng" ? 
-                                <div className="w-2 h-2 rounded-full bg-white" /> : 
+                              questionType === "Một đáp án đúng" ?
+                                <div className="w-2 h-2 rounded-full bg-white" /> :
                                 <CheckCircle className="w-3 h-3" />
                             )}
                           </div>
@@ -607,7 +605,7 @@ export default function AIGeneratePage() {
                             className="w-full text-sm bg-transparent border-none focus:ring-0 p-0"
                             value={opt.content}
                             onChange={(e) => handleOptionChange(qIndex, optIndex, e.target.value)}
-                            onClick={(e) => e.stopPropagation()} // Ngăn click lan ra ngoài
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
                       ))}

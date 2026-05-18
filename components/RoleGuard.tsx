@@ -1,4 +1,4 @@
-// components/RoleGuard.tsx
+
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,7 +31,7 @@ export default function RoleGuard({
       description: "Bạn không có quyền truy cập trang này.",
     });
     router.push("/dashboard");
-    return null; 
+    return null;
   }
 
   return <>{children}</>;

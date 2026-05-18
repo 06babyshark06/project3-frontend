@@ -9,9 +9,9 @@ import Highlight from "@tiptap/extension-highlight";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { MathExtension } from "@aarkue/tiptap-math-extension";
 import { all, createLowlight } from "lowlight";
-import { 
-  Bold, Italic, List, ListOrdered, Quote, Undo, Redo, 
-  Code, Type, AlignLeft, AlignCenter, AlignRight, 
+import {
+  Bold, Italic, List, ListOrdered, Quote, Undo, Redo,
+  Code, Type, AlignLeft, AlignCenter, AlignRight,
   Highlighter, Link as LinkIcon, Sigma, Binary
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       >
         <Type className="h-4 w-4" />
       </Button>
-      
+
       <div className="w-px h-6 bg-border mx-1 my-auto" />
 
       <Button
@@ -93,7 +93,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       >
         <ListOrdered className="h-4 w-4" />
       </Button>
-      
+
       <div className="w-px h-6 bg-border mx-1 my-auto" />
 
       <Button
@@ -108,8 +108,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       <Button
         variant="ghost" size="sm" type="button"
         onClick={() => {
-          // Mathematics extension handles typing $...$ or $$...$$
-          // But we can also provide a button to insert placeholders
+
           editor.chain().focus().insertContent("$x = $").run();
         }}
         title="Math Formula (or type $...$)"
@@ -140,7 +139,7 @@ export default function RichTextEditor({ content, onChange, placeholder, minHeig
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
-        codeBlock: false, // Disable default codeBlock to use lowlight
+        codeBlock: false,
       }),
       Underline,
       Link.configure({
@@ -167,7 +166,6 @@ export default function RichTextEditor({ content, onChange, placeholder, minHeig
     },
   });
 
-  // Sync content if it changes externally (e.g. when loading for edit)
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // Import router
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
@@ -17,11 +17,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input"; // Thêm Input
+import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select"; // Thêm Select
+} from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -35,20 +35,17 @@ interface User {
 }
 
 export default function UserManagementPage() {
-  const router = useRouter(); // Hook điều hướng
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Pagination state
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
 
-  // Search & Filter state (UI only for now)
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
 
-  // Dialog state
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -78,7 +75,6 @@ export default function UserManagementPage() {
 
   useEffect(() => { fetchUsers(1); }, [roleFilter]);
 
-  // 2. Xử lý Xóa
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
     setIsDeleting(true);
@@ -99,7 +95,6 @@ export default function UserManagementPage() {
     }
   };
 
-  // 3. Xử lý Đổi Role
   const handleChangeRole = async (userId: number, newRole: string) => {
     const oldUsers = [...users];
     setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
@@ -124,7 +119,7 @@ export default function UserManagementPage() {
   return (
     <div className="container mx-auto max-w-7xl p-6">
 
-      {/* === 1. TOP BAR ĐIỀU HƯỚNG === */}
+      {}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div className="flex items-center gap-4">
 
@@ -133,10 +128,10 @@ export default function UserManagementPage() {
             <p className="text-sm text-muted-foreground">Tổng số: {totalUsers} tài khoản trong hệ thống.</p>
           </div>
         </div>
-        {/* (Có thể thêm nút "Tạo User" ở đây nếu cần) */}
+        {}
       </div>
 
-      {/* === 2. TOOLBAR (TÌM KIẾM & LỌC) === */}
+      {}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -146,7 +141,7 @@ export default function UserManagementPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && fetchUsers(1)}
-          // (Logic search client hoặc server sẽ được gắn vào đây sau)
+
           />
         </div>
         <div className="w-full sm:w-[200px]">
@@ -165,7 +160,7 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {/* === 3. BẢNG DỮ LIỆU === */}
+      {}
       <Card className="shadow-sm border">
         <CardContent className="p-0">
           {isLoading ? (
@@ -257,7 +252,7 @@ export default function UserManagementPage() {
                 </Table>
               </div>
 
-              {/* Pagination */}
+              {}
               <div className="flex items-center justify-between px-6 py-4 border-t">
                 <div className="text-sm text-muted-foreground">
                   Trang {page} trên {totalPages}
@@ -272,7 +267,7 @@ export default function UserManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Alert Dialog Xóa User */}
+      {}
       <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

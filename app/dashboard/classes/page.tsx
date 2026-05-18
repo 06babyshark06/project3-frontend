@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { 
-  Users, BookOpen, Search, Filter 
+import {
+  Users, BookOpen, Search, Filter
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -47,8 +47,7 @@ export default function StudentClassesPage() {
     fetchClasses();
   }, []);
 
-  // Lọc lớp học theo từ khóa tìm kiếm
-  const filteredClasses = classes.filter(cls => 
+  const filteredClasses = classes.filter(cls =>
     cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cls.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cls.teacher_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -56,7 +55,7 @@ export default function StudentClassesPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl space-y-8">
-      {/* Header Section */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Lớp học của tôi</h1>
@@ -67,7 +66,7 @@ export default function StudentClassesPage() {
         <JoinClassDialog />
       </div>
 
-      {/* Search & Filter Section */}
+      {}
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -78,10 +77,10 @@ export default function StudentClassesPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        {/* Có thể thêm bộ lọc status nếu cần */}
+        {}
       </div>
 
-      {/* Content Section */}
+      {}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
@@ -137,8 +136,8 @@ export default function StudentClassesPage() {
           </div>
           <h3 className="text-lg font-medium">Chưa tìm thấy lớp học nào</h3>
           <p className="text-muted-foreground text-sm max-w-md text-center mt-2 mb-6">
-            {searchTerm 
-              ? "Không có lớp học nào khớp với từ khóa tìm kiếm của bạn." 
+            {searchTerm
+              ? "Không có lớp học nào khớp với từ khóa tìm kiếm của bạn."
               : "Bạn chưa tham gia lớp học nào. Hãy hỏi giảng viên mã lớp để tham gia ngay."}
           </p>
           {!searchTerm && <JoinClassDialog />}

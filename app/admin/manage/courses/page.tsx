@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Import useRouter
-import { Loader2, Eye, Trash2, MoreHorizontal, ArrowLeft } from "lucide-react"; // Thêm ArrowLeft
+import { useRouter } from "next/navigation";
+import { Loader2, Eye, Trash2, MoreHorizontal, ArrowLeft } from "lucide-react";
 
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -33,19 +33,17 @@ interface Course {
 }
 
 export default function ManageAllCoursesPage() {
-  const router = useRouter(); // Hook điều hướng
+  const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // State cho dialog xóa
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchAllCourses = async () => {
     try {
       setIsLoading(true);
-      // Admin gọi API public (hoặc API admin riêng nếu backend hỗ trợ)
-      // Tạm thời dùng /courses với limit lớn
+
       const response = await api.get("/courses?limit=100");
       setCourses(response.data.data.courses || []);
     } catch (error) {
@@ -61,11 +59,10 @@ export default function ManageAllCoursesPage() {
     if (!courseToDelete) return;
     setIsDeleting(true);
     try {
-      // Gọi API DELETE /courses/:id (Admin Only)
-      // Đảm bảo bạn đã có route này ở backend
+
       await api.delete(`/courses/${courseToDelete.id}`);
       toast.success("Đã xóa khóa học thành công.");
-      fetchAllCourses(); // Refresh danh sách
+      fetchAllCourses();
     } catch (error) {
       toast.error("Xóa thất bại (Có thể do lỗi server hoặc quyền hạn).");
     } finally {
@@ -77,13 +74,13 @@ export default function ManageAllCoursesPage() {
   return (
     <div className="container mx-auto max-w-6xl p-6">
 
-      {/* === TOP BAR ĐIỀU HƯỚNG === */}
+      {}
       <div className="flex items-center justify-between mb-8 pb-4 border-b">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Quản Lý Tất Cả Khóa Học</h1>
           <p className="text-sm text-muted-foreground">Kiểm soát toàn bộ nội dung học tập trên hệ thống.</p>
         </div>
-        {/* (Có thể thêm nút Export hoặc Filter ở đây nếu cần) */}
+        {}
       </div>
 
       <Card>
@@ -139,7 +136,7 @@ export default function ManageAllCoursesPage() {
                                   </Link>
                                 </DropdownMenuItem>
 
-                                {/* Admin có quyền xóa bất kỳ khóa học nào */}
+                                {}
                                 <DropdownMenuItem
                                   onClick={() => setCourseToDelete(course)}
                                   className="text-destructive focus:text-destructive cursor-pointer"
@@ -160,7 +157,7 @@ export default function ManageAllCoursesPage() {
         </CardContent>
       </Card>
 
-      {/* Alert Dialog Xóa */}
+      {}
       <AlertDialog open={!!courseToDelete} onOpenChange={(open) => !open && setCourseToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -4,7 +4,7 @@ const RAW_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 if (!RAW_BASE_URL) {
   console.warn("Missing NEXT_PUBLIC_API_URL env var, defaulting to localhost");
 }
-// Fallback for dev if env is missing, but intended to be from env
+
 const API_URL = RAW_BASE_URL || "http://localhost:8081/api/v1";
 const STORAGE_KEY = "accessToken";
 

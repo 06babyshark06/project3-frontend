@@ -26,7 +26,6 @@ export function ExcelImportDialog({
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
 
-      // Validate file type
       const validTypes = [
         "application/vnd.ms-excel",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -42,7 +41,7 @@ export function ExcelImportDialog({
   };
 
   const handleDownloadTemplate = () => {
-    // Đảm bảo bạn đã tạo file này trong folder public/templates/
+
     const fileUrl = "/templates/question_template.xlsx";
     const link = document.createElement('a');
     link.href = fileUrl;
@@ -96,7 +95,7 @@ export function ExcelImportDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* ALERT HƯỚNG DẪN TỔNG QUAN */}
+          {}
           <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex gap-3 items-start">
             <div className="bg-blue-100 p-2 rounded-full shrink-0">
               <AlertCircle className="h-5 w-5 text-blue-600" />
@@ -116,7 +115,7 @@ export function ExcelImportDialog({
             </div>
           </div>
 
-          {/* KHU VỰC UPLOAD */}
+          {}
           <div className="space-y-2">
             <Label>Chọn file Excel (.xlsx, .xls) <span className="text-red-500">*</span></Label>
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer relative group">
@@ -148,7 +147,7 @@ export function ExcelImportDialog({
             </div>
           </div>
 
-          {/* HƯỚNG DẪN CHI TIẾT CẤU TRÚC FILE */}
+          {}
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
             <div className="p-4 bg-muted/40 border-b">
               <h4 className="text-sm font-semibold flex items-center gap-2">

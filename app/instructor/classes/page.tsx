@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { 
-  Users, Search, Plus, MoreHorizontal, 
-  Trash2, Edit, ExternalLink, Loader2 
+import {
+  Users, Search, Plus, MoreHorizontal,
+  Trash2, Edit, ExternalLink, Loader2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -151,8 +151,8 @@ export default function ClassListPage() {
               Xác nhận xóa lớp học?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn đang chuẩn bị xóa lớp <strong>"{classToDelete?.name}"</strong>. 
-              Mọi dữ liệu thành viên và kết quả học tập trong lớp này sẽ bị mất. 
+              Bạn đang chuẩn bị xóa lớp <strong>"{classToDelete?.name}"</strong>.
+              Mọi dữ liệu thành viên và kết quả học tập trong lớp này sẽ bị mất.
               Hành động này không thể hoàn tác!
             </AlertDialogDescription>
           </AlertDialogHeader>

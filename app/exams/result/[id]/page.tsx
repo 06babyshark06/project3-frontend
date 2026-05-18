@@ -20,8 +20,6 @@ import { MediaRenderer } from "@/components/MediaRenderer";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-
-// --- Interfaces ---
 interface ChoiceReview {
   id: number;
   content: string;
@@ -78,19 +76,16 @@ export default function ExamResultPage() {
         const response = await api.get(`/submissions/${submissionId}`);
         const data = response.data.data;
 
-        // Log dữ liệu để kiểm tra nếu vẫn bị lỗi
         console.log("Submission Data:", data);
 
         setResult(data);
 
-        // Hiệu ứng pháo hoa nếu điểm cao
         if ((data.score ?? 0) >= 8.0) {
           triggerConfetti();
         }
       } catch (error) {
         console.error("Lỗi tải kết quả:", error);
         toast.error("Không tìm thấy kết quả bài thi.");
-        // router.push("/dashboard"); // Tạm thời comment để debug
       } finally {
         setIsLoading(false);
       }
@@ -105,7 +100,7 @@ export default function ExamResultPage() {
 
     try {
       setLoadingAI(prev => ({ ...prev, [qId]: true }));
-      
+
       const payload = {
         question_content: item.question_content,
         choices: item.choices.map(c => c.content),
@@ -114,14 +109,13 @@ export default function ExamResultPage() {
       };
 
       const response = await api.post("/ai/explain", payload);
-      
+
       if (response.data.success) {
         const explanation = response.data.data.explanation;
         setAiExplanations(prev => ({
           ...prev,
           [qId]: explanation
         }));
-        // Initialize chat history with the explanation
         setChatHistories(prev => ({
           ...prev,
           [qId]: [{ role: 'model', content: explanation }]
@@ -142,7 +136,6 @@ export default function ExamResultPage() {
     const message = inputTexts[qId]?.trim();
     if (!message || isChatLoading[qId]) return;
 
-    // Clear input
     setInputTexts(prev => ({ ...prev, [qId]: "" }));
 
     const newUserTurn: ChatTurn = { role: 'user', content: message };
@@ -153,18 +146,18 @@ export default function ExamResultPage() {
 
     try {
       setIsChatLoading(prev => ({ ...prev, [qId]: true }));
-      
+
       const payload = {
         question_content: item.question_content,
         choices: item.choices.map(c => c.content),
         correct_choice: (item.question_type === "short_answer") ? item.choices.map(c => c.content).join(" hoặc ") : (item.choices.find(c => c.is_correct)?.content || ""),
         user_choice: (item.question_type === "short_answer" || item.question_type === "essay") ? (item.text_answer || "Không chọn") : (item.choices.find(c => c.user_selected)?.content || "Không chọn"),
-        history: currentHistory, // History before the new message
+        history: currentHistory,
         new_message: message
       };
 
       const response = await api.post("/ai/chat", payload);
-      
+
       if (response.data.success) {
         const reply = response.data.data.reply;
         setChatHistories(prev => ({
@@ -208,7 +201,6 @@ export default function ExamResultPage() {
 
   if (!result) return null;
 
-  // Sử dụng toán tử '??' để fallback về 0 nếu dữ liệu bị null/undefined
   const score = result.score ?? 0;
   const correctCount = result.correct_count ?? 0;
   const totalQuestions = result.total_questions ?? 0;
@@ -218,14 +210,9 @@ export default function ExamResultPage() {
   const isAwaitingGrading = ungradedCount > 0 && score < 5.0;
   const submittedDate = result.submitted_at ? new Date(result.submitted_at).toLocaleString('vi-VN') : "N/A";
 
-  // const MediaContent removed, using MediaRenderer instead
-
   return (
     <div className="min-h-screen w-full bg-muted/30 py-8 px-4 flex flex-col items-center">
-
-      {/* === 1. CARD TỔNG KẾT (Chỉ hiện khi có chi tiết - tức là đã được công bố kết quả) === */}
-      {result.details && result.details.length > 0 && (
-        <Card className={`w-full max-w-2xl shadow-xl border-t-8 ${isAwaitingGrading ? "border-t-amber-500" : (isPass ? "border-t-green-500" : "border-t-red-500")} mb-8`}>
+      <Card className={`w-full max-w-2xl shadow-xl border-t-8 ${isAwaitingGrading ? "border-t-amber-500" : (isPass ? "border-t-green-500" : "border-t-red-500")} mb-8`}>
           <CardHeader className="text-center pb-2">
             <div className={`mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full ${isAwaitingGrading ? "bg-amber-100" : (isPass ? "bg-green-100" : "bg-red-100")}`}>
               {isAwaitingGrading ? (
@@ -245,7 +232,7 @@ export default function ExamResultPage() {
           </CardHeader>
 
           <CardContent className="space-y-8 pt-6">
-            {/* Điểm Số Lớn */}
+            {}
             <div className="flex flex-col items-center justify-center">
               <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-1">Tổng Điểm</span>
               <div className="flex items-baseline">
@@ -264,7 +251,7 @@ export default function ExamResultPage() {
               )}
             </div>
 
-            {/* Thống kê chi tiết */}
+            {}
             <div className={`grid ${ungradedCount > 0 ? "grid-cols-3" : "grid-cols-2"} gap-4`}>
               <div className="flex flex-col items-center p-5 bg-green-50/50 border border-green-100 rounded-xl justify-center text-center">
                 <div className="flex items-center gap-2 mb-1">
@@ -320,9 +307,7 @@ export default function ExamResultPage() {
             </Button>
           </CardFooter>
         </Card>
-      )}
 
-      {/* === 2. CHI TIẾT CÂU TRẢ LỜI === */}
       {result.details && result.details.length > 0 ? (
         <div className="w-full max-w-2xl space-y-6">
           <div className="flex items-center gap-2 mb-4">
@@ -352,14 +337,12 @@ export default function ExamResultPage() {
               </CardHeader>
 
               <CardContent className="pt-4 space-y-4">
-                {/* Danh sách đáp án */}
                 {(item.question_type === "short_answer" || item.question_type === "essay") ? (
                   <div className="space-y-4">
                      <div className={`p-4 rounded-lg border ${item.question_type === "essay" ? "bg-background/50 border-border" : (item.is_correct ? "border-green-500 bg-green-50 text-green-900" : "border-red-500 bg-red-50 text-red-900")}`}>
                         <span className={`text-sm font-semibold uppercase mb-2 block ${item.question_type === "essay" ? "text-muted-foreground" : (item.is_correct ? "text-green-700" : "text-red-700")}`}>Câu trả lời của bạn:</span>
                         <div className="text-base whitespace-pre-wrap">{item.text_answer || (item.choices && item.choices.some(c => c.user_selected) ? "" : <span className="italic opacity-70">Không có câu trả lời văn bản</span>)}</div>
-                        
-                        {/* Hiển thị lựa chọn nếu student chọn thay vì nhập text cho Short Answer */}
+
                         {item.choices && item.choices.some(c => c.user_selected) && (
                            <div className="mt-3 pt-3 border-t border-dashed border-muted-foreground/20 space-y-2">
                               <span className="text-xs font-semibold text-muted-foreground uppercase block">Lựa chọn đã chọn:</span>
@@ -419,7 +402,6 @@ export default function ExamResultPage() {
                 </div>
                 )}
 
-                {/* Giải thích gốc của giáo viên */}
                 {item.explanation && (
                   <div className="mt-4 p-4 bg-blue-50/50 border border-blue-100 rounded-lg text-blue-900 flex gap-3 items-start">
                     <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
@@ -430,12 +412,11 @@ export default function ExamResultPage() {
                   </div>
                 )}
 
-                {/* AI Explanation Section */}
                 <div className="mt-4 pt-4 border-t border-dashed">
                   {!aiExplanations[item.question_id] ? (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleAskAI(item)}
                       disabled={loadingAI[item.question_id]}
                       className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 hover:border-indigo-400 text-indigo-700 transition-all duration-300 group shadow-sm"
@@ -459,13 +440,13 @@ export default function ExamResultPage() {
                         <span className="font-bold text-indigo-900 text-sm uppercase tracking-tighter">AI Tutor Conversation</span>
                         <Badge variant="secondary" className="ml-auto text-[10px] bg-indigo-100 text-indigo-700 border-indigo-200">✨ Interactive</Badge>
                       </div>
-                      
+
                       <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar mb-4">
                         {chatHistories[item.question_id]?.map((chat, cIdx) => (
                           <div key={cIdx} className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
-                              chat.role === 'user' 
-                                ? 'bg-indigo-600 text-white rounded-tr-none' 
+                              chat.role === 'user'
+                                ? 'bg-indigo-600 text-white rounded-tr-none'
                                 : 'bg-white border border-indigo-100 text-slate-700 rounded-tl-none'
                             }`}>
                               {chat.role === 'user' ? (
@@ -503,8 +484,8 @@ export default function ExamResultPage() {
                           onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(item)}
                           className="flex-1 bg-white/50 border border-indigo-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-slate-400"
                         />
-                        <Button 
-                          size="icon" 
+                        <Button
+                          size="icon"
                           onClick={() => handleSendMessage(item)}
                           disabled={isChatLoading[item.question_id] || !inputTexts[item.question_id]?.trim()}
                           className="rounded-full bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 shrink-0"
@@ -525,10 +506,9 @@ export default function ExamResultPage() {
             <div className="bg-white/60 p-4 rounded-full inline-block mb-2">
               <AlertCircle className="h-12 w-12 text-yellow-600" />
             </div>
-            <h3 className="text-2xl font-bold text-yellow-800">Kết quả đang chờ công bố</h3>
+            <h3 className="text-2xl font-bold text-yellow-800">Chi tiết đáp án không hiển thị</h3>
             <p className="text-yellow-700 max-w-md mx-auto">
-              Bài thi này được cài đặt để không hiển thị kết quả ngay lập tức.
-              Vui lòng quay lại sau hoặc liên hệ giảng viên để biết thêm chi tiết.
+              Bài thi này được cấu hình ẩn đáp án chi tiết. Điểm số và trạng thái bài làm của bạn đã được ghi nhận thành công.
             </p>
             <div className="py-4">
               <div className="inline-flex flex-col items-start gap-2 bg-white/50 p-4 rounded-lg text-sm text-yellow-900 border border-yellow-100">

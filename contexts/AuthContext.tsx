@@ -1,4 +1,4 @@
-// contexts/AuthContext.tsx
+
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [token, setTokenState] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadUserFromToken = async () => {
     setIsLoading(true);
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // (Từ lib/api.ts)
+
     const handleTokenRefresh = () => {
       console.log("AuthContext: Phát hiện token được refresh (interceptor)...");
       loadUserFromToken();
@@ -88,14 +88,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (newToken: string, newUser: User) => {
-    setToken(newToken); 
-    setTokenState(newToken); 
+    setToken(newToken);
+    setTokenState(newToken);
     setUser(newUser);
   };
 
   const logout = (redirectPath: string = "/login") => {
-    removeToken(); 
-    setTokenState(null); 
+    removeToken();
+    setTokenState(null);
     setUser(null);
     router.push(redirectPath);
   };
@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!isLoading && children} 
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 }

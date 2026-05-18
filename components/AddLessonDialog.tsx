@@ -1,4 +1,4 @@
-// components/AddLessonDialog.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -24,17 +24,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-// Định nghĩa Props
 interface AddLessonDialogProps {
   sectionId: number;
   onSuccess: () => void;
-  lessonToEdit?: {  // Thêm prop này (optional)
+  lessonToEdit?: {
     id: number;
     title: string;
     lesson_type: string;
     content_url?: string;
   } | null;
-  open?: boolean; // Điều khiển mở từ bên ngoài
+  open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
@@ -47,22 +46,21 @@ export function AddLessonDialog({ sectionId, onSuccess, lessonToEdit, open, onOp
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Form state
   const [title, setTitle] = useState("");
   const [lessonType, setLessonType] = useState<LessonType>("video");
-  const [file, setFile] = useState<File | null>(null); // Cho video
-  const [textContent, setTextContent] = useState(""); // Cho text
+  const [file, setFile] = useState<File | null>(null);
+  const [textContent, setTextContent] = useState("");
 
   useEffect(() => {
     if (lessonToEdit) {
       setTitle(lessonToEdit.title);
       setLessonType(lessonToEdit.lesson_type as "video" | "text");
       if (lessonToEdit.lesson_type === "text") {
-        setTextContent(lessonToEdit.content_url || ""); // Giả sử API trả về content_url
+        setTextContent(lessonToEdit.content_url || "");
       }
-      // Video file không thể pre-fill, user phải upload lại nếu muốn đổi
+
     } else {
-      // Reset nếu tạo mới
+
       setTitle("");
       setLessonType("video");
       setTextContent("");
@@ -77,7 +75,6 @@ export function AddLessonDialog({ sectionId, onSuccess, lessonToEdit, open, onOp
     try {
       let contentUrl = lessonToEdit?.content_url || "";
 
-      // === XỬ LÝ UPLOAD (NẾU LÀ VIDEO) ===
       if (lessonType === "video") {
         if (!file) {
           toast.error("Vui lòng chọn một file video.");
@@ -85,7 +82,6 @@ export function AddLessonDialog({ sectionId, onSuccess, lessonToEdit, open, onOp
           return;
         }
 
-        // 1. Lấy Presigned URL từ backend
         const uploadUrlResponse = await api.post("/lessons/upload-url", {
           file_name: file.name,
           content_type: file.type,
@@ -95,7 +91,6 @@ export function AddLessonDialog({ sectionId, onSuccess, lessonToEdit, open, onOp
         const { upload_url, final_url } = uploadUrlResponse.data.data;
         contentUrl = final_url;
 
-        // 2. Tải file TRỰC TIẾP lên R2 (Cloudflare)
         const uploadResponse = await fetch(upload_url, {
           method: "PUT",
           body: file,
@@ -108,19 +103,19 @@ export function AddLessonDialog({ sectionId, onSuccess, lessonToEdit, open, onOp
           throw new Error("Tải file lên R2 thất bại.");
         }
       }
-      // === XỬ LÝ (NẾU LÀ TEXT) ===
+
       else {
         if (!textContent) {
           toast.error("Vui lòng nhập nội dung bài học.");
           setIsLoading(false);
           return;
         }
-        // Giả sử backend lưu text content vào 'content_url'
+
         contentUrl = textContent;
       }
 
       if (lessonToEdit) {
-        // === LOGIC SỬA (UPDATE) ===
+
         await api.put(`/lessons/${lessonToEdit.id}`, {
           title,
           lesson_type: lessonType,
@@ -128,7 +123,7 @@ export function AddLessonDialog({ sectionId, onSuccess, lessonToEdit, open, onOp
         });
         toast.success("Cập nhật bài học thành công!");
       } else {
-        // === LOGIC TẠO MỚI (CREATE) ===
+
         await api.post("/lessons", {
           section_id: sectionId,
           title,
@@ -197,7 +192,7 @@ export function AddLessonDialog({ sectionId, onSuccess, lessonToEdit, open, onOp
               </RadioGroup>
             </div>
 
-            {/* Hiển thị input tương ứng */}
+            {}
             {lessonType === "video" && (
               <div className="space-y-2">
                 <Label htmlFor="file" className="text-lg font-medium">File video</Label>

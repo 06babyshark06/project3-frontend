@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { 
-  Loader2, ArrowLeft, Search, Eye, 
+import {
+  Loader2, ArrowLeft, Search, Eye,
   FileCheck, Clock, User, ChevronLeft, ChevronRight,
   ClipboardList
 } from "lucide-react";
@@ -42,8 +42,7 @@ export default function InstructorSubmissionsPage() {
   const fetchSubmissions = async () => {
     setIsLoading(true);
     try {
-      // For now we use the recent-submissions endpoint with a larger limit
-      // Since the backend doesn't support full pagination on this yet
+
       const res = await api.get("/instructor/recent-submissions", {
         params: {
           limit: 50
@@ -65,11 +64,11 @@ export default function InstructorSubmissionsPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search is handled client-side for now as the backend doesn't support it for all submissions
+
     fetchSubmissions();
   };
 
-  const filteredSubmissions = submissions.filter(sub => 
+  const filteredSubmissions = submissions.filter(sub =>
     sub.student_name?.toLowerCase().includes(search.toLowerCase()) ||
     sub.exam_title?.toLowerCase().includes(search.toLowerCase()) ||
     sub.submission_id.toString().includes(search)
@@ -89,7 +88,7 @@ export default function InstructorSubmissionsPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl animate-in fade-in duration-500">
-      {/* HEADER */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
@@ -105,7 +104,7 @@ export default function InstructorSubmissionsPage() {
         </div>
       </div>
 
-      {/* FILTERS */}
+      {}
       <Card className="mb-8 border-none shadow-sm bg-muted/30">
         <CardContent className="pt-6">
           <form onSubmit={handleSearch} className="flex gap-3">
@@ -123,7 +122,7 @@ export default function InstructorSubmissionsPage() {
         </CardContent>
       </Card>
 
-      {/* TABLE */}
+      {}
       <Card className="border-none shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
@@ -176,7 +175,7 @@ export default function InstructorSubmissionsPage() {
                        </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className={`inline-flex items-center justify-center h-10 w-16 rounded-lg font-bold text-lg 
+                      <div className={`inline-flex items-center justify-center h-10 w-16 rounded-lg font-bold text-lg
                         ${(sub.score ?? 0) >= 8 ? "bg-emerald-50 text-emerald-700" : (sub.score ?? 0) >= 5 ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700"}`}>
                         {sub.score !== undefined ? sub.score.toFixed(1) : "-"}
                       </div>
@@ -194,13 +193,13 @@ export default function InstructorSubmissionsPage() {
                     </TableCell>
                     <TableCell>{getStatusBadge(sub.status)}</TableCell>
                     <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="text-primary hover:text-primary hover:bg-primary/5 font-semibold"
                         onClick={() => router.push(`/instructor/exams/${sub.exam_id}/submissions/${sub.submission_id}`)}
                       >
-                        <Eye className="h-4 w-4 mr-2" /> 
+                        <Eye className="h-4 w-4 mr-2" />
                         Chi tiết
                       </Button>
                     </TableCell>
@@ -211,7 +210,7 @@ export default function InstructorSubmissionsPage() {
           </Table>
         </div>
       </Card>
-      
+
       <div className="mt-6 flex justify-between items-center text-sm text-muted-foreground bg-muted/20 p-4 rounded-lg">
         <div className="flex items-center gap-2">
            <ClipboardList className="h-4 w-4" />

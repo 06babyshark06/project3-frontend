@@ -1,4 +1,4 @@
-// app/login/page.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -77,7 +77,7 @@ export default function LoginPage() {
               Đăng nhập để tiếp tục hành trình học tập của bạn.
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-6 px-8">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-lg font-medium">
@@ -90,7 +90,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12 text-lg" 
+                className="h-12 text-lg"
               />
             </div>
 

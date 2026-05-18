@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { 
-  Plus, Trash2, CheckCircle2, Circle, Square, CheckSquare, 
+import {
+  Plus, Trash2, CheckCircle2, Circle, Square, CheckSquare,
   Loader2, Image as ImageIcon, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,47 +44,41 @@ interface AddQuestionDialogProps {
 interface Topic { id: number; name: string; }
 interface Section { id: number; name: string; }
 
-export function AddQuestionDialog({ 
+export function AddQuestionDialog({
   examId, defaultTopicId, defaultSectionId,
-  onSuccess, open, onOpenChange, questionToEdit 
+  onSuccess, open, onOpenChange, questionToEdit
 }: AddQuestionDialogProps) {
   const [loading, setLoading] = useState(false);
-  
-  // Upload State
+
   const [isUploading, setIsUploading] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const questionFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Data Select options
   const [topics, setTopics] = useState<Topic[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
 
-  // Form State
   const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [selectedSection, setSelectedSection] = useState<string>("");
   const [content, setContent] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
   const [questionType, setQuestionType] = useState("single_choice");
   const [explanation, setExplanation] = useState("");
-  
-  // Choices State
+
   const [choices, setChoices] = useState([
     { content: "", isCorrect: true, attachmentUrl: "" },
     { content: "", isCorrect: false, attachmentUrl: "" },
     { content: "", isCorrect: false, attachmentUrl: "" },
     { content: "", isCorrect: false, attachmentUrl: "" },
   ]);
-  
+
   const [uploadingChoiceIndex, setUploadingChoiceIndex] = useState<number | null>(null);
 
-  // 1. Fetch Topics
   useEffect(() => {
     if (open) {
       api.get("/topics").then(res => setTopics(res.data.data.topics || [])).catch(console.error);
     }
   }, [open]);
 
-  // 2. Fetch Sections
   useEffect(() => {
     if (!selectedTopic || !open) return;
     api.get(`/exam-sections?topic_id=${selectedTopic}`)
@@ -92,7 +86,6 @@ export function AddQuestionDialog({
        .catch(console.error);
   }, [selectedTopic, open]);
 
-  // 3. Fill dữ liệu
   useEffect(() => {
     if (open) {
       if (questionToEdit) {
@@ -101,15 +94,15 @@ export function AddQuestionDialog({
         setQuestionType(questionToEdit.question_type || "single_choice");
         setExplanation(questionToEdit.explanation || "");
         setAttachmentUrl(questionToEdit.attachment_url || "");
-        
+
         if (questionToEdit.topic_id) setSelectedTopic(questionToEdit.topic_id.toString());
         if (questionToEdit.section_id) setTimeout(() => setSelectedSection(questionToEdit.section_id.toString()), 100);
 
         if (questionToEdit.choices && questionToEdit.choices.length > 0) {
           setChoices(questionToEdit.choices.map((c) => ({
-            content: c.content, 
+            content: c.content,
             isCorrect: c.is_correct || false,
-            attachmentUrl: c.attachment_url || "" 
+            attachmentUrl: c.attachment_url || ""
           })));
         }
       } else {
@@ -176,7 +169,7 @@ export function AddQuestionDialog({
   const handleChoiceFileSelect = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     setUploadingChoiceIndex(index);
     const url = await uploadFile(file);
     if (url) {
@@ -186,7 +179,7 @@ export function AddQuestionDialog({
         toast.success("Đã tải ảnh đáp án!");
     }
     setUploadingChoiceIndex(null);
-    e.target.value = ""; 
+    e.target.value = "";
   };
 
   const removeChoiceAttachment = (index: number) => {
@@ -211,7 +204,7 @@ export function AddQuestionDialog({
   const handleSubmit = async () => {
     if (!selectedSection) return toast.error("Vui lòng chọn Chương/Phần");
     if (!content.trim()) return toast.error("Chưa nhập nội dung câu hỏi");
-    
+
     let finalChoices = [...choices];
     if (questionType === "essay") {
       finalChoices = [];
@@ -221,7 +214,7 @@ export function AddQuestionDialog({
     } else {
       if (choices.filter(c => c.isCorrect).length === 0) return toast.error("Phải có ít nhất 1 đáp án đúng");
     }
-    
+
     setLoading(true);
     try {
       const payload = {
@@ -231,12 +224,12 @@ export function AddQuestionDialog({
         difficulty,
         explanation,
         attachment_url: attachmentUrl,
-        choices: finalChoices.map(c => ({ 
-            content: c.content, 
+        choices: finalChoices.map(c => ({
+            content: c.content,
             is_correct: c.isCorrect,
-            attachment_url: c.attachmentUrl 
+            attachment_url: c.attachmentUrl
         })),
-        ...(examId ? { exam_id: examId } : {}) 
+        ...(examId ? { exam_id: examId } : {})
       };
 
       if (questionToEdit) {
@@ -261,7 +254,7 @@ export function AddQuestionDialog({
         <DialogHeader><DialogTitle>{questionToEdit ? "✏️ Sửa câu hỏi" : "➕ Thêm câu hỏi mới"}</DialogTitle></DialogHeader>
 
         <div className="space-y-5 py-2">
-          {/* TOPIC & SECTION */}
+          {}
           <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border">
             <div className="space-y-2">
                 <Label>Chủ đề <span className="text-red-500">*</span></Label>
@@ -279,11 +272,11 @@ export function AddQuestionDialog({
             </div>
           </div>
 
-          {/* === CONTENT (TEXTAREA ĐƠN GIẢN) === */}
+          {}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
                 <Label>Nội dung câu hỏi <span className="text-red-500">*</span></Label>
-                <Button 
+                <Button
                     type="button" variant="ghost" size="sm" className="h-7 text-xs text-primary"
                     onClick={() => questionFileInputRef.current?.click()}
                     disabled={isUploading}
@@ -293,20 +286,20 @@ export function AddQuestionDialog({
                 </Button>
                 <input type="file" ref={questionFileInputRef} className="hidden" accept="image/*,video/*,audio/*" onChange={handleQuestionFileSelect} />
             </div>
-            
+
             <RichTextEditor
-                content={content} 
-                onChange={(newContent) => setContent(newContent)} 
-                placeholder="Nhập nội dung câu hỏi tại đây..." 
+                content={content}
+                onChange={(newContent) => setContent(newContent)}
+                placeholder="Nhập nội dung câu hỏi tại đây..."
                 minHeight="150px"
             />
-            
+
             <div className="mt-2">
               <MediaRenderer url={attachmentUrl} onRemove={() => setAttachmentUrl("")} />
             </div>
           </div>
 
-          {/* TYPE & DIFFICULTY */}
+          {}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label>Loại câu hỏi</Label>
@@ -329,12 +322,12 @@ export function AddQuestionDialog({
             </div>
           </div>
 
-          {/* CHOICES LIST */}
+          {}
           {questionType !== "essay" && (
           <div className="space-y-3">
             <Label className="text-base font-semibold">
-              {questionType === "short_answer" 
-                ? "Các đáp án được chấp nhận (Acceptable Answers)" 
+              {questionType === "short_answer"
+                ? "Các đáp án được chấp nhận (Acceptable Answers)"
                 : "Các lựa chọn"} <span className="text-red-500">*</span>
             </Label>
             <div className="space-y-4">
@@ -343,8 +336,8 @@ export function AddQuestionDialog({
                     <div className="flex gap-3 items-center">
                         {(questionType === "single_choice" || questionType === "multiple_choice") && (
                             <button type="button" onClick={() => toggleCorrectAnswer(index)} className="shrink-0 pt-1" title="Đánh dấu đáp án đúng">
-                                {choice.isCorrect ? 
-                                    (questionType === "single_choice" ? <CheckCircle2 className="h-6 w-6 text-green-600" /> : <CheckSquare className="h-6 w-6 text-green-600" />) : 
+                                {choice.isCorrect ?
+                                    (questionType === "single_choice" ? <CheckCircle2 className="h-6 w-6 text-green-600" /> : <CheckSquare className="h-6 w-6 text-green-600" />) :
                                     (questionType === "single_choice" ? <Circle className="h-6 w-6 text-gray-300 hover:text-green-400" /> : <Square className="h-6 w-6 text-gray-300 hover:text-green-400" />)
                                 }
                             </button>
@@ -352,24 +345,24 @@ export function AddQuestionDialog({
                         {questionType === "short_answer" && (
                             <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
                         )}
-                        
+
                         <div className="flex-1">
-                            <Input 
-                                value={choice.content} 
-                                onChange={(e) => handleChoiceChange(index, e.target.value)} 
+                            <Input
+                                value={choice.content}
+                                onChange={(e) => handleChoiceChange(index, e.target.value)}
                                 placeholder={
-                                  questionType === "short_answer" 
-                                  ? `Nhập đáp án hợp lệ ${index + 1}` 
+                                  questionType === "short_answer"
+                                  ? `Nhập đáp án hợp lệ ${index + 1}`
                                   : `Nội dung đáp án ${String.fromCharCode(65 + index)}`
-                                } 
+                                }
                                 className={choice.isCorrect || questionType === "short_answer" ? "border-green-500 bg-green-50/20 font-medium" : ""}
                             />
                         </div>
 
-                        {/* Button Upload Choice Image */}
+                        {}
                         <div className="flex items-center gap-1">
-                            <Label 
-                                htmlFor={`choice-file-${index}`} 
+                            <Label
+                                htmlFor={`choice-file-${index}`}
                                 className={`cursor-pointer p-2 rounded-md hover:bg-muted transition-colors ${choice.attachmentUrl ? "text-blue-600 bg-blue-50" : "text-muted-foreground"}`}
                                 title="Đính kèm ảnh cho đáp án này"
                             >
@@ -384,8 +377,8 @@ export function AddQuestionDialog({
                             )}
                         </div>
                     </div>
-                    
-                    {/* Preview ảnh/video/âm thanh của choice */}
+
+                    {}
                     {choice.attachmentUrl && (
                         <div className="ml-9">
                             <MediaRenderer url={choice.attachmentUrl} onRemove={() => removeChoiceAttachment(index)} />
@@ -398,13 +391,13 @@ export function AddQuestionDialog({
           </div>
           )}
 
-          {/* === EXPLANATION (TEXTAREA ĐƠN GIẢN) === */}
+          {}
           <div className="space-y-2">
             <Label>Giải thích chi tiết (Hiện sau khi nộp bài)</Label>
-            <RichTextEditor 
-                content={explanation} 
-                onChange={(newVal) => setExplanation(newVal)} 
-                placeholder="Giải thích tại sao đáp án này đúng..." 
+            <RichTextEditor
+                content={explanation}
+                onChange={(newVal) => setExplanation(newVal)}
+                placeholder="Giải thích tại sao đáp án này đúng..."
                 minHeight="100px"
             />
           </div>

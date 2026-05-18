@@ -46,8 +46,7 @@ export function AddSectionDialog({
 }: AddSectionDialogProps) {
   const [loading, setLoading] = useState(false);
   const [topics, setTopics] = useState<Topic[]>([]);
-  
-  // Form State
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [topicId, setTopicId] = useState<string>("");
@@ -57,7 +56,7 @@ export function AddSectionDialog({
       api.get("/topics")
         .then(res => setTopics(res.data.data.topics || []))
         .catch(err => console.error("Load topics failed", err));
-        
+
       if (sectionToEdit) {
         setName(sectionToEdit.name);
         setDescription(sectionToEdit.description || "");
@@ -100,8 +99,8 @@ export function AddSectionDialog({
         });
         toast.success("Tạo chương thành công!");
       }
-      
-      onSuccess(); // Refresh danh sách bên ngoài
+
+      onSuccess();
       onOpenChange(false);
     } catch (error: any) {
       console.error(error);
@@ -121,10 +120,10 @@ export function AddSectionDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Thuộc Chủ đề (Topic) <span className="text-red-500">*</span></Label>
-            <Select 
-              value={topicId} 
-              onValueChange={setTopicId} 
-              disabled={!!defaultTopicId || !!sectionToEdit} // Khóa khi edit để tránh nhầm lẫn
+            <Select
+              value={topicId}
+              onValueChange={setTopicId}
+              disabled={!!defaultTopicId || !!sectionToEdit}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Chọn chủ đề..." />

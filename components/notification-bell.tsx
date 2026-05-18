@@ -32,7 +32,6 @@ export function NotificationBell() {
   useEffect(() => {
     if (!token) return;
 
-    // Connect to SSE stream
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1";
     const eventSource = new EventSource(`${baseUrl}/notifications/stream?token=${token}`);
 
@@ -90,8 +89,8 @@ export function NotificationBell() {
         <Button variant="outline" size="icon" className="relative">
           <Bell className="h-[1.2rem] w-[1.2rem] transition-all" />
           {unreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
+            <Badge
+              variant="destructive"
               className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center p-1 rounded-full text-xs"
             >
               {unreadCount > 99 ? "99+" : unreadCount}
@@ -110,7 +109,7 @@ export function NotificationBell() {
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        
+
         <ScrollArea className="h-72">
           {notifications.length === 0 ? (
             <div className="flex justify-center items-center h-full py-10 px-4 text-center text-sm text-muted-foreground">

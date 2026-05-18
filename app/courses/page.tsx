@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image"; 
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -9,13 +9,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button"; // Thêm Button
-import { api } from "@/lib/api"; 
+import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 import { SearchFilters } from "@/components/SearchFilters";
-import { ArrowLeft, Home, LayoutDashboard } from "lucide-react"; // Thêm Icons
+import { ArrowLeft, Home, LayoutDashboard } from "lucide-react";
 
 interface Course {
-  id: number; 
+  id: number;
   title: string;
   description: string;
   thumbnail_url: string;
@@ -32,18 +32,17 @@ async function getCourses(searchParams: any) {
         limit: 9,
       }
     });
-    
+
     const data = response.data.data;
-    
-    // Kiểm tra an toàn dữ liệu trả về
+
     if (data && Array.isArray(data.courses)) {
        return data.courses as Course[];
     }
 
-    return []; 
+    return [];
   } catch (error) {
     console.error("Lỗi khi fetch khóa học:", error);
-    return []; 
+    return [];
   }
 }
 
@@ -56,17 +55,17 @@ export default async function CoursesPage({
 
   return (
     <div className="container mx-auto max-w-7xl p-4 md:p-8">
-      
-      {/* === 1. TOP BAR ĐIỀU HƯỚNG (THÊM MỚI) === */}
+
+      {}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 pb-6 border-b">
         <div className="flex items-center gap-3">
-          {/* Nút Quay lại Dashboard */}
+          {}
           <Button variant="outline" size="icon" asChild>
             <Link href="/dashboard" title="Quay về Dashboard">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          
+
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-primary">
               Thư viện Khóa học
@@ -91,10 +90,10 @@ export default async function CoursesPage({
         </div>
       </div>
 
-      {/* === 2. BỘ LỌC === */}
+      {}
       <SearchFilters />
-      
-      {/* === 3. DANH SÁCH KHÓA HỌC === */}
+
+      {}
       {courses.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {courses.map((course) => (
@@ -109,7 +108,7 @@ export default async function CoursesPage({
                     className="group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
-                
+
                 <CardHeader>
                   <CardTitle className="text-xl font-bold line-clamp-2 group-hover:text-primary transition-colors">
                     {course.title}
@@ -118,7 +117,7 @@ export default async function CoursesPage({
                     {course.description}
                   </CardDescription>
                 </CardHeader>
-                
+
                 <CardFooter className="mt-auto pt-4 flex justify-between items-center">
                   {course.price > 0 ? (
                     <Badge variant="default" className="text-base font-bold px-3 py-1 bg-primary/90 hover:bg-primary">
@@ -129,7 +128,7 @@ export default async function CoursesPage({
                       Miễn phí
                     </Badge>
                   )}
-                  
+
                   <span className="text-xs text-muted-foreground font-medium group-hover:underline">
                     Xem chi tiết
                   </span>
@@ -141,9 +140,9 @@ export default async function CoursesPage({
       ) : (
         <div className="text-center py-20 bg-muted/10 rounded-xl border border-dashed border-muted-foreground/25">
           <p className="text-xl text-muted-foreground font-medium">Không tìm thấy khóa học nào phù hợp.</p>
-          <Button 
-            variant="link" 
-            className="mt-2 text-primary" 
+          <Button
+            variant="link"
+            className="mt-2 text-primary"
             asChild
           >
             <Link href="/courses">Xóa bộ lọc</Link>

@@ -8,7 +8,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { SheetTitle } from "@/components/ui/sheet";
 
 interface MobileNavProps {
-    children: React.ReactNode; // Content to display in the sheet (e.g., Sidebar)
+    children: React.ReactNode;
 }
 
 export function MobileNav({ children }: MobileNavProps) {

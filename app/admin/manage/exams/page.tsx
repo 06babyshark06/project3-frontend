@@ -39,16 +39,13 @@ export default function ManageAllExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // State cho việc xóa
   const [examToDelete, setExamToDelete] = useState<Exam | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchAllExams = async () => {
     try {
       setIsLoading(true);
-      // Gọi API lấy danh sách bài thi (Public)
-      // Lưu ý: Hiện tại API này trả về các bài đã xuất bản. 
-      // Để Admin thấy cả bài nháp của người khác, Backend cần hỗ trợ logic role Admin trong GetExams.
+
       const res = await api.get("/exams?limit=100&status=all");
       setExams(res.data.data.exams || []);
     } catch (error) {
@@ -64,7 +61,7 @@ export default function ManageAllExamsPage() {
     if (!examToDelete) return;
     setIsDeleting(true);
     try {
-      // Gọi API xóa bài thi
+
       await api.delete(`/exams/${examToDelete.id}`);
       toast.success("Đã xóa bài thi.");
       fetchAllExams();
@@ -78,7 +75,7 @@ export default function ManageAllExamsPage() {
 
   return (
     <div className="container mx-auto max-w-6xl p-6">
-      {/* === TOP BAR ĐIỀU HƯỚNG === */}
+      {}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-4 border-b">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Quản Lý Tất Cả Bài Thi</h1>
@@ -176,7 +173,7 @@ export default function ManageAllExamsPage() {
         </CardContent>
       </Card>
 
-      {/* Alert Dialog Xóa */}
+      {}
       <AlertDialog open={!!examToDelete} onOpenChange={(open) => !open && setExamToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

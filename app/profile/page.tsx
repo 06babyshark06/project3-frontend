@@ -1,4 +1,4 @@
-// app/profile/page.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -27,42 +27,34 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ProfilePage() {
-  const { user, login } = useAuth(); // Lấy user từ context
+  const { user, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // State cho Form thông tin
   const [fullName, setFullName] = useState("");
 
-  // State cho Form mật khẩu
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Load dữ liệu ban đầu
   useEffect(() => {
     if (user) {
       setFullName(user.full_name);
     }
   }, [user]);
 
-  // 1. Xử lý cập nhật thông tin
   const handleUpdateInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Gọi API PUT /users/me
+
       const response = await api.put("/users/me", {
         full_name: fullName,
       });
 
-      // API trả về user mới, cập nhật lại Context
-      // (Lưu ý: Bạn cần đảm bảo hàm login của AuthContext hỗ trợ cập nhật user mà không cần đổi token)
-      // Hoặc đơn giản là reload lại trang để AuthContext tự fetch lại
       toast.success("Cập nhật thông tin thành công!");
-      
-      // Cách đơn giản nhất để đồng bộ: Reload lại trang (hoặc gọi api /users/me trong context)
-      window.location.reload(); 
+
+      window.location.reload();
 
     } catch (error: any) {
       toast.error("Cập nhật thất bại", {
@@ -73,7 +65,6 @@ export default function ProfilePage() {
     }
   };
 
-  // 2. Xử lý đổi mật khẩu
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -81,7 +72,7 @@ export default function ProfilePage() {
       toast.error("Mật khẩu xác nhận không khớp.");
       return;
     }
-    
+
     if (newPassword.length < 6) {
       toast.error("Mật khẩu mới phải có ít nhất 6 ký tự.");
       return;
@@ -89,19 +80,18 @@ export default function ProfilePage() {
 
     setIsLoading(true);
     try {
-      // Gọi API PUT /users/password
+
       await api.put("/users/password", {
         old_password: oldPassword,
         new_password: newPassword,
       });
 
       toast.success("Đổi mật khẩu thành công!");
-      
-      // Reset form
+
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      
+
     } catch (error: any) {
       console.error(error);
       const msg = error.response?.data?.error || "Đổi mật khẩu thất bại.";
@@ -123,7 +113,7 @@ export default function ProfilePage() {
           <TabsTrigger value="security">Bảo mật & Mật khẩu</TabsTrigger>
         </TabsList>
 
-        {/* TAB 1: THÔNG TIN CHUNG */}
+        {}
         <TabsContent value="general">
           <Card>
             <CardHeader>
@@ -134,7 +124,7 @@ export default function ProfilePage() {
             </CardHeader>
             <form onSubmit={handleUpdateInfo}>
               <CardContent className="space-y-6">
-                {/* Avatar (Demo) */}
+                {}
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20">
                     <AvatarImage src="" />
@@ -168,7 +158,7 @@ export default function ProfilePage() {
                     <Input id="email" value={user.email} disabled className="bg-muted" />
                     <p className="text-xs text-muted-foreground">Email không thể thay đổi.</p>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>Vai trò</Label>
                     <div className="flex">
@@ -189,7 +179,7 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
 
-        {/* TAB 2: BẢO MẬT */}
+        {}
         <TabsContent value="security">
           <Card>
             <CardHeader>
@@ -214,7 +204,7 @@ export default function ProfilePage() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">Mật khẩu mới</Label>
                   <Input

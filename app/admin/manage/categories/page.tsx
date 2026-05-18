@@ -36,7 +36,7 @@ import { AddTopicDialog } from "@/components/AddTopicDialog";
 import { AddSectionDialog } from "@/components/AddSectionDialog";
 
 interface Section { id: number; name: string; description: string; topic_id: number; }
-interface Topic { id: number; name: string; description: string; creator_name?: string; } // Added creator_name
+interface Topic { id: number; name: string; description: string; creator_name?: string; }
 
 export default function CategoryManagementPage() {
     const [topics, setTopics] = useState<Topic[]>([]);
@@ -44,12 +44,10 @@ export default function CategoryManagementPage() {
     const [loading, setLoading] = useState(true);
     const [expandedTopics, setExpandedTopics] = useState<number[]>([]);
 
-    // Dialog States
     const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
     const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
     const [selectedTopicId, setSelectedTopicId] = useState<number | undefined>();
 
-    // Edit/Delete States
     const [editingItem, setEditingItem] = useState<{ type: 'topic' | 'section', data: any } | null>(null);
     const [deletingItem, setDeletingItem] = useState<{ type: 'topic' | 'section', id: number, name: string } | null>(null);
 
@@ -66,7 +64,7 @@ export default function CategoryManagementPage() {
     };
 
     const fetchSections = async (topicId: number) => {
-        if (sectionsMap[topicId]) return; // Đã tải rồi thì thôi
+        if (sectionsMap[topicId]) return;
         try {
             const res = await api.get(`/exam-sections?topic_id=${topicId}`);
             setSectionsMap(prev => ({ ...prev, [topicId]: res.data.data.sections || [] }));
@@ -98,11 +96,10 @@ export default function CategoryManagementPage() {
             toast.success("Cập nhật thành công!");
             setEditingItem(null);
 
-            // Refresh data
             if (editingItem?.type === 'topic') {
                 fetchTopics();
             } else {
-                // Force reload section của topic đó
+
                 const topicId = data.topic_id;
                 const res = await api.get(`/exam-sections?topic_id=${topicId}`);
                 setSectionsMap(prev => ({ ...prev, [topicId]: res.data.data.sections || [] }));
@@ -122,10 +119,9 @@ export default function CategoryManagementPage() {
             if (deletingItem.type === 'topic') {
                 fetchTopics();
             } else {
-                // Tìm topic cha để reload (hơi khó vì chỉ có ID, nhưng ta có thể reload all hoặc trick UI)
-                // Đơn giản nhất: Reload lại trang hoặc reload topics
-                fetchTopics(); // Reload topics để reset tree
-                setSectionsMap({}); // Clear cache sections
+
+                fetchTopics();
+                setSectionsMap({});
                 setExpandedTopics([]);
             }
         } catch (error) {
@@ -255,7 +251,7 @@ export default function CategoryManagementPage() {
                 </div>
             )}
 
-            {/* EDIT DIALOG */}
+            {}
             <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
                 <DialogContent>
                     <DialogHeader>
@@ -284,7 +280,7 @@ export default function CategoryManagementPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* DELETE ALERT */}
+            {}
             <AlertDialog open={!!deletingItem} onOpenChange={(open) => !open && setDeletingItem(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>

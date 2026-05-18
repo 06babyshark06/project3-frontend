@@ -6,8 +6,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { 
-  Loader2, PlayCircle, ArrowLeft, BookOpen, Clock 
+import {
+  Loader2, PlayCircle, ArrowLeft, BookOpen, Clock
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -17,14 +17,13 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
-// Interface cho khóa học đã đăng ký
 interface EnrolledCourse {
   id: number;
   title: string;
   description: string;
   thumbnail_url: string;
   instructor_id: number;
-  progress?: number; 
+  progress?: number;
 }
 
 export default function MyCoursesPage() {
@@ -36,7 +35,7 @@ export default function MyCoursesPage() {
     const fetchMyCourses = async () => {
       try {
         setIsLoading(true);
-        // 1. Lấy danh sách khóa học đã đăng ký (Bao gồm cả Progress đã được tối ưu ở Backend)
+
         const response = await api.get("/my-courses");
         const coursesData = response.data.data.courses || [];
 
@@ -62,8 +61,8 @@ export default function MyCoursesPage() {
 
   return (
     <div className="container mx-auto max-w-7xl p-6 md:p-8">
-      
-      {/* === HEADER & NAV === */}
+
+      {}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 border-b pb-6">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={() => router.push('/dashboard')}>
@@ -78,7 +77,7 @@ export default function MyCoursesPage() {
             </p>
           </div>
         </div>
-        
+
         <Button asChild>
            <Link href="/courses">
               <BookOpen className="mr-2 h-4 w-4" /> Khám phá thêm
@@ -86,14 +85,14 @@ export default function MyCoursesPage() {
         </Button>
       </div>
 
-      {/* === DANH SÁCH KHÓA HỌC === */}
+      {}
       {courses.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {courses.map((course) => (
             <Link href={`/learn/${course.id}`} key={course.id} className="group">
               <Card className="h-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-muted/60 hover:border-primary/50">
-                
-                {/* Ảnh bìa */}
+
+                {}
                 <div className="relative w-full h-48 bg-muted">
                   <Image
                     src={course.thumbnail_url || "https://via.placeholder.com/400x200"}
@@ -109,19 +108,19 @@ export default function MyCoursesPage() {
                     </Badge>
                   </div>
                 </div>
-                
+
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xl font-bold line-clamp-2 group-hover:text-primary transition-colors">
                     {course.title}
                   </CardTitle>
                 </CardHeader>
-                
+
                 <CardContent className="flex-1 pb-2">
                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
                      {course.description || "Không có mô tả."}
                    </p>
 
-                   {/* Thanh tiến độ */}
+                   {}
                    <div className="space-y-2">
                      <div className="flex justify-between text-xs font-medium text-muted-foreground">
                         <span>Tiến độ hoàn thành</span>
@@ -130,7 +129,7 @@ export default function MyCoursesPage() {
                      <Progress value={course.progress || 0} className="h-2" />
                    </div>
                 </CardContent>
-                
+
                 <CardFooter className="pt-4">
                   <Button className="w-full font-bold text-md group-hover:bg-primary/90 transition-colors">
                     <PlayCircle className="mr-2 h-5 w-5" /> Vào học ngay
@@ -141,7 +140,7 @@ export default function MyCoursesPage() {
           ))}
         </div>
       ) : (
-        // Empty State
+
         <div className="flex flex-col items-center justify-center py-20 bg-muted/10 rounded-2xl border-2 border-dashed">
           <div className="bg-muted rounded-full p-4 mb-4">
              <BookOpen className="h-10 w-10 text-muted-foreground/50" />

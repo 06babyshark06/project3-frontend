@@ -41,13 +41,12 @@ export function AddExamToClassDialog({ classId, onSuccess }: AddExamToClassDialo
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
 
-  // Load danh sách bài thi của giảng viên khi mở Dialog
   useEffect(() => {
     if (open) {
       const fetchExams = async () => {
         try {
           setFetching(true);
-          // Gọi API mới mà bạn vừa thêm ở Backend
+
           const res = await api.get("/instructor/all-exams");
           setExams(res.data.data.exams || []);
         } catch (error) {
@@ -69,15 +68,15 @@ export function AddExamToClassDialog({ classId, onSuccess }: AddExamToClassDialo
 
     try {
       setLoading(true);
-      // Gọi API gán bài thi (lưu ý ép kiểu exam_id về number nếu backend yêu cầu int64)
+
       await api.post(`/classes/${classId}/exams`, {
         exam_id: parseInt(selectedExamId),
       });
-      
+
       toast.success("Đã thêm bài thi vào lớp thành công!");
       setOpen(false);
-      setSelectedExamId(""); // Reset selection
-      onSuccess(); // Refresh lại danh sách bên ngoài
+      setSelectedExamId("");
+      onSuccess();
     } catch (error: any) {
       console.error(error);
       const msg = error.response?.data?.error || "Lỗi khi gán bài thi";
@@ -101,7 +100,7 @@ export function AddExamToClassDialog({ classId, onSuccess }: AddExamToClassDialo
             Chọn bài thi từ thư viện của bạn để giao cho lớp này. Học sinh trong lớp sẽ nhìn thấy và có thể làm bài.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="exam" className="text-right">

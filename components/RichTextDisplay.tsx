@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-// @ts-ignore
+
 import renderMathInElement from "katex/dist/contrib/auto-render.js";
 import "katex/dist/katex.min.css";
 
@@ -20,7 +20,7 @@ export default function RichTextDisplay({ content, className = "" }: RichTextDis
 
   useEffect(() => {
     if (mounted && containerRef.current && content) {
-      // Decode content if it looks escaped
+
       let targetContent = content;
       if (typeof content === 'string' && (content.includes("&lt;") || content.includes("&gt;"))) {
         const txt = document.createElement("textarea");
@@ -28,7 +28,6 @@ export default function RichTextDisplay({ content, className = "" }: RichTextDis
         targetContent = txt.value;
       }
 
-      // Update the innerHTML manually to be sure
       containerRef.current.innerHTML = targetContent;
 
       try {
@@ -50,7 +49,7 @@ export default function RichTextDisplay({ content, className = "" }: RichTextDis
   if (!content) return null;
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`tiptap-content prose prose-sm dark:prose-invert max-w-none break-words min-h-[1em] ${className}`}
     />

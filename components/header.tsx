@@ -1,5 +1,5 @@
-// components/header.tsx
-"use client"; // Header CẦN là client component
+
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";

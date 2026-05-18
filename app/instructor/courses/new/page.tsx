@@ -1,4 +1,4 @@
-// app/instructor/courses/new/page.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -17,10 +17,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea"; // <-- Component mới
+import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 
-// (Kiểu dữ liệu response từ API tạo khóa học)
 interface CreateCourseResponse {
     data: {
         course: {
@@ -44,23 +43,19 @@ export default function CreateCoursePage() {
         setIsLoading(true);
 
         try {
-            // 1. Gọi API (Interceptor sẽ tự gắn token)
-            // API Gateway sẽ check Role (instructor/admin)
+
             const response = await api.post<CreateCourseResponse>("/courses", {
                 title,
                 description,
-                price: Number(price), // Đảm bảo 'price' là số
+                price: Number(price),
             });
 
             const newCourse = response.data.data.course;
 
-            // 2. Thông báo thành công
             toast.success("Tạo khóa học thành công!", {
                 description: `Đã tạo "${newCourse.title}".`,
             });
 
-            // 3. Chuyển hướng đến trang "Sửa khóa học" (quan trọng)
-            // Đây là nơi giảng viên sẽ thêm Section và Lesson
             router.push(`/instructor/courses/edit/${newCourse.id}`);
 
         } catch (err: any) {
@@ -88,7 +83,7 @@ export default function CreateCoursePage() {
 
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-6">
-                        {/* Tiêu đề */}
+                        {}
                         <div className="space-y-2">
                             <Label htmlFor="title" className="text-lg font-medium">
                                 Tiêu đề khóa học
@@ -104,7 +99,7 @@ export default function CreateCoursePage() {
                             />
                         </div>
 
-                        {/* Mô tả */}
+                        {}
                         <div className="space-y-2">
                             <Label htmlFor="description" className="text-lg font-medium">
                                 Mô tả
@@ -119,7 +114,7 @@ export default function CreateCoursePage() {
                             />
                         </div>
 
-                        {/* Giá tiền */}
+                        {}
                         <div className="space-y-2">
                             <Label htmlFor="price" className="text-lg font-medium">
                                 Giá (VNĐ)

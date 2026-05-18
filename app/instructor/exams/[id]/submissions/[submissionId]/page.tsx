@@ -14,7 +14,6 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import RichTextDisplay from "@/components/RichTextDisplay";
 
-// ===== INTERFACES =====
 interface ChoiceReview {
   id: number;
   content: string;
@@ -57,15 +56,13 @@ export default function SubmissionDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [pointsInput, setPointsInput] = useState<Record<number, string>>({});
 
-  // ===== FETCH SUBMISSION =====
   useEffect(() => {
     const fetchSubmission = async () => {
       setIsLoading(true);
       try {
         const res = await api.get(`/submissions/${submissionId}`);
         setSubmission(res.data.data);
-        
-        // Init input state with current points
+
         if (res.data.data && res.data.data.details) {
           const initPoints: Record<number, string> = {};
           const totalMaxPoints = res.data.data.details.reduce((acc: number, d: any) => acc + (d.points || 1.0), 0) || 1.0;
@@ -101,7 +98,7 @@ export default function SubmissionDetailPage() {
         score_ratio: scoreRatio !== undefined ? scoreRatio : (isCorrect ? 1.0 : 0.0),
       });
       toast.success("Đã cập nhật kết quả.");
-      // Refresh data
+
       const res = await api.get(`/submissions/${submissionId}`);
       setSubmission(res.data.data);
     } catch (error) {
@@ -110,7 +107,6 @@ export default function SubmissionDetailPage() {
     }
   };
 
-  // ===== LOADING =====
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -127,19 +123,18 @@ export default function SubmissionDetailPage() {
     );
   }
 
-  // ===== CALCULATE STATS =====
   const totalQuestions = submission.total_questions || 0;
   const correctCount = submission.correct_count || 0;
   const wrongCount = totalQuestions - correctCount;
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
-      {/* HEADER */}
+      {}
       <Button variant="ghost" onClick={() => router.back()} className="mb-6">
         <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại
       </Button>
 
-      {/* STUDENT INFO */}
+      {}
       <Card className="mb-6">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -177,7 +172,7 @@ export default function SubmissionDetailPage() {
         </CardContent>
       </Card>
 
-      {/* QUESTIONS & ANSWERS */}
+      {}
       <div className="space-y-6">
         {(() => {
           const totalMaxPoints = (submission.details || []).reduce((acc, d) => acc + (d.points || 1.0), 0) || 1.0;
@@ -222,12 +217,12 @@ export default function SubmissionDetailPage() {
                     <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-dashed">
                       <div className="flex items-center gap-3">
                         <p className="text-sm font-medium text-muted-foreground">Chấm điểm thủ công:</p>
-                        
+
                         <div className="flex items-center gap-2">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            max={maxPtsForQuestion.toFixed(2)} 
+                          <input
+                            type="number"
+                            min="0"
+                            max={maxPtsForQuestion.toFixed(2)}
                             step="0.01"
                             className="w-20 px-2 py-1 text-sm border rounded"
                             value={pointsInput[detail.question_id] !== undefined ? pointsInput[detail.question_id] : ""}
@@ -236,8 +231,8 @@ export default function SubmissionDetailPage() {
                           <span className="text-sm text-muted-foreground">/ {maxPtsForQuestion.toFixed(2)}</span>
                         </div>
 
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="default"
                           className="bg-primary"
                           onClick={() => {

@@ -40,7 +40,6 @@ export function AddTopicDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  // Update form when topicToEdit changes
   useEffect(() => {
     if (topicToEdit) {
       setName(topicToEdit.name);
@@ -72,10 +71,10 @@ export function AddTopicDialog({
         });
         toast.success("Tạo chủ đề thành công!");
       }
-      
+
       setName("");
       setDescription("");
-      onSuccess(); // Refresh danh sách topic bên ngoài
+      onSuccess();
       onOpenChange(false);
     } catch (error: any) {
       console.error(error);

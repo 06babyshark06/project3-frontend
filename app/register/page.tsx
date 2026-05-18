@@ -1,10 +1,10 @@
-// app/register/page.tsx
+
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner"; // Dùng toast
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +38,7 @@ export default function RegisterPage() {
       setIsLoading(false);
       return;
     }
-    
+
     if (password.length < 6) {
        toast.error("Đăng ký thất bại", {
         description: "Mật khẩu phải có ít nhất 6 ký tự.",
@@ -63,7 +63,7 @@ export default function RegisterPage() {
     } catch (err: any) {
       console.error("Lỗi đăng ký:", err);
       const errorMessage = err.response?.data?.error || "Đã xảy ra lỗi. Vui lòng thử lại.";
-      
+
       toast.error("Đăng ký thất bại", {
         description: errorMessage,
       });
@@ -84,7 +84,7 @@ export default function RegisterPage() {
               Chỉ mất vài giây để bắt đầu hành trình của bạn.
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-6 px-8 mb-4">
             <div className="space-y-2">
               <Label htmlFor="fullName" className="text-lg font-medium">
@@ -97,10 +97,10 @@ export default function RegisterPage() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="h-12 text-lg" 
+                className="h-12 text-lg"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-lg font-medium">
                 Địa chỉ Email
@@ -112,7 +112,7 @@ export default function RegisterPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12 text-lg" 
+                className="h-12 text-lg"
               />
             </div>
 

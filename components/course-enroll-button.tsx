@@ -19,23 +19,23 @@ export function CourseEnrollButton({ courseId, isEnrolled }: CourseEnrollButtonP
   const [isLoading, setIsLoading] = useState(false);
 
   const handleEnroll = async () => {
-    // 1. Kiểm tra đăng nhập
+
     if (!user) {
       toast.error("Vui lòng đăng nhập để đăng ký khóa học.");
       router.push("/login");
       return;
     }
-    
+
     setIsLoading(true);
     try {
       await api.post("/courses/enroll", { course_id: courseId });
-      
+
       toast.success("Đăng ký thành công! Đang vào lớp học...");
-      
+
       router.refresh();
-      
+
       router.push(`/learn/${courseId}`);
-      
+
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || "Đăng ký thất bại.";
       toast.error(errorMessage);
@@ -49,9 +49,9 @@ export function CourseEnrollButton({ courseId, isEnrolled }: CourseEnrollButtonP
 
   if (isEnrolled) {
     return (
-      <Button 
-        size="lg" 
-        className="w-full text-lg font-bold bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg transition-all" 
+      <Button
+        size="lg"
+        className="w-full text-lg font-bold bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg transition-all"
         onClick={handleStartLearning}
       >
         <PlayCircle className="mr-2 h-5 w-5" /> Vào học ngay
@@ -60,10 +60,10 @@ export function CourseEnrollButton({ courseId, isEnrolled }: CourseEnrollButtonP
   }
 
   return (
-    <Button 
-      size="lg" 
-      className="w-full text-lg font-bold shadow-md hover:shadow-lg transition-all" 
-      onClick={handleEnroll} 
+    <Button
+      size="lg"
+      className="w-full text-lg font-bold shadow-md hover:shadow-lg transition-all"
+      onClick={handleEnroll}
       disabled={isLoading}
     >
       {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}

@@ -34,7 +34,7 @@ export default function InstructorDashboardPage() {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        // Fetch stats and activity in parallel
+
         const [coursesRes, examsRes, classesRes, recentRes] = await Promise.all([
           api.get("/instructor/courses?limit=1"),
           api.get("/instructor/exams?limit=1"),
@@ -44,8 +44,7 @@ export default function InstructorDashboardPage() {
 
         const totalCourses = coursesRes.data.data.total || 0;
         const totalExams = examsRes.data.data.total || 0;
-        
-        // Calculate total students from classes
+
         const classes = classesRes.data.data.classes || [];
         const totalStudents = classes.reduce((acc: number, curr: any) => acc + (curr.student_count || 0), 0);
 
@@ -55,7 +54,6 @@ export default function InstructorDashboardPage() {
           totalStudents
         });
 
-        // Set recent submissions
         setRecentSubmissions(recentRes.data.data.submissions || []);
       } catch (error) {
         console.error("Dashboard fetch error:", error);
@@ -100,7 +98,7 @@ export default function InstructorDashboardPage() {
 
   return (
     <div className="container mx-auto max-w-7xl p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
-      {/* Header Section */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
@@ -124,33 +122,33 @@ export default function InstructorDashboardPage() {
         </div>
       </div>
 
-      {/* Khu vực thống kê nhanh */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard 
-          title="Tổng số khóa học" 
-          value={stats.totalCourses} 
-          label="khóa học đang giảng dạy" 
-          icon={BookCopy} 
+        <StatCard
+          title="Tổng số khóa học"
+          value={stats.totalCourses}
+          label="khóa học đang giảng dạy"
+          icon={BookCopy}
           color="bg-blue-500"
         />
-        <StatCard 
-          title="Tổng số bài thi" 
-          value={stats.totalExams} 
-          label="ngân hàng đề thi" 
-          icon={Edit} 
+        <StatCard
+          title="Tổng số bài thi"
+          value={stats.totalExams}
+          label="ngân hàng đề thi"
+          icon={Edit}
           color="bg-indigo-500"
         />
-        <StatCard 
-          title="Học viên tham gia" 
-          value={stats.totalStudents} 
-          label="tổng học sinh của bạn" 
-          icon={Users} 
+        <StatCard
+          title="Học viên tham gia"
+          value={stats.totalStudents}
+          label="tổng học sinh của bạn"
+          icon={Users}
           color="bg-emerald-500"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Quick Actions */}
+        {}
         <Card className="lg:col-span-1 border-dashed bg-muted/10">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -162,32 +160,32 @@ export default function InstructorDashboardPage() {
           <CardContent className="grid gap-3">
             <Button variant="outline" className="justify-start h-12" asChild>
               <Link href="/instructor/exams/new">
-                <Plus className="mr-2 h-4 w-4 bg-orange-100 text-orange-600 rounded p-0.5" /> 
+                <Plus className="mr-2 h-4 w-4 bg-orange-100 text-orange-600 rounded p-0.5" />
                 Soạn đề thi mới
               </Link>
             </Button>
             <Button variant="outline" className="justify-start h-12" asChild>
               <Link href="/instructor/questions">
-                <FileQuestion className="mr-2 h-4 w-4 bg-blue-100 text-blue-600 rounded p-0.5" /> 
+                <FileQuestion className="mr-2 h-4 w-4 bg-blue-100 text-blue-600 rounded p-0.5" />
                 Ngân hàng câu hỏi
               </Link>
             </Button>
             <Button variant="outline" className="justify-start h-12" asChild>
               <Link href="/instructor/classes">
-                <Users className="mr-2 h-4 w-4 bg-green-100 text-green-600 rounded p-0.5" /> 
+                <Users className="mr-2 h-4 w-4 bg-green-100 text-green-600 rounded p-0.5" />
                 Quản lý lớp học
               </Link>
             </Button>
             <Button variant="outline" className="justify-start h-12" asChild>
               <Link href="/instructor/categories">
-                <FolderCog className="mr-2 h-4 w-4 bg-purple-100 text-purple-600 rounded p-0.5" /> 
+                <FolderCog className="mr-2 h-4 w-4 bg-purple-100 text-purple-600 rounded p-0.5" />
                 Danh mục & Chủ đề
               </Link>
             </Button>
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
+        {}
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -257,7 +255,6 @@ export default function InstructorDashboardPage() {
   );
 }
 
-// Missing icon helper
 function PlusSquare(props: any) {
   return (
     <svg
@@ -277,4 +274,4 @@ function PlusSquare(props: any) {
       <path d="M12 8v8" />
     </svg>
   );
-}
+}

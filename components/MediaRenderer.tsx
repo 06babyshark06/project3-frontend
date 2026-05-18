@@ -17,29 +17,29 @@ export function MediaRenderer({ url, onRemove, className = "" }: MediaRendererPr
   return (
     <div className={`relative inline-block group mt-2 w-full ${className}`}>
       {isImage ? (
-        <img 
-            src={url} 
-            alt="Attachment Preview" 
-            className="md:max-h-[300px] max-h-[200px] w-auto max-w-full rounded-md border object-contain bg-muted mx-auto" 
+        <img
+            src={url}
+            alt="Attachment Preview"
+            className="md:max-h-[300px] max-h-[200px] w-auto max-w-full rounded-md border object-contain bg-muted mx-auto"
         />
       ) : isVideo ? (
-        <video 
-            src={url} 
-            controls 
-            className="md:max-h-[300px] max-h-[200px] w-auto max-w-full rounded-md border bg-black mx-auto" 
+        <video
+            src={url}
+            controls
+            className="md:max-h-[300px] max-h-[200px] w-auto max-w-full rounded-md border bg-black mx-auto"
         />
       ) : isAudio ? (
-        <audio 
-            src={url} 
-            controls 
-            className="w-full max-w-sm rounded-md mx-auto" 
+        <audio
+            src={url}
+            controls
+            className="w-full max-w-sm rounded-md mx-auto"
         />
       ) : (
         <div className="p-3 border rounded bg-muted text-sm break-all max-w-[300px] mx-auto text-center">
             📄 {url.split('/').pop()}
         </div>
       )}
-      
+
       {onRemove && (
         <button
           type="button"

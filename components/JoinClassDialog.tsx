@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { api } from "@/lib/api"; // Import instance api đã cấu hình
-import { PlusCircle } from "lucide-react"; // Nếu chưa có icon thì bỏ dòng này và thẻ <PlusCircle> bên dưới
+import { api } from "@/lib/api";
+import { PlusCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -40,7 +40,6 @@ export function JoinClassDialog() {
       setCode("");
       setOpen(false);
 
-      // Redirect to the newly joined class
       const classId = response.data?.classId;
       if (classId) {
         router.push(`/dashboard/classes/${classId}`);

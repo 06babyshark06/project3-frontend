@@ -55,7 +55,7 @@ export function Sidebar({ items, header, className }: SidebarProps) {
                     </nav>
                 </ScrollArea>
                 <div className="mt-auto p-4 border-t">
-                    {/* Placeholder for footer or logout if needed later */}
+                    {}
                 </div>
             </div>
         </div>

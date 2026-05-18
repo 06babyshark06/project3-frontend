@@ -46,7 +46,6 @@ import { AddSectionDialog } from "@/components/AddSectionDialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import RichTextDisplay from "@/components/RichTextDisplay";
 
-// ===== INTERFACES =====
 interface Choice {
     id: number;
     content: string;
@@ -82,26 +81,23 @@ interface Topic {
 }
 
 export default function AdminQuestionBankPage() {
-    // ===== STATE MANAGEMENT =====
+
     const [questions, setQuestions] = useState<Question[]>([]);
     const [sections, setSections] = useState<Section[]>([]);
     const [topics, setTopics] = useState<Topic[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
-    // ===== FILTER STATE =====
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedTopic, setSelectedTopic] = useState<string>("all");
     const [selectedSection, setSelectedSection] = useState<string>("all");
     const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
 
-    // ===== PAGINATION STATE =====
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalQuestions, setTotalQuestions] = useState(0);
     const LIMIT = APP_CONFIG.PAGINATION.DEFAULT_LIMIT;
 
-    // ===== DIALOG STATES =====
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -110,13 +106,11 @@ export default function AdminQuestionBankPage() {
     const [isAddTopicDialogOpen, setIsAddTopicDialogOpen] = useState(false);
     const [isAddSectionDialogOpen, setIsAddSectionDialogOpen] = useState(false);
 
-    // ===== BULK ACTION STATE =====
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
     const [isExporting, setIsExporting] = useState(false);
 
-    // ===== FETCH TOPICS =====
     const fetchTopics = useCallback(async () => {
         try {
             const res = await api.get("/topics");
@@ -129,7 +123,6 @@ export default function AdminQuestionBankPage() {
         fetchTopics();
     }, [fetchTopics]);
 
-    // ===== FETCH SECTIONS (Khi chọn Topic) =====
     useEffect(() => {
         if (selectedTopic === "all") {
             setSections([]);
@@ -141,7 +134,7 @@ export default function AdminQuestionBankPage() {
             try {
                 const res = await api.get(`/exam-sections?topic_id=${selectedTopic}`);
                 setSections(res.data.data.sections || []);
-                setSelectedSection("all"); // Reset section khi đổi topic
+                setSelectedSection("all");
             } catch (error) {
                 console.error("Fetch sections error:", error);
             }
@@ -149,7 +142,6 @@ export default function AdminQuestionBankPage() {
         fetchSections();
     }, [selectedTopic]);
 
-    // ===== FETCH QUESTIONS (Search & Filter) =====
     const fetchQuestions = async () => {
         try {
             setIsLoading(true);
@@ -160,7 +152,6 @@ export default function AdminQuestionBankPage() {
 
             if (searchTerm) params.search = searchTerm;
 
-            // Logic lọc theo cấp bậc: Section -> Topic
             if (selectedSection !== "all") {
                 params.section_id = selectedSection;
             } else if (selectedTopic !== "all") {
@@ -176,7 +167,6 @@ export default function AdminQuestionBankPage() {
             setTotalPages(data.total_pages || 1);
             setTotalQuestions(data.total || 0);
 
-            // Nếu API trả về page khác page hiện tại (do filter làm giảm số trang)
             if (data.page && data.page !== page) setPage(data.page);
 
         } catch (error) {
@@ -187,7 +177,6 @@ export default function AdminQuestionBankPage() {
         }
     };
 
-    // Auto-fetch khi filter thay đổi (debounce search)
     useEffect(() => {
         const timer = setTimeout(() => {
             fetchQuestions();
@@ -223,13 +212,13 @@ export default function AdminQuestionBankPage() {
     };
 
     const handleSectionCreated = () => {
-        // Nếu đang chọn Topic cụ thể, load lại danh sách Section để thấy ngay Section mới
+
         if (selectedTopic !== "all") {
             const fetchSections = async () => {
                 try {
                     const res = await api.get(`/exam-sections?topic_id=${selectedTopic}`);
                     setSections(res.data.data.sections || []);
-                    // Không cần reset selectedSection về 'all' để user đỡ phải chọn lại topic
+
                 } catch (error) {
                     console.error("Fetch sections error:", error);
                 }
@@ -321,7 +310,7 @@ export default function AdminQuestionBankPage() {
                         alt="Minh họa"
                         className="max-h-[200px] max-w-full rounded-lg border object-contain bg-muted/20"
                         onError={(e) => {
-                            // Fallback nếu ảnh lỗi
+
                             (e.target as HTMLImageElement).style.display = 'none';
                         }}
                     />
@@ -364,7 +353,7 @@ export default function AdminQuestionBankPage() {
 
     return (
         <div className="container mx-auto py-8 px-4 max-w-7xl">
-            {/* HEADER */}
+            {}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Quản Lý Ngân Hàng Câu Hỏi</h1>
@@ -374,7 +363,7 @@ export default function AdminQuestionBankPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* Mobile Actions Menu */}
+                    {}
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -403,7 +392,7 @@ export default function AdminQuestionBankPage() {
                         </DropdownMenu>
                     </div>
 
-                    {/* Desktop Actions Group */}
+                    {}
                     <div className="hidden md:flex items-center gap-2">
                         <Button
                             variant="secondary"
@@ -431,7 +420,7 @@ export default function AdminQuestionBankPage() {
                         </Button>
                     </div>
 
-                    {/* Primary Action */}
+                    {}
                     <Button onClick={() => {
                         setEditingQuestion(null);
                         setIsAddDialogOpen(true);
@@ -443,7 +432,7 @@ export default function AdminQuestionBankPage() {
                 </div>
             </div>
 
-            {/* FILTERS CARD */}
+            {}
             <Card className="p-5 mb-6 bg-card/50 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-4 text-sm font-medium text-muted-foreground">
                     <Filter className="h-4 w-4" />
@@ -451,11 +440,11 @@ export default function AdminQuestionBankPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    {/* 1. Chọn Chủ đề */}
+                    {}
                     <div className="md:col-span-3">
                         <Select value={selectedTopic} onValueChange={(val) => {
                             setSelectedTopic(val);
-                            setPage(1); // Reset về trang 1 khi đổi chủ đề
+                            setPage(1);
                         }}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Chọn chủ đề" />
@@ -469,7 +458,7 @@ export default function AdminQuestionBankPage() {
                         </Select>
                     </div>
 
-                    {/* 2. Chọn Chương (Phụ thuộc Chủ đề) */}
+                    {}
                     <div className="md:col-span-3">
                         <Select
                             value={selectedSection}
@@ -491,7 +480,7 @@ export default function AdminQuestionBankPage() {
                         </Select>
                     </div>
 
-                    {/* 3. Độ khó */}
+                    {}
                     <div className="md:col-span-2">
                         <Select value={selectedDifficulty} onValueChange={(val) => {
                             setSelectedDifficulty(val);
@@ -509,7 +498,7 @@ export default function AdminQuestionBankPage() {
                         </Select>
                     </div>
 
-                    {/* 4. Tìm kiếm */}
+                    {}
                     <div className="md:col-span-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -526,7 +515,7 @@ export default function AdminQuestionBankPage() {
                     </div>
                 </div>
 
-                {/* Filter Summary & Reset */}
+                {}
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
                     <p className="text-xs text-muted-foreground">
                         Hiển thị <strong>{questions.length}</strong> trên tổng số <strong>{totalQuestions}</strong> câu hỏi
@@ -565,7 +554,7 @@ export default function AdminQuestionBankPage() {
                 </div>
             )}
 
-            {/* DATA TABLE */}
+            {}
             <Card className="overflow-hidden border-border/50">
                 <Table>
                     <TableHeader className="bg-muted/50">
@@ -679,7 +668,7 @@ export default function AdminQuestionBankPage() {
                 </Table>
             </Card>
 
-            {/* PAGINATION */}
+            {}
             {totalPages > 1 && (
                 <div className="flex items-center justify-end gap-2 mt-4">
                     <Button
@@ -704,7 +693,7 @@ export default function AdminQuestionBankPage() {
                 </div>
             )}
 
-            {/* DIALOGS */}
+            {}
             <AddTopicDialog
                 open={isAddTopicDialogOpen}
                 onOpenChange={setIsAddTopicDialogOpen}
@@ -736,7 +725,7 @@ export default function AdminQuestionBankPage() {
                 onImportSuccess={handleImportSuccess}
             />
 
-            {/* VIEW DETAIL DIALOG */}
+            {}
             <Dialog open={!!questionToView} onOpenChange={() => setQuestionToView(null)}>
                 <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
@@ -754,7 +743,7 @@ export default function AdminQuestionBankPage() {
 
                                 <RichTextDisplay content={questionToView.content} />
 
-                                {/* ẢNH/VIDEO CỦA CÂU HỎI */}
+                                {}
                                 <MediaDisplay url={questionToView.attachment_url} />
                             </div>
 
@@ -773,7 +762,7 @@ export default function AdminQuestionBankPage() {
                                                 <div className="flex-1 min-w-0">
                                                     <RichTextDisplay content={c.content} className={c.is_correct ? "font-medium text-green-700 dark:text-green-400" : ""} />
 
-                                                    {/* ẢNH/VIDEO CỦA ĐÁP ÁN */}
+                                                    {}
                                                     <MediaDisplay url={c.attachment_url} />
                                                 </div>
                                                 {c.is_correct && <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />}
@@ -794,7 +783,7 @@ export default function AdminQuestionBankPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* DELETE ALERT */}
+            {}
             <AlertDialog open={!!questionToDelete} onOpenChange={() => setQuestionToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -815,7 +804,6 @@ export default function AdminQuestionBankPage() {
     );
 }
 
-// Icon component import bổ sung nếu thiếu
 function CheckCircle2(props: any) {
     return (
         <svg

@@ -65,7 +65,6 @@ export default function ExamMonitorPage() {
     }
   };
 
-  // Xử lý dữ liệu: Gom nhóm theo sinh viên
   const processData = (data: Violation[]) => {
     const map: Record<number, StudentStatus> = {};
 
@@ -79,16 +78,15 @@ export default function ExamMonitorPage() {
           details: []
         };
       }
-      
+
       const student = map[v.user_id];
       student.violation_count++;
       student.details.push(v);
-      // Sắp xếp lấy vi phạm mới nhất
+
       if (!student.last_violation || new Date(v.violation_time) > new Date(student.last_violation)) {
         student.last_violation = v.violation_time;
       }
 
-      // Đánh giá mức độ
       if (student.violation_count >= 5) student.status = "danger";
       else if (student.violation_count >= 2) student.status = "warning";
     });
@@ -125,7 +123,7 @@ export default function ExamMonitorPage() {
 
           setViolations((prev) => {
             const updated = [newMsg, ...prev];
-            processData(updated); 
+            processData(updated);
             return updated;
           });
           setLastUpdated(new Date());
@@ -170,7 +168,7 @@ export default function ExamMonitorPage() {
 
   return (
     <div className="container mx-auto py-6 px-4 h-[calc(100vh-60px)] flex flex-col">
-      {/* HEADER */}
+      {}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Button variant="ghost" onClick={() => router.back()}>
@@ -196,7 +194,7 @@ export default function ExamMonitorPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 overflow-hidden">
-        {/* CỘT TRÁI: DANH SÁCH SINH VIÊN VI PHẠM */}
+        {}
         <Card className="lg:col-span-2 flex flex-col overflow-hidden">
           <CardHeader className="pb-3 border-b">
             <CardTitle>Danh sách thí sinh có hành vi bất thường</CardTitle>
@@ -239,8 +237,8 @@ export default function ExamMonitorPage() {
                       </TableCell>
                       <TableCell>{getStatusBadge(s.status)}</TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => setSelectedStudentId(s.user_id)}
                         >
@@ -255,7 +253,7 @@ export default function ExamMonitorPage() {
           </div>
         </Card>
 
-        {/* CỘT PHẢI: LOG REALTIME */}
+        {}
         <Card className="flex flex-col min-h-0 overflow-hidden bg-zinc-950 text-zinc-50 border-zinc-800">
           <CardHeader className="pb-3 border-b border-zinc-800 bg-zinc-900/50">
             <CardTitle className="text-sm font-mono flex items-center gap-2">
@@ -290,7 +288,7 @@ export default function ExamMonitorPage() {
         </Card>
       </div>
 
-      {/* DETAIL DIALOG */}
+      {}
       <Dialog open={selectedStudentId !== null} onOpenChange={() => setSelectedStudentId(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
           <DialogHeader>
@@ -299,7 +297,7 @@ export default function ExamMonitorPage() {
               Chi tiết vi phạm - User #{selectedStudentId}
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="flex-1 overflow-auto py-4">
             {selectedStudentId && studentMap[selectedStudentId] ? (
               <Table>

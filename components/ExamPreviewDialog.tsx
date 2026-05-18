@@ -122,7 +122,7 @@ export default function ExamPreviewDialog({ examId, isOpen, onClose }: ExamPrevi
                         <div className="text-base font-medium">
                           <RichTextDisplay content={q.content} />
                         </div>
-                        
+
                         {q.question_type !== 'essay' && q.question_type !== 'short_answer' ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
                             {q.choices.map((choice) => (

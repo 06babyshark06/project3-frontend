@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { 
-  Loader2, Pencil, Trash2, Library, Book, 
+import {
+  Loader2, Pencil, Trash2, Library, Book,
   Search, Plus, ChevronRight, AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -72,11 +72,9 @@ export function ManageBankDialog({
   const [sections, setSections] = useState<Section[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // Topic Filter for Sections tab
+
   const [selectedTopicId, setSelectedTopicId] = useState<string>("all");
 
-  // Edit/Delete Dialog States
   const [topicToEdit, setTopicToEdit] = useState<Topic | null>(null);
   const [sectionToEdit, setSectionToEdit] = useState<Section | null>(null);
   const [topicToDelete, setTopicToDelete] = useState<Topic | null>(null);
@@ -103,7 +101,7 @@ export function ManageBankDialog({
       setSections(res.data.data.sections || []);
     } catch (error) {
       console.error("Fetch sections error:", error);
-      // Don't toast error if it's just 'topic not selected' type logic
+
     } finally {
       setIsLoading(false);
     }
@@ -146,11 +144,11 @@ export function ManageBankDialog({
     }
   };
 
-  const filteredTopics = topics.filter(t => 
+  const filteredTopics = topics.filter(t =>
     t.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredSections = sections.filter(s => 
+  const filteredSections = sections.filter(s =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -184,8 +182,8 @@ export function ManageBankDialog({
 
               <div className="relative w-64">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Tìm kiếm..." 
+                <Input
+                  placeholder="Tìm kiếm..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8 h-9"
@@ -226,17 +224,17 @@ export function ManageBankDialog({
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="h-8 w-8"
                               onClick={() => setTopicToEdit(t)}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={() => setTopicToDelete(t)}
                             >
@@ -254,7 +252,7 @@ export function ManageBankDialog({
             <TabsContent value="sections" className="flex-1 overflow-auto mt-0 flex flex-col gap-4">
               <div className="flex items-center gap-4 p-4 border rounded-md bg-muted/30">
                 <div className="text-sm font-medium shrink-0">Lọc theo chủ đề:</div>
-                <select 
+                <select
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={selectedTopicId}
                   onChange={(e) => setSelectedTopicId(e.target.value)}
@@ -301,17 +299,17 @@ export function ManageBankDialog({
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-8 w-8"
                                 onClick={() => setSectionToEdit(s)}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                 onClick={() => setSectionToDelete(s)}
                               >
@@ -330,8 +328,8 @@ export function ManageBankDialog({
         </DialogContent>
       </Dialog>
 
-      {/* EDIT MODALS */}
-      <AddTopicDialog 
+      {}
+      <AddTopicDialog
         open={!!topicToEdit}
         onOpenChange={(open) => !open && setTopicToEdit(null)}
         topicToEdit={topicToEdit}
@@ -351,7 +349,7 @@ export function ManageBankDialog({
         }}
       />
 
-      {/* DELETE CONFIRMATIONS */}
+      {}
       <AlertDialog open={!!topicToDelete} onOpenChange={(open) => !open && setTopicToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -360,7 +358,7 @@ export function ManageBankDialog({
               Xác nhận xóa chủ đề?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn đang sắp xóa chủ đề <strong>"{topicToDelete?.name}"</strong>. 
+              Bạn đang sắp xóa chủ đề <strong>"{topicToDelete?.name}"</strong>.
               Hành động này sẽ xóa <strong>TẤT CẢ</strong> các chương và câu hỏi thuộc chủ đề này.
               Điều này không thể hoàn tác!
             </AlertDialogDescription>
@@ -382,7 +380,7 @@ export function ManageBankDialog({
               Xác nhận xóa chương?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn đang sắp xóa chương <strong>"{sectionToDelete?.name}"</strong>. 
+              Bạn đang sắp xóa chương <strong>"{sectionToDelete?.name}"</strong>.
               Hành động này sẽ xóa <strong>TẤT CẢ</strong> các câu hỏi thuộc chương này.
               Điều này không thể hoàn tác!
             </AlertDialogDescription>

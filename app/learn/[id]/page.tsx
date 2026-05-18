@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { 
-  Loader2, PlayCircle, CheckCircle, FileText, 
+import {
+  Loader2, PlayCircle, CheckCircle, FileText,
   ChevronLeft, Menu, ChevronRight, ArrowLeft
 } from "lucide-react";
 
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/accordion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-// --- Interface ---
 interface Lesson {
   id: number;
   title: string;
@@ -50,7 +49,6 @@ export default function LearningPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [completingLesson, setCompletingLesson] = useState(false);
 
-  // --- Helpers ---
   const getAllLessons = () => {
     if (!course) return [];
     return course.sections.flatMap(sec => sec.lessons || []);
@@ -74,40 +72,37 @@ export default function LearningPage() {
     }
   };
 
-  // === Helper nhận diện loại bài học ===
   const detectLessonType = (lesson: any): "video" | "text" => {
-    // 1. Ưu tiên dùng lesson_type từ API nếu có
+
     if (lesson.lesson_type === "video" || lesson.lesson_type === "text") {
       return lesson.lesson_type;
     }
-    // 2. Nếu không, đoán dựa trên đuôi file
+
     if (lesson.content_url && /\.(mp4|mov|webm|mkv)$/i.test(lesson.content_url)) {
       return "video";
     }
-    // 3. Mặc định là text
+
     return "text";
   };
 
-  // 1. Fetch dữ liệu khóa học
   const fetchCourseContent = async () => {
     try {
       const response = await api.get(`/courses/${courseId}`);
       const data = response.data.data;
-      
+
       if (!data.is_enrolled) {
         toast.error("Bạn chưa đăng ký khóa học này!");
         router.push(`/courses/${courseId}`);
         return;
       }
 
-      // === MAP DỮ LIỆU VÀ XỬ LÝ LOẠI BÀI HỌC ===
       const fullCourse: CourseData = {
         ...data.course,
         sections: (data.sections || []).map((sec: any) => ({
           ...sec,
           lessons: (sec.lessons || []).map((les: any) => ({
             ...les,
-            // Tự động gán lesson_type chuẩn
+
             lesson_type: detectLessonType(les)
           }))
         })),
@@ -116,7 +111,6 @@ export default function LearningPage() {
 
       setCourse(fullCourse);
 
-      // Chọn bài học đầu tiên
       if (!currentLesson) {
         for (const sec of fullCourse.sections) {
             if (sec.lessons && sec.lessons.length > 0) {
@@ -138,7 +132,6 @@ export default function LearningPage() {
     if (courseId) fetchCourseContent();
   }, [courseId]);
 
-  // 2. Hàm xử lý "Hoàn thành bài học"
   const handleMarkCompleted = async () => {
     if (!currentLesson) return;
     setCompletingLesson(true);
@@ -146,21 +139,20 @@ export default function LearningPage() {
       await api.post("/lessons/complete", {
         lesson_id: currentLesson.id
       });
-      
+
       toast.success("Đã hoàn thành bài học!");
-      
-      // Cập nhật UI local
+
       setCourse(prev => {
         if (!prev) return null;
         const newSections = prev.sections.map(sec => ({
           ...sec,
-          lessons: sec.lessons?.map(les => 
+          lessons: sec.lessons?.map(les =>
             les.id === currentLesson.id ? { ...les, is_completed: true } : les
           ) || []
         }));
         return { ...prev, sections: newSections };
       });
-      
+
       setCurrentLesson(prev => prev ? { ...prev, is_completed: true } : null);
       setTimeout(() => handleNextLesson(), 1500);
 
@@ -184,7 +176,6 @@ export default function LearningPage() {
     return total === 0 ? 0 : Math.round((completed / total) * 100);
   };
 
-  // --- Component Sidebar ---
   const CourseSidebar = () => (
     <div className="h-full flex flex-col bg-card">
       <div className="p-4 border-b">
@@ -197,7 +188,7 @@ export default function LearningPage() {
           <Progress value={calculateProgress()} className="h-2" />
         </div>
       </div>
-      
+
       <ScrollArea className="flex-1">
         <Accordion type="multiple" defaultValue={course?.sections.map(s => `sec-${s.id}`) || []} className="w-full">
           {course?.sections.map((section) => (
@@ -215,7 +206,7 @@ export default function LearningPage() {
                         <button
                         key={lesson.id}
                         onClick={() => setCurrentLesson(lesson)}
-                        className={`w-full flex items-center gap-3 p-3 text-left transition-colors border-b border-muted/50 
+                        className={`w-full flex items-center gap-3 p-3 text-left transition-colors border-b border-muted/50
                             ${isActive ? "bg-primary/10 border-l-4 border-l-primary" : "hover:bg-muted/50 border-l-4 border-l-transparent"}
                         `}
                         >
@@ -258,7 +249,6 @@ export default function LearningPage() {
 
   if (!course) return null;
 
-  // Xác định trạng thái nút Previous/Next
   const allLessons = getAllLessons();
   const currentIndex = allLessons.findIndex(l => l.id === currentLesson?.id);
   const hasPrev = currentIndex > 0;
@@ -266,11 +256,11 @@ export default function LearningPage() {
 
   return (
     <div className="flex h-screen flex-col md:flex-row overflow-hidden bg-background">
-      
-      {/* === KHUNG VIDEO / NỘI DUNG (Giữa) === */}
+
+      {}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        
-        {/* Header Mobile */}
+
+        {}
         <div className="md:hidden p-4 border-b flex items-center justify-between bg-card">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
@@ -286,7 +276,7 @@ export default function LearningPage() {
           </Sheet>
         </div>
 
-        {/* Header Desktop */}
+        {}
         <div className="hidden md:flex items-center p-4 border-b bg-card">
             <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/my-courses')}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại khóa học
@@ -294,28 +284,28 @@ export default function LearningPage() {
             <h1 className="ml-4 font-bold text-lg truncate flex-1">{currentLesson?.title}</h1>
         </div>
 
-        {/* NỘI DUNG CHÍNH (TỰ ĐỘNG CHỌN PLAYER) */}
+        {}
         <div className="flex-1 bg-black flex items-center justify-center overflow-y-auto">
           {currentLesson ? (
             currentLesson.lesson_type === "video" ? (
-              // === PLAYER VIDEO (Cho file MP4) ===
-              <video 
-                key={currentLesson.content_url} 
-                controls 
+
+              <video
+                key={currentLesson.content_url}
+                controls
                 className="w-full h-full max-h-full object-contain outline-none"
                 controlsList="nodownload"
-                onEnded={() => !currentLesson.is_completed && handleMarkCompleted()} 
+                onEnded={() => !currentLesson.is_completed && handleMarkCompleted()}
               >
                 <source src={currentLesson.content_url} type="video/mp4" />
                 Trình duyệt của bạn không hỗ trợ thẻ video.
               </video>
             ) : (
-              // === BÀI ĐỌC TEXT ===
+
               <div className="bg-background text-foreground p-8 md:p-12 w-full h-full overflow-y-auto">
                  <div className="max-w-3xl mx-auto prose dark:prose-invert">
                     <h1>{currentLesson.title}</h1>
                     <div className="whitespace-pre-wrap text-lg leading-relaxed mt-6">
-                        {/* Render nội dung text */}
+                        {}
                         {currentLesson.content_url}
                     </div>
                  </div>
@@ -326,31 +316,31 @@ export default function LearningPage() {
           )}
         </div>
 
-        {/* Footer điều hướng */}
+        {}
         <div className="p-4 border-t bg-card flex justify-between items-center shadow-lg z-20">
-          <Button 
-            variant="outline" 
-            onClick={handlePrevLesson} 
+          <Button
+            variant="outline"
+            onClick={handlePrevLesson}
             disabled={!hasPrev}
             className="w-32"
           >
             <ChevronLeft className="mr-2 h-4 w-4" /> Bài trước
           </Button>
-          
+
           <div className="flex gap-2">
-            <Button 
-              onClick={handleMarkCompleted} 
+            <Button
+              onClick={handleMarkCompleted}
               disabled={completingLesson || currentLesson?.is_completed}
               variant={currentLesson?.is_completed ? "secondary" : "default"}
               className="w-40"
             >
-              {completingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 
+              {completingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> :
                currentLesson?.is_completed ? <CheckCircle className="mr-2 h-4 w-4" /> : null}
               {currentLesson?.is_completed ? "Đã hoàn thành" : "Hoàn thành"}
             </Button>
 
-            <Button 
-                onClick={handleNextLesson} 
+            <Button
+                onClick={handleNextLesson}
                 disabled={!hasNext}
                 variant="outline"
                 className="w-32"
@@ -361,7 +351,7 @@ export default function LearningPage() {
         </div>
       </div>
 
-      {/* SIDEBAR */}
+      {}
       <div className="hidden md:block w-80 lg:w-96 border-l h-full bg-card z-10 shadow-lg">
         <CourseSidebar />
       </div>

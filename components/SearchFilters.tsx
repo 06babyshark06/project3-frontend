@@ -1,4 +1,4 @@
-// components/SearchFilters.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,23 +9,21 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { useDebounce } from "use-debounce"; 
+import { useDebounce } from "use-debounce";
 
 export function SearchFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // State cục bộ
   const [text, setText] = useState(searchParams.get("search") || "");
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
-  
-  // Debounce: Chỉ search sau khi ngừng gõ 500ms
+
   const [query] = useDebounce(text, 500);
 
   useEffect(() => {
-    // Khi query hoặc sort thay đổi -> Update URL
+
     const params = new URLSearchParams(searchParams.toString());
-    
+
     if (query) {
       params.set("search", query);
     } else {
@@ -37,8 +35,7 @@ export function SearchFilters() {
     } else {
       params.delete("sort");
     }
-    
-    // Reset về trang 1 khi search
+
     params.set("page", "1");
 
     router.push(`/courses?${params.toString()}`);

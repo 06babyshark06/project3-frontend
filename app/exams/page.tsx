@@ -1,4 +1,4 @@
-"use client"; // ✅ QUAN TRỌNG: Chuyển thành Client Component
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -19,7 +19,7 @@ interface Exam {
   id: number;
   title: string;
   duration_minutes: number;
-  topic_name?: string; // Thêm topic name nếu có
+  topic_name?: string;
 }
 
 export default function ExamsPage() {
@@ -30,13 +30,13 @@ export default function ExamsPage() {
     const fetchExams = async () => {
       try {
         setLoading(true);
-        // Gọi API lấy danh sách bài thi
+
         const response = await api.get("/exams", {
           params: {
             limit: 100,
           },
         });
-        
+
         const data = response.data.data;
         if (data && Array.isArray(data.exams)) {
           setExams(data.exams);
@@ -53,8 +53,8 @@ export default function ExamsPage() {
 
   return (
     <div className="container mx-auto max-w-7xl p-4 md:p-8">
-      
-      {/* === 1. TOP BAR ĐIỀU HƯỚNG === */}
+
+      {}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 pb-6 border-b">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="icon" asChild>
@@ -62,7 +62,7 @@ export default function ExamsPage() {
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          
+
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-primary">
               Thư viện Đề thi
@@ -86,8 +86,8 @@ export default function ExamsPage() {
            </Button>
         </div>
       </div>
-      
-      {/* === 2. DANH SÁCH BÀI THI === */}
+
+      {}
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -106,7 +106,7 @@ export default function ExamsPage() {
                             <Clock className="mr-1 h-3 w-3" /> {exam.duration_minutes} phút
                         </Badge>
                     </div>
-                    {/* Hiển thị Topic nếu có */}
+                    {}
                     {exam.topic_name && (
                       <Badge variant="secondary" className="mt-2 w-fit">{exam.topic_name}</Badge>
                     )}
@@ -114,13 +114,13 @@ export default function ExamsPage() {
                         {exam.title}
                     </CardTitle>
                 </CardHeader>
-                
+
                 <CardContent className="flex-1 pt-4">
                   <CardDescription className="line-clamp-3">
                     Bài kiểm tra trắc nghiệm đánh giá kiến thức tổng hợp.
                   </CardDescription>
                 </CardContent>
-                
+
                 <CardFooter className="pt-0 pb-4 px-6">
                   <Button className="w-full group-hover:bg-primary/90">
                     Làm bài ngay
@@ -133,9 +133,9 @@ export default function ExamsPage() {
       ) : (
         <div className="text-center py-20 bg-muted/10 rounded-xl border border-dashed border-muted-foreground/25">
           <p className="text-xl text-muted-foreground font-medium">Chưa có bài thi nào được xuất bản.</p>
-          <Button 
-            variant="link" 
-            className="mt-2 text-primary" 
+          <Button
+            variant="link"
+            className="mt-2 text-primary"
             asChild
           >
             <Link href="/">Quay về trang chủ</Link>

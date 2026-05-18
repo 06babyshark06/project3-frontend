@@ -42,8 +42,7 @@ export function QuestionBankSelector({
   const [questions, setQuestions] = useState<Question[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  
-  // Filters
+
   const [search, setSearch] = useState("");
   const [selectedSection, setSelectedSection] = useState("all");
   const [difficulty, setDifficulty] = useState("all");
@@ -66,8 +65,8 @@ export function QuestionBankSelector({
     setLoading(true);
     try {
       const params: any = {
-        limit: 100, 
-        topic_id: topicId 
+        limit: 100,
+        topic_id: topicId
       };
       if (search) params.search = search;
       if (selectedSection !== "all") params.section_id = selectedSection;
@@ -84,10 +83,10 @@ export function QuestionBankSelector({
 
   const toggleSelection = (id: number) => {
     if (existingQuestionIds.includes(id)) return;
-    
-    setSelectedIds(prev => 
-      prev.includes(id) 
-        ? prev.filter(qId => qId !== id) 
+
+    setSelectedIds(prev =>
+      prev.includes(id)
+        ? prev.filter(qId => qId !== id)
         : [...prev, id]
     );
   };
@@ -100,20 +99,16 @@ export function QuestionBankSelector({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* FIX: 
-         1. h-[90vh]: Cố định chiều cao 90% màn hình
-         2. flex flex-col: Để chia layout dọc
-         3. p-0 gap-0: Xóa padding mặc định để tự quản lý borders đẹp hơn
-      */}
+      {}
       <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 gap-0">
-        
-        {/* HEADER SECTION (Cố định) */}
+
+        {}
         <div className="px-6 py-4 border-b">
           <DialogHeader className="mb-4">
             <DialogTitle>Chọn câu hỏi từ Ngân hàng</DialogTitle>
           </DialogHeader>
 
-          {/* FILTERS */}
+          {}
           <div className="grid grid-cols-12 gap-3">
             <div className="col-span-5 relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -124,7 +119,7 @@ export function QuestionBankSelector({
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            
+
             <div className="col-span-4">
               <Select value={selectedSection} onValueChange={setSelectedSection}>
                 <SelectTrigger>
@@ -155,8 +150,8 @@ export function QuestionBankSelector({
           </div>
         </div>
 
-        {/* BODY SECTION (Cuộn nội dung) */}
-        {/* FIX: flex-1 overflow-hidden để chiếm hết khoảng trống còn lại */}
+        {}
+        {}
         <div className="flex-1 overflow-hidden bg-muted/5 p-4">
           <ScrollArea className="h-full pr-4">
             {loading ? (
@@ -174,11 +169,11 @@ export function QuestionBankSelector({
                   const isSelected = selectedIds.includes(q.id);
 
                   return (
-                    <div 
+                    <div
                       key={q.id}
                       onClick={() => toggleSelection(q.id)}
                       className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all bg-card ${
-                        isExisting ? "opacity-50 bg-muted cursor-not-allowed" : 
+                        isExisting ? "opacity-50 bg-muted cursor-not-allowed" :
                         isSelected ? "bg-blue-50 border-blue-500 shadow-sm" : "hover:border-primary/50"
                       }`}
                     >
@@ -191,22 +186,22 @@ export function QuestionBankSelector({
                           <Square className="h-5 w-5 text-muted-foreground" />
                         )}
                       </div>
-                      
+
                       <div className="flex-1 space-y-1">
                         <p className="text-sm font-medium line-clamp-2">{q.content}</p>
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline" className="text-xs bg-background">{q.section_name}</Badge>
                           <Badge variant={
-                            q.question_type === "multiple_choice" ? "secondary" : 
+                            q.question_type === "multiple_choice" ? "secondary" :
                             q.question_type === "essay" ? "destructive" :
                             q.question_type === "short_answer" ? "default" : "outline"
                           } className="text-[10px]">
-                            {q.question_type === "multiple_choice" ? "Nhiều Đ.A" : 
+                            {q.question_type === "multiple_choice" ? "Nhiều Đ.A" :
                              q.question_type === "single_choice" ? "1 Đ.A" :
                              q.question_type === "short_answer" ? "T.L Ngắn" : "Tự luận"}
                           </Badge>
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={`text-xs bg-background ${
                               q.difficulty === 'easy' ? 'text-green-600 border-green-200' :
                               q.difficulty === 'medium' ? 'text-yellow-600 border-yellow-200' :
@@ -225,7 +220,7 @@ export function QuestionBankSelector({
           </ScrollArea>
         </div>
 
-        {/* FOOTER SECTION (Cố định) */}
+        {}
         <div className="p-4 border-t bg-background">
           <DialogFooter className="flex justify-between items-center w-full sm:justify-between">
             <div className="text-sm text-muted-foreground">

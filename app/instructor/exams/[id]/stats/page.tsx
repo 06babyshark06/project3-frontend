@@ -17,15 +17,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
-// ===== INTERFACES =====
 interface ExamStats {
   total_students: number;
   submitted_count: number;
-  // Cho phép các trường này có thể undefined
+
   average_score?: number;
   highest_score?: number;
   lowest_score?: number;
-  score_distribution: Record<string, number>; 
+  score_distribution: Record<string, number>;
 }
 
 export default function ExamStatsPage() {
@@ -64,7 +63,7 @@ export default function ExamStatsPage() {
     try {
       toast.info("Đang xử lý xuất báo cáo...");
       const res = await api.get(`/exams/${examId}/export`);
-      
+
       const fileUrl = res.data.data.file_url;
       if (fileUrl) {
         window.open(fileUrl, "_blank");
@@ -106,14 +105,12 @@ export default function ExamStatsPage() {
     );
   }
 
-  // ✅ SỬA LỖI: Tạo các biến an toàn, mặc định là 0 nếu undefined
   const avgScore = stats.average_score || 0;
   const highScore = stats.highest_score || 0;
   const lowScore = stats.lowest_score || 0;
 
-  // ===== CHART DATA =====
   const sortOrder = [
-    "0-1", "1-2", "2-3", "3-4", "4-5", 
+    "0-1", "1-2", "2-3", "3-4", "4-5",
     "5-6", "6-7", "7-8", "8-9", "9-10"
   ];
   const chartData = sortOrder.map(range => ({
@@ -129,9 +126,9 @@ export default function ExamStatsPage() {
     .reduce((sum, [_, count]) => sum + count, 0);
 
   const failCount = stats.submitted_count - passCount;
-  // Tránh chia cho 0
-  const passRate = stats.submitted_count > 0 
-    ? (passCount / stats.submitted_count) * 100 
+
+  const passRate = stats.submitted_count > 0
+    ? (passCount / stats.submitted_count) * 100
     : 0;
 
   const pieData = [
@@ -154,7 +151,7 @@ export default function ExamStatsPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl space-y-8">
-      {/* HEADER */}
+      {}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="icon" onClick={() => router.back()} title="Quay lại">
@@ -182,49 +179,49 @@ export default function ExamStatsPage() {
         </div>
       </div>
 
-      {/* OVERVIEW METRICS */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard 
-          title="Tổng thí sinh" 
-          value={stats.total_students} 
+        <MetricCard
+          title="Tổng thí sinh"
+          value={stats.total_students}
           subValue={`Đã nộp: ${stats.submitted_count}`}
-          icon={Users} 
-          iconColor="text-blue-500" 
+          icon={Users}
+          iconColor="text-blue-500"
         />
-        <MetricCard 
-          title="Điểm trung bình" 
-          // ✅ FIX: Sử dụng avgScore đã xử lý fallback
-          value={avgScore.toFixed(2)} 
+        <MetricCard
+          title="Điểm trung bình"
+
+          value={avgScore.toFixed(2)}
           subValue={
             <Badge variant={avgScore >= 5 ? "secondary" : "destructive"} className="mt-1">
               {avgScore >= 5 ? "Đạt yêu cầu" : "Cần cải thiện"}
             </Badge>
           }
-          icon={TrendingUp} 
-          iconColor="text-green-500" 
+          icon={TrendingUp}
+          iconColor="text-green-500"
         />
-        <MetricCard 
-          title="Cao nhất" 
-          // ✅ FIX: Sử dụng highScore
-          value={highScore.toFixed(2)} 
+        <MetricCard
+          title="Cao nhất"
+
+          value={highScore.toFixed(2)}
           subValue="Điểm số cao nhất"
-          icon={Trophy} 
-          iconColor="text-yellow-500" 
+          icon={Trophy}
+          iconColor="text-yellow-500"
         />
-        <MetricCard 
-          title="Thấp nhất" 
-          // ✅ FIX: Sử dụng lowScore
-          value={lowScore.toFixed(2)} 
+        <MetricCard
+          title="Thấp nhất"
+
+          value={lowScore.toFixed(2)}
           subValue="Điểm số thấp nhất"
-          icon={TrendingDown} 
-          iconColor="text-red-500" 
+          icon={TrendingDown}
+          iconColor="text-red-500"
         />
       </div>
 
-      {/* CHARTS AREA */}
+      {}
       {isMounted && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Cột 1: Phổ điểm */}
+          {}
           <Card className="lg:col-span-2 shadow-sm">
             <CardHeader>
               <CardTitle>Phổ điểm chi tiết</CardTitle>
@@ -234,20 +231,20 @@ export default function ExamStatsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="range" 
-                    tickLine={false} 
-                    axisLine={false} 
+                  <XAxis
+                    dataKey="range"
+                    tickLine={false}
+                    axisLine={false}
                     tick={{ fontSize: 12, fill: "#6b7280" }}
                     dy={10}
                   />
-                  <YAxis 
-                    tickLine={false} 
-                    axisLine={false} 
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
                     tick={{ fontSize: 12, fill: "#6b7280" }}
                     allowDecimals={false}
                   />
-                  <RechartsTooltip 
+                  <RechartsTooltip
                     cursor={{ fill: 'transparent' }}
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
@@ -261,7 +258,7 @@ export default function ExamStatsPage() {
             </CardContent>
           </Card>
 
-          {/* Cột 2: Tỷ lệ Đạt */}
+          {}
           <Card className="shadow-sm flex flex-col">
             <CardHeader>
               <CardTitle>Tỷ lệ Đạt / Trượt</CardTitle>
@@ -304,7 +301,7 @@ export default function ExamStatsPage() {
         </div>
       )}
 
-      {/* AI INSIGHTS */}
+      {}
       <Card className="bg-primary/5 border-primary/20 shadow-none">
         <CardHeader>
           <CardTitle className="text-primary flex items-center gap-2">
@@ -313,7 +310,7 @@ export default function ExamStatsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* ✅ FIX: Sử dụng avgScore đã xử lý */}
+          {}
           {avgScore >= 8 ? (
             <InsightItem type="success" text="Xuất sắc! Lớp có thành tích rất cao, đa số sinh viên nắm vững kiến thức." />
           ) : avgScore >= 6.5 ? (
@@ -327,7 +324,7 @@ export default function ExamStatsPage() {
           {highScore === 10 && (
             <InsightItem type="success" text="Có sinh viên đạt điểm tuyệt đối (10/10). Nên có hình thức khen thưởng." />
           )}
-          
+
           {passRate < 50 && (
             <InsightItem type="danger" text="Hơn 50% sinh viên không đạt yêu cầu. Cần phân tích kỹ các câu hỏi có tỷ lệ sai cao." />
           )}
