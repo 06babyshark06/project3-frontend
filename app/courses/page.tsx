@@ -101,7 +101,7 @@ export default async function CoursesPage({
               <Card className="h-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-muted/60 hover:border-primary/50">
                 <div className="relative w-full h-48 bg-muted">
                   <Image
-                    src={course.thumbnail_url || "https://via.placeholder.com/400x200"}
+                    src={course.thumbnail_url || "/default-course.png"}
                     alt={course.title}
                     layout="fill"
                     objectFit="cover"

@@ -203,7 +203,7 @@ export default function DashboardPage() {
                             <Card className="flex flex-row overflow-hidden hover:shadow-md transition-all h-32 border-muted/60">
                                 <div className="w-32 relative bg-muted shrink-0">
                                     <Image
-                                        src={course.thumbnail_url || "https://via.placeholder.com/150"}
+                                        src={course.thumbnail_url || "/default-course.png"}
                                         alt={course.title}
                                         layout="fill"
                                         objectFit="cover"

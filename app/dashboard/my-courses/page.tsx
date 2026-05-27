@@ -95,7 +95,7 @@ export default function MyCoursesPage() {
                 {}
                 <div className="relative w-full h-48 bg-muted">
                   <Image
-                    src={course.thumbnail_url || "https://via.placeholder.com/400x200"}
+                    src={course.thumbnail_url || "/default-course.png"}
                     alt={course.title}
                     layout="fill"
                     objectFit="cover"

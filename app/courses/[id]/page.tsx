@@ -154,7 +154,7 @@ export default function CourseDetailPage() {
             <CardHeader className="p-0">
               <div className="relative w-full h-56">
                 <Image
-                  src={courseInfo.thumbnail_url || "https://via.placeholder.com/400x200"}
+                  src={courseInfo.thumbnail_url || "/default-course.png"}
                   alt={courseInfo.title}
                   layout="fill"
                   objectFit="cover"
