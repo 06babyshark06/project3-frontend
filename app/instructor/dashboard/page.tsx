@@ -159,7 +159,7 @@ export default function InstructorDashboardPage() {
           </CardHeader>
           <CardContent className="grid gap-3">
             <Button variant="outline" className="justify-start h-12" asChild>
-              <Link href="/instructor/exams/new">
+              <Link href="/instructor/exams/create">
                 <Plus className="mr-2 h-4 w-4 bg-orange-100 text-orange-600 rounded p-0.5" />
                 Soạn đề thi mới
               </Link>
