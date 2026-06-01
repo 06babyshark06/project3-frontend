@@ -80,7 +80,7 @@ export default function InstructorCoursesPage() {
         {data.map((course) => (
           <TableRow key={course.id}>
             <TableCell className="font-medium">{course.title}</TableCell>
-            <TableCell>{(course.price || 0) === 0 ? "Miễn phí" : (course.price || 0).toLocaleString()} đ</TableCell>
+            <TableCell>{(course.price || 0) === 0 ? "Miễn phí" : `${(course.price || 0).toLocaleString()} đ`}</TableCell>
             <TableCell>
               {course.is_published ?
                 <Badge className="bg-green-600 hover:bg-green-700">Đã xuất bản</Badge> :
