@@ -160,25 +160,25 @@ export default function InstructorDashboardPage() {
           <CardContent className="grid gap-3">
             <Button variant="outline" className="justify-start h-12" asChild>
               <Link href="/instructor/exams/create">
-                <Plus className="mr-2 h-4 w-4 bg-orange-100 text-orange-600 rounded p-0.5" />
+                <Plus className="mr-2 h-4 w-4 bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 rounded p-0.5" />
                 Soạn đề thi mới
               </Link>
             </Button>
             <Button variant="outline" className="justify-start h-12" asChild>
               <Link href="/instructor/questions">
-                <FileQuestion className="mr-2 h-4 w-4 bg-blue-100 text-blue-600 rounded p-0.5" />
+                <FileQuestion className="mr-2 h-4 w-4 bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded p-0.5" />
                 Ngân hàng câu hỏi
               </Link>
             </Button>
             <Button variant="outline" className="justify-start h-12" asChild>
               <Link href="/instructor/classes">
-                <Users className="mr-2 h-4 w-4 bg-green-100 text-green-600 rounded p-0.5" />
+                <Users className="mr-2 h-4 w-4 bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-400 rounded p-0.5" />
                 Quản lý lớp học
               </Link>
             </Button>
             <Button variant="outline" className="justify-start h-12" asChild>
               <Link href="/instructor/categories">
-                <FolderCog className="mr-2 h-4 w-4 bg-purple-100 text-purple-600 rounded p-0.5" />
+                <FolderCog className="mr-2 h-4 w-4 bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 rounded p-0.5" />
                 Danh mục & Chủ đề
               </Link>
             </Button>
@@ -209,11 +209,11 @@ export default function InstructorDashboardPage() {
                 {recentSubmissions.length > 0 ? (
                   recentSubmissions.map((sub: any) => (
                     <div key={sub.submission_id} className="flex items-start gap-4">
-                      <div className={`p-2 rounded-lg ${(sub.score ?? 0) >= 5 ? "bg-emerald-100" : "bg-amber-100"}`}>
+                      <div className={`p-2 rounded-lg ${(sub.score ?? 0) >= 5 ? "bg-emerald-100 dark:bg-emerald-950/30" : "bg-amber-100 dark:bg-amber-950/30"}`}>
                         {(sub.score ?? 0) >= 5 ? (
-                          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                         ) : (
-                          <AlertCircle className="h-5 w-5 text-amber-600" />
+                          <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                         )}
                       </div>
                       <div className="flex-1 space-y-1">
@@ -221,7 +221,7 @@ export default function InstructorDashboardPage() {
                           <p className="text-sm font-bold">
                             {sub.student_name} đã hoàn thành bài thi
                           </p>
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${(sub.score ?? 0) >= 8 ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${(sub.score ?? 0) >= 8 ? "bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400" : "bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300"}`}>
                             {(sub.score ?? 0).toFixed(1)} / 10
                           </span>
                         </div>

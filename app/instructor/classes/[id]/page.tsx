@@ -373,7 +373,7 @@ export default function ClassDetailPage() {
                                                                     return (
                                                                         <TableCell key={e.id} className="text-center">
                                                                             {hasScore ? (
-                                                                                <Badge variant="outline" className={`${score >= 8 ? "border-green-500 text-green-700 bg-green-50" : score >= 5 ? "border-yellow-500 text-yellow-700 bg-yellow-50" : "border-red-500 text-red-700 bg-red-50"}`}>
+                                                                                <Badge variant="outline" className={`${score >= 8 ? "border-green-500 dark:border-green-800 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/20" : score >= 5 ? "border-yellow-500 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950/20" : "border-red-500 dark:border-red-800 text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/20"}`}>
                                                                                     {score.toFixed(1)}
                                                                                 </Badge>
                                                                             ) : (

@@ -80,7 +80,7 @@ export default function InstructorSubmissionsPage() {
       case "completed":
         return <Badge className="bg-green-600 hover:bg-green-700">Đã hoàn thành</Badge>;
       case "in_progress":
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-700">Đang thực hiện</Badge>;
+        return <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300">Đang thực hiện</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -176,7 +176,7 @@ export default function InstructorSubmissionsPage() {
                     </TableCell>
                     <TableCell className="text-center">
                       <div className={`inline-flex items-center justify-center h-10 w-16 rounded-lg font-bold text-lg
-                        ${(sub.score ?? 0) >= 8 ? "bg-emerald-50 text-emerald-700" : (sub.score ?? 0) >= 5 ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700"}`}>
+                        ${(sub.score ?? 0) >= 8 ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400" : (sub.score ?? 0) >= 5 ? "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400" : "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400"}`}>
                         {sub.score !== undefined ? sub.score.toFixed(1) : "-"}
                       </div>
                     </TableCell>

@@ -168,7 +168,7 @@ export default function CourseDetailPage() {
                       {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(courseInfo.price)}
                     </Badge>
                   ) : (
-                    <Badge variant="secondary" className="text-2xl font-bold w-full justify-center p-3 bg-green-100 text-green-700 hover:bg-green-200">
+                    <Badge variant="secondary" className="text-2xl font-bold w-full justify-center p-3 bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/30">
                       Miễn phí
                     </Badge>
                   )}

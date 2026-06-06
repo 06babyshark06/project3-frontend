@@ -214,16 +214,16 @@ export default function ExamResultPage() {
     <div className="min-h-screen w-full bg-muted/30 py-8 px-4 flex flex-col items-center">
       <Card className={`w-full max-w-2xl shadow-xl border-t-8 ${isAwaitingGrading ? "border-t-amber-500" : (isPass ? "border-t-green-500" : "border-t-red-500")} mb-8`}>
           <CardHeader className="text-center pb-2">
-            <div className={`mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full ${isAwaitingGrading ? "bg-amber-100" : (isPass ? "bg-green-100" : "bg-red-100")}`}>
+            <div className={`mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full ${isAwaitingGrading ? "bg-amber-100 dark:bg-amber-950/30" : (isPass ? "bg-green-100 dark:bg-green-950/30" : "bg-red-100 dark:bg-red-950/30")}`}>
               {isAwaitingGrading ? (
-                <AlertCircle className="h-12 w-12 text-amber-600 drop-shadow-sm" />
+                <AlertCircle className="h-12 w-12 text-amber-600 dark:text-amber-400 drop-shadow-sm" />
               ) : isPass ? (
-                <Trophy className="h-12 w-12 text-green-600 drop-shadow-sm" />
+                <Trophy className="h-12 w-12 text-green-600 dark:text-green-400 drop-shadow-sm" />
               ) : (
-                <XCircle className="h-12 w-12 text-red-600 drop-shadow-sm" />
+                <XCircle className="h-12 w-12 text-red-600 dark:text-red-400 drop-shadow-sm" />
               )}
             </div>
-            <CardTitle className={`text-4xl font-black tracking-tight ${isAwaitingGrading ? "text-amber-700" : (isPass ? "text-green-700" : "text-red-700")}`}>
+            <CardTitle className={`text-4xl font-black tracking-tight ${isAwaitingGrading ? "text-amber-700 dark:text-amber-400" : (isPass ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400")}`}>
               {isAwaitingGrading ? "ĐANG CHỜ CHẤM ĐIỂM" : (isPass ? "XIN CHÚC MỪNG!" : "CỐ GẮNG LẦN SAU NHÉ!")}
             </CardTitle>
             <p className="text-muted-foreground text-xl mt-2 font-medium">
@@ -232,7 +232,6 @@ export default function ExamResultPage() {
           </CardHeader>
 
           <CardContent className="space-y-8 pt-6">
-            {}
             <div className="flex flex-col items-center justify-center">
               <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-1">Tổng Điểm</span>
               <div className="flex items-baseline">
@@ -242,8 +241,8 @@ export default function ExamResultPage() {
                 <span className="text-3xl text-muted-foreground font-medium">/10</span>
               </div>
               {ungradedCount > 0 && (
-                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs font-semibold max-w-md text-center flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-lg text-amber-900 dark:text-amber-300 text-xs font-semibold max-w-md text-center flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <span>
                     Bài thi có <strong>{ungradedCount} câu tự luận chưa được chấm điểm</strong>. Điểm số hiện tại là tạm thời và có thể thay đổi sau khi giáo viên chấm bài.
                   </span>
@@ -251,22 +250,21 @@ export default function ExamResultPage() {
               )}
             </div>
 
-            {}
             <div className={`grid ${ungradedCount > 0 ? "grid-cols-3" : "grid-cols-2"} gap-4`}>
-              <div className="flex flex-col items-center p-5 bg-green-50/50 border border-green-100 rounded-xl justify-center text-center">
+              <div className="flex flex-col items-center p-5 bg-green-50/50 dark:bg-green-950/10 border border-green-100 dark:border-green-900/30 rounded-xl justify-center text-center">
                 <div className="flex items-center gap-2 mb-1">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="text-xs sm:text-sm font-bold text-green-700 uppercase">Câu Đúng</span>
+                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <span className="text-xs sm:text-sm font-bold text-green-700 dark:text-green-400 uppercase">Câu Đúng</span>
                 </div>
                 <span className="text-3xl font-bold text-foreground">
                   {correctCount}
                 </span>
               </div>
 
-              <div className="flex flex-col items-center p-5 bg-red-50/50 border border-red-100 rounded-xl justify-center text-center">
+              <div className="flex flex-col items-center p-5 bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/30 rounded-xl justify-center text-center">
                 <div className="flex items-center gap-2 mb-1">
-                  <XCircle className="h-5 w-5 text-red-600" />
-                  <span className="text-xs sm:text-sm font-bold text-red-700 uppercase">Câu Sai</span>
+                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  <span className="text-xs sm:text-sm font-bold text-red-700 dark:text-red-400 uppercase">Câu Sai</span>
                 </div>
                 <span className="text-3xl font-bold text-foreground">
                   {wrongCount >= 0 ? wrongCount : 0}
@@ -274,10 +272,10 @@ export default function ExamResultPage() {
               </div>
 
               {ungradedCount > 0 && (
-                <div className="flex flex-col items-center p-5 bg-amber-50/50 border border-amber-100 rounded-xl justify-center text-center">
+                <div className="flex flex-col items-center p-5 bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/30 rounded-xl justify-center text-center">
                   <div className="flex items-center gap-2 mb-1">
-                    <AlertCircle className="h-5 w-5 text-amber-600" />
-                    <span className="text-xs sm:text-sm font-bold text-amber-700 uppercase">Chờ Chấm</span>
+                    <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    <span className="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-400 uppercase">Chờ Chấm</span>
                   </div>
                   <span className="text-3xl font-bold text-foreground">
                     {ungradedCount}
@@ -327,11 +325,11 @@ export default function ExamResultPage() {
                     <MediaRenderer url={item.attachment_url} />
                   </div>
                   {(item.question_type === "essay" && !item.is_graded) ? (
-                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-amber-200 shrink-0"><AlertCircle className="w-3 h-3 mr-1" /> Chờ chấm</Badge>
+                    <Badge className="bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/40 border-amber-200 dark:border-amber-900/30 shrink-0"><AlertCircle className="w-3 h-3 mr-1" /> Chờ chấm</Badge>
                   ) : item.is_correct ? (
-                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 shrink-0"><Check className="w-3 h-3 mr-1" /> Đúng</Badge>
+                    <Badge className="bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-950/40 border-green-200 dark:border-green-900/30 shrink-0"><Check className="w-3 h-3 mr-1" /> Đúng</Badge>
                   ) : (
-                    <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100 border-red-200 shrink-0"><X className="w-3 h-3 mr-1" /> Sai</Badge>
+                    <Badge variant="destructive" className="bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/40 border-red-200 dark:border-red-900/30 shrink-0"><X className="w-3 h-3 mr-1" /> Sai</Badge>
                   )}
                 </div>
               </CardHeader>
@@ -339,16 +337,16 @@ export default function ExamResultPage() {
               <CardContent className="pt-4 space-y-4">
                 {(item.question_type === "short_answer" || item.question_type === "essay") ? (
                   <div className="space-y-4">
-                     <div className={`p-4 rounded-lg border ${item.question_type === "essay" ? "bg-background/50 border-border" : (item.is_correct ? "border-green-500 bg-green-50 text-green-900" : "border-red-500 bg-red-50 text-red-900")}`}>
-                        <span className={`text-sm font-semibold uppercase mb-2 block ${item.question_type === "essay" ? "text-muted-foreground" : (item.is_correct ? "text-green-700" : "text-red-700")}`}>Câu trả lời của bạn:</span>
+                     <div className={`p-4 rounded-lg border ${item.question_type === "essay" ? "bg-background/50 border-border text-foreground" : (item.is_correct ? "border-green-500 dark:border-green-800 bg-green-50 dark:bg-green-950/20 text-green-900 dark:text-green-300" : "border-red-500 dark:border-red-850 bg-red-50 dark:bg-red-950/20 text-red-900 dark:text-red-300")}`}>
+                        <span className={`text-sm font-semibold uppercase mb-2 block ${item.question_type === "essay" ? "text-muted-foreground" : (item.is_correct ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400")}`}>Câu trả lời của bạn:</span>
                         <div className="text-base whitespace-pre-wrap">{item.text_answer || (item.choices && item.choices.some(c => c.user_selected) ? "" : <span className="italic opacity-70">Không có câu trả lời văn bản</span>)}</div>
 
                         {item.choices && item.choices.some(c => c.user_selected) && (
                            <div className="mt-3 pt-3 border-t border-dashed border-muted-foreground/20 space-y-2">
                               <span className="text-xs font-semibold text-muted-foreground uppercase block">Lựa chọn đã chọn:</span>
                               {item.choices.filter(c => c.user_selected).map(c => (
-                                 <div key={c.id} className={`p-2 rounded flex items-center gap-2 text-sm ${c.is_correct ? "bg-green-100/50 text-green-800" : "bg-red-100/50 text-red-800"}`}>
-                                    {c.is_correct ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-red-600" />}
+                                 <div key={c.id} className={`p-2 rounded flex items-center gap-2 text-sm ${c.is_correct ? "bg-green-100/50 dark:bg-green-950/30 text-green-800 dark:text-green-300" : "bg-red-100/50 dark:bg-red-950/30 text-red-800 dark:text-red-300"}`}>
+                                    {c.is_correct ? <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" /> : <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />}
                                     <RichTextDisplay content={c.content} />
                                  </div>
                               ))}
@@ -356,8 +354,8 @@ export default function ExamResultPage() {
                         )}
                      </div>
                      {item.question_type !== "essay" && (
-                         <div className="p-4 rounded-lg border border-green-500 bg-green-50/40 text-green-900">
-                            <span className="text-sm font-semibold text-green-700 uppercase mb-2 block">Đáp án được chấp nhận:</span>
+                         <div className="p-4 rounded-lg border border-green-500 dark:border-green-800 bg-green-50/40 dark:bg-green-950/20 text-green-900 dark:text-green-300">
+                            <span className="text-sm font-semibold text-green-700 dark:text-green-400 uppercase mb-2 block">Đáp án được chấp nhận:</span>
                             <ul className="list-disc list-inside space-y-1 text-sm">
                                {item.choices?.map(c => <li key={c.id} className="font-medium">{c.content}</li>)}
                             </ul>
@@ -371,17 +369,17 @@ export default function ExamResultPage() {
                     let icon = <div className="w-4 h-4 rounded-full border border-muted-foreground/30" />;
 
                     if (choice.is_correct) {
-                      styleClass = "border-green-500 bg-green-50/40 text-green-900";
-                      icon = <CheckCircle className="w-5 h-5 text-green-600 fill-green-100" />;
+                      styleClass = "border-green-500 dark:border-green-800 bg-green-50/40 dark:bg-green-950/20 text-green-900 dark:text-green-300";
+                      icon = <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 fill-green-100 dark:fill-green-950/40" />;
                     }
 
                     if (choice.user_selected) {
                       if (choice.is_correct) {
-                        styleClass = "border-green-600 bg-green-100 text-green-900 font-medium ring-1 ring-green-600";
-                        icon = <CheckCircle className="w-5 h-5 text-green-700 fill-green-200" />;
+                        styleClass = "border-green-600 dark:border-green-700 bg-green-100 dark:bg-green-950/30 text-green-900 dark:text-green-300 font-medium ring-1 ring-green-600 dark:ring-green-700";
+                        icon = <CheckCircle className="w-5 h-5 text-green-700 dark:text-green-400 fill-green-200 dark:fill-green-900/40" />;
                       } else {
-                        styleClass = "border-red-500 bg-red-50 text-red-900 ring-1 ring-red-500";
-                        icon = <XCircle className="w-5 h-5 text-red-600 fill-red-100" />;
+                        styleClass = "border-red-500 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-900 dark:text-red-300 ring-1 ring-red-500 dark:ring-red-800";
+                        icon = <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 fill-red-100 dark:fill-red-950/40" />;
                       }
                     }
 
@@ -393,8 +391,8 @@ export default function ExamResultPage() {
                           <MediaRenderer url={choice.attachment_url} />
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          {choice.user_selected && <span className="text-[10px] font-bold uppercase tracking-wider bg-black/5 px-2 py-0.5 rounded">Bạn chọn</span>}
-                          {choice.is_correct && <span className="text-[10px] font-bold uppercase tracking-wider bg-green-200 text-green-800 px-2 py-0.5 rounded">Đáp án đúng</span>}
+                          {choice.user_selected && <span className="text-[10px] font-bold uppercase tracking-wider bg-black/5 dark:bg-white/10 px-2 py-0.5 rounded text-foreground">Bạn chọn</span>}
+                          {choice.is_correct && <span className="text-[10px] font-bold uppercase tracking-wider bg-green-200 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-0.5 rounded">Đáp án đúng</span>}
                         </div>
                       </div>
                     )
@@ -403,11 +401,11 @@ export default function ExamResultPage() {
                 )}
 
                 {item.explanation && (
-                  <div className="mt-4 p-4 bg-blue-50/50 border border-blue-100 rounded-lg text-blue-900 flex gap-3 items-start">
-                    <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-lg text-blue-900 dark:text-blue-300 flex gap-3 items-start">
+                    <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-blue-700 block mb-1 text-xs uppercase tracking-wider">Giải thích từ giáo viên:</span>
-                      <RichTextDisplay content={item.explanation} className="text-sm leading-relaxed opacity-90" />
+                      <span className="font-bold text-blue-700 dark:text-blue-400 block mb-1 text-xs uppercase tracking-wider">Giải thích từ giáo viên:</span>
+                      <RichTextDisplay content={item.explanation} className="text-sm leading-relaxed opacity-90 text-foreground" />
                     </div>
                   </div>
                 )}
@@ -419,26 +417,26 @@ export default function ExamResultPage() {
                       size="sm"
                       onClick={() => handleAskAI(item)}
                       disabled={loadingAI[item.question_id]}
-                      className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 hover:border-indigo-400 text-indigo-700 transition-all duration-300 group shadow-sm"
+                      className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 hover:border-indigo-400 text-indigo-700 transition-all duration-300 group shadow-sm dark:from-indigo-950/20 dark:to-purple-950/20 dark:border-indigo-800 dark:text-indigo-300"
                     >
                       {loadingAI[item.question_id] ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : (
-                        <Sparkles className="w-4 h-4 mr-2 text-purple-600 group-hover:scale-110 transition-transform" />
+                        <Sparkles className="w-4 h-4 mr-2 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
                       )}
                       Hỏi AI Trợ Giảng giải thích
                     </Button>
                   ) : (
-                    <div className="bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 border border-indigo-100 rounded-xl p-5 shadow-sm relative overflow-hidden group">
+                    <div className="bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 dark:from-indigo-950/10 dark:via-background dark:to-purple-950/10 border border-indigo-100 dark:border-indigo-900/40 rounded-xl p-5 shadow-sm relative overflow-hidden group">
                       <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Sparkles className="w-12 h-12 text-indigo-600" />
+                        <Sparkles className="w-12 h-12 text-indigo-600 dark:text-indigo-400" />
                       </div>
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="bg-indigo-600 p-1.5 rounded-lg shadow-indigo-200 shadow-lg">
+                        <div className="bg-indigo-600 p-1.5 rounded-lg shadow-indigo-200 shadow-lg dark:shadow-none">
                           <MessageSquare className="w-4 h-4 text-white" />
                         </div>
-                        <span className="font-bold text-indigo-900 text-sm uppercase tracking-tighter">AI Tutor Conversation</span>
-                        <Badge variant="secondary" className="ml-auto text-[10px] bg-indigo-100 text-indigo-700 border-indigo-200">✨ Interactive</Badge>
+                        <span className="font-bold text-indigo-900 dark:text-indigo-300 text-sm uppercase tracking-tighter">AI Tutor Conversation</span>
+                        <Badge variant="secondary" className="ml-auto text-[10px] bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">✨ Interactive</Badge>
                       </div>
 
                       <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar mb-4">
@@ -447,12 +445,12 @@ export default function ExamResultPage() {
                             <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
                               chat.role === 'user'
                                 ? 'bg-indigo-600 text-white rounded-tr-none'
-                                : 'bg-white border border-indigo-100 text-slate-700 rounded-tl-none'
+                                : 'bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-950 text-slate-700 dark:text-slate-350 rounded-tl-none'
                             }`}>
                               {chat.role === 'user' ? (
                                 <RichTextDisplay content={chat.content} className="text-white" />
                               ) : (
-                                <div className="prose prose-sm prose-indigo max-w-none break-words">
+                                <div className="prose prose-sm prose-indigo dark:prose-invert max-w-none break-words">
                                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                     {chat.content}
                                   </ReactMarkdown>
@@ -463,7 +461,7 @@ export default function ExamResultPage() {
                         ))}
                         {isChatLoading[item.question_id] && (
                            <div className="flex justify-start">
-                             <div className="bg-white border border-indigo-100 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm flex items-center gap-2">
+                             <div className="bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-950 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm flex items-center gap-2">
                                <div className="flex gap-1">
                                  <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
                                  <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -482,7 +480,7 @@ export default function ExamResultPage() {
                           value={inputTexts[item.question_id] || ""}
                           onChange={(e) => setInputTexts(prev => ({ ...prev, [item.question_id]: e.target.value }))}
                           onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(item)}
-                          className="flex-1 bg-white/50 border border-indigo-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-slate-400"
+                          className="flex-1 bg-white/50 dark:bg-background border border-indigo-200 dark:border-indigo-800 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-slate-450 text-foreground"
                         />
                         <Button
                           size="icon"
@@ -501,35 +499,35 @@ export default function ExamResultPage() {
           ))}
         </div>
       ) : (
-        <Card className="w-full max-w-2xl border-yellow-200 bg-yellow-50 shadow-lg">
+        <Card className="w-full max-w-2xl border-yellow-200 dark:border-yellow-900/30 bg-yellow-50 dark:bg-yellow-950/10 shadow-lg text-foreground">
           <CardContent className="pt-8 pb-6 text-center space-y-4">
-            <div className="bg-white/60 p-4 rounded-full inline-block mb-2">
-              <AlertCircle className="h-12 w-12 text-yellow-600" />
+            <div className="bg-white/60 dark:bg-yellow-950/30 p-4 rounded-full inline-block mb-2">
+              <AlertCircle className="h-12 w-12 text-yellow-600 dark:text-yellow-400" />
             </div>
-            <h3 className="text-2xl font-bold text-yellow-800">Chi tiết đáp án không hiển thị</h3>
-            <p className="text-yellow-700 max-w-md mx-auto">
+            <h3 className="text-2xl font-bold text-yellow-800 dark:text-yellow-450">Chi tiết đáp án không hiển thị</h3>
+            <p className="text-yellow-700 dark:text-yellow-350 max-w-md mx-auto">
               Bài thi này được cấu hình ẩn đáp án chi tiết. Điểm số và trạng thái bài làm của bạn đã được ghi nhận thành công.
             </p>
             <div className="py-4">
-              <div className="inline-flex flex-col items-start gap-2 bg-white/50 p-4 rounded-lg text-sm text-yellow-900 border border-yellow-100">
+              <div className="inline-flex flex-col items-start gap-2 bg-white/50 dark:bg-yellow-950/20 p-4 rounded-lg text-sm text-yellow-900 dark:text-yellow-300 border border-yellow-100 dark:border-yellow-900/30">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                   <p><strong>Trạng thái:</strong> {result.status === 'completed' ? 'Đã nộp bài thành công' : result.status}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-blue-600" />
+                  <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <p><strong>Thời gian nộp:</strong> {submittedDate}</p>
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-              <Button variant="outline" className="bg-white hover:bg-yellow-50 border-yellow-200 text-yellow-900" asChild>
+              <Button variant="outline" className="bg-white dark:bg-slate-900 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900/30 text-yellow-900 dark:text-yellow-400" asChild>
                 <Link href="/exams">
                   <RefreshCcw className="mr-2 h-4 w-4" /> Danh sách bài thi
                 </Link>
               </Button>
-              <Button className="bg-yellow-600 hover:bg-yellow-700 text-white border-none shadow-md" asChild>
+              <Button className="bg-yellow-600 hover:bg-yellow-700 text-white dark:text-yellow-100 border-none shadow-md" asChild>
                 <Link href="/dashboard">
                   Về Dashboard <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>

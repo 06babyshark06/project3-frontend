@@ -204,9 +204,9 @@ export default function QuestionBankPage() {
 
   const getDifficultyBadge = (difficulty: string) => {
     const variants: Record<string, { label: string, className: string }> = {
-      easy: { label: "Dễ", className: "bg-green-100 text-green-700 hover:bg-green-100/80 border-green-200" },
-      medium: { label: "Trung bình", className: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100/80 border-yellow-200" },
-      hard: { label: "Khó", className: "bg-red-100 text-red-700 hover:bg-red-100/80 border-red-200" }
+      easy: { label: "Dễ", className: "bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 hover:bg-green-100/80 dark:hover:bg-green-950/40 border-green-200 dark:border-green-900/30" },
+      medium: { label: "Trung bình", className: "bg-yellow-100 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100/80 dark:hover:bg-yellow-950/40 border-yellow-200 dark:border-yellow-900/30" },
+      hard: { label: "Khó", className: "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 hover:bg-red-100/80 dark:hover:bg-red-950/40 border-red-200 dark:border-red-900/30" }
     };
     const conf = variants[difficulty] || variants.easy;
     return <Badge variant="outline" className={conf.className}>{conf.label}</Badge>;
@@ -434,11 +434,11 @@ export default function QuestionBankPage() {
 
           {}
           <div className="flex gap-2">
-            <Button variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold" onClick={() => {
+            <Button variant="outline" className="border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/30 font-semibold" onClick={() => {
 
               router.push('/instructor/questions/generate');
             }}>
-              <Sparkles className="mr-2 h-4 w-4 text-blue-600" />
+              <Sparkles className="mr-2 h-4 w-4 text-blue-600 dark:text-blue-400" />
               <span className="hidden sm:inline">Sinh bằng AI</span>
               <span className="sm:hidden">AI</span>
             </Button>
@@ -632,7 +632,7 @@ export default function QuestionBankPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-normal text-xs bg-blue-50 text-blue-700 border-blue-200 truncate max-w-[150px]">
+                        <Badge variant="outline" className="font-normal text-xs bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900/30 truncate max-w-[150px]">
                           {q.topic_name || "N/A"}
                         </Badge>
                       </div>

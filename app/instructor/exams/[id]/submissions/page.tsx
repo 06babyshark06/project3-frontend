@@ -80,7 +80,7 @@ export default function ExamSubmissionsPage() {
       case "submitted":
         return <Badge className="bg-green-600 hover:bg-green-700">Đã nộp</Badge>;
       case "in_progress":
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-700">Đang thi</Badge>;
+        return <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300">Đang thi</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
