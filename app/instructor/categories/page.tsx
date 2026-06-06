@@ -54,8 +54,8 @@ export default function CategoryManagementPage() {
         }
     };
 
-    const fetchSections = async (topicId: number) => {
-        if (sectionsMap[topicId]) return;
+    const fetchSections = async (topicId: number, force = false) => {
+        if (sectionsMap[topicId] && !force) return;
         try {
             const res = await api.get(`/exam-sections?topic_id=${topicId}`);
             setSectionsMap(prev => ({ ...prev, [topicId]: res.data.data.sections || [] }));
@@ -222,11 +222,9 @@ export default function CategoryManagementPage() {
                 sectionToEdit={sectionToEdit}
                 onSuccess={() => {
                     if (sectionToEdit) {
-                        const tId = sectionToEdit.topic_id;
-                        api.get(`/exam-sections?topic_id=${tId}`)
-                            .then(res => setSectionsMap(prev => ({ ...prev, [tId]: res.data.data.sections || [] })));
+                        fetchSections(sectionToEdit.topic_id, true);
                     } else if (selectedTopicId) {
-                        fetchSections(selectedTopicId);
+                        fetchSections(selectedTopicId, true);
                     }
                 }}
                 defaultTopicId={selectedTopicId}

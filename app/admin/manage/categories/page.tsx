@@ -63,8 +63,8 @@ export default function CategoryManagementPage() {
         }
     };
 
-    const fetchSections = async (topicId: number) => {
-        if (sectionsMap[topicId]) return;
+    const fetchSections = async (topicId: number, force = false) => {
+        if (sectionsMap[topicId] && !force) return;
         try {
             const res = await api.get(`/exam-sections?topic_id=${topicId}`);
             setSectionsMap(prev => ({ ...prev, [topicId]: res.data.data.sections || [] }));
@@ -99,10 +99,7 @@ export default function CategoryManagementPage() {
             if (editingItem?.type === 'topic') {
                 fetchTopics();
             } else {
-
-                const topicId = data.topic_id;
-                const res = await api.get(`/exam-sections?topic_id=${topicId}`);
-                setSectionsMap(prev => ({ ...prev, [topicId]: res.data.data.sections || [] }));
+                fetchSections(data.topic_id, true);
             }
         } catch (error) {
             toast.error("Cập nhật thất bại");
@@ -302,7 +299,7 @@ export default function CategoryManagementPage() {
             <AddSectionDialog
                 open={isAddSectionOpen}
                 onOpenChange={setIsAddSectionOpen}
-                onSuccess={() => { if (selectedTopicId) fetchSections(selectedTopicId); }}
+                onSuccess={() => { if (selectedTopicId) fetchSections(selectedTopicId, true); }}
                 defaultTopicId={selectedTopicId}
             />
         </div>
