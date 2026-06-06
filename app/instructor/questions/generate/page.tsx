@@ -329,28 +329,28 @@ export default function AIGeneratePage() {
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <span>Sinh Câu Hỏi Bằng </span>
           <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">AI Gemini</span>
         </h1>
-        <p className="text-gray-500 mt-2">
+        <p className="text-muted-foreground mt-2">
           Hệ thống sẽ tự động bóc tách tài liệu và tạo ra bộ câu hỏi bám sát nội dung.
           Vui lòng kiểm tra lại cấu trúc câu hỏi trước khi lưu.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {}
+        {/* Cấu hình bên trái */}
         <div className="col-span-1 space-y-6">
-          <div className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+          <div className="p-6 bg-card text-card-foreground border border-border rounded-xl shadow-sm">
             <h3 className="text-lg font-semibold mb-4">Cấu hình</h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tài liệu tham khảo (PDF, DOCX, PPTX)</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Tài liệu tham khảo (PDF, DOCX, PPTX)</label>
                 <div
                   className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors ${
-                    isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-500"
+                    isDragging ? "border-blue-500 bg-blue-50/10 dark:bg-blue-950/20" : "border-border hover:border-blue-500"
                   }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -358,27 +358,27 @@ export default function AIGeneratePage() {
                 >
                   <div className="space-y-1 text-center">
                     <Upload className={`mx-auto h-12 w-12 ${isDragging ? "text-blue-500" : "text-gray-400"}`} />
-                    <div className="flex text-sm text-gray-600">
-                      <label className="relative cursor-pointer bg-transparent rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                    <div className="flex text-sm text-muted-foreground">
+                      <label className="relative cursor-pointer bg-transparent rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
                         <span>Tải file lên</span>
                         <input type="file" className="sr-only" onChange={handleFileChange} accept=".pdf,.docx,.txt,.pptx" />
                       </label>
                       <p className="pl-1">hoặc kéo thả vào đây</p>
                     </div>
-                    {file && <p className="text-sm text-green-600 font-medium truncate">{file.name}</p>}
+                    {file && <p className="text-sm text-green-600 dark:text-green-400 font-medium truncate">{file.name}</p>}
                   </div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700">Môn học (Topic)</label>
-                  <button type="button" onClick={() => setIsAddTopicDialogOpen(true)} className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1">
+                  <label className="block text-sm font-medium text-foreground">Môn học (Topic)</label>
+                  <button type="button" onClick={() => setIsAddTopicDialogOpen(true)} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs flex items-center gap-1">
                     <Plus className="w-3 h-3"/> Thêm mới
                   </button>
                 </div>
                 <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-                  <SelectTrigger className="mt-1 w-full bg-white">
+                  <SelectTrigger className="mt-1 w-full bg-background">
                     <SelectValue placeholder="-- Chọn Môn học --" />
                   </SelectTrigger>
                   <SelectContent>
@@ -389,13 +389,13 @@ export default function AIGeneratePage() {
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700">Chuyên đề (Section)</label>
-                  <button type="button" onClick={() => setIsAddSectionDialogOpen(true)} className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1" disabled={!selectedTopic}>
+                  <label className="block text-sm font-medium text-foreground">Chuyên đề (Section)</label>
+                  <button type="button" onClick={() => setIsAddSectionDialogOpen(true)} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs flex items-center gap-1" disabled={!selectedTopic}>
                     <Plus className="w-3 h-3"/> Thêm mới
                   </button>
                 </div>
                 <Select value={selectedSection} onValueChange={setSelectedSection} disabled={!selectedTopic}>
-                  <SelectTrigger className="mt-1 w-full bg-white">
+                  <SelectTrigger className="mt-1 w-full bg-background">
                     <SelectValue placeholder="-- Chọn Chuyên đề --" />
                   </SelectTrigger>
                   <SelectContent>
@@ -405,9 +405,9 @@ export default function AIGeneratePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Độ khó</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Độ khó</label>
                 <Select value={difficulty} onValueChange={setDifficulty}>
-                  <SelectTrigger className="mt-1 w-full bg-white">
+                  <SelectTrigger className="mt-1 w-full bg-background">
                     <SelectValue placeholder="Chọn độ khó" />
                   </SelectTrigger>
                   <SelectContent>
@@ -419,9 +419,9 @@ export default function AIGeneratePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Loại câu hỏi</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Loại câu hỏi</label>
                 <Select value={questionType} onValueChange={setQuestionType}>
-                  <SelectTrigger className="mt-1 w-full bg-white">
+                  <SelectTrigger className="mt-1 w-full bg-background">
                     <SelectValue placeholder="Chọn loại câu" />
                   </SelectTrigger>
                   <SelectContent>
@@ -433,9 +433,9 @@ export default function AIGeneratePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ngôn ngữ câu hỏi</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Ngôn ngữ câu hỏi</label>
                 <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger className="mt-1 w-full bg-white">
+                  <SelectTrigger className="mt-1 w-full bg-background">
                     <SelectValue placeholder="Chọn ngôn ngữ" />
                   </SelectTrigger>
                   <SelectContent>
@@ -447,19 +447,19 @@ export default function AIGeneratePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Số lượng sinh ra</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Số lượng sinh ra</label>
                   <Input
                     type="number" min="1" max="50"
-                    className="mt-1 w-full bg-white"
+                    className="mt-1 w-full bg-background"
                     placeholder="VD: 10"
                     value={count} onChange={(e) => setCount(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Số đáp án / câu</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Số đáp án / câu</label>
                   <Input
                     type="number" min="2" max="6"
-                    className="mt-1 w-full bg-white"
+                    className="mt-1 w-full bg-background"
                     placeholder="VD: 4"
                     value={maxOptions} onChange={(e) => setMaxOptions(e.target.value)}
                   />
@@ -467,10 +467,10 @@ export default function AIGeneratePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Trọng tâm / Yêu cầu thêm (Tùy chọn)</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Trọng tâm / Yêu cầu thêm (Tùy chọn)</label>
                 <textarea
                   placeholder="VD: Chỉ hỏi về công thức. Tập trung vào chương 2. Đáp án nhiễu phải rất khó nhận biết."
-                  className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white min-h-[80px]"
+                  className="mt-1 block w-full p-3 border border-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-background text-foreground min-h-[80px]"
                   value={focusTopic} onChange={(e) => setFocusTopic(e.target.value)}
                 />
               </div>
@@ -485,7 +485,7 @@ export default function AIGeneratePage() {
               </button>
 
               {error && (
-                <div className="flex items-center p-3 text-red-700 bg-red-50 rounded-lg">
+                <div className="flex items-center p-3 text-red-700 bg-red-50 dark:bg-red-950/20 dark:text-red-400 rounded-lg">
                   <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
                   <span className="text-sm">{error}</span>
                 </div>
@@ -494,27 +494,27 @@ export default function AIGeneratePage() {
           </div>
         </div>
 
-        {}
+        {/* Kết quả bên phải */}
         <div className="col-span-1 md:col-span-2 space-y-6">
           {questions.length === 0 && !loading && (
-            <div className="p-12 bg-white border border-gray-200 border-dashed rounded-xl flex flex-col items-center justify-center text-gray-400">
-              <div className="bg-gray-50 p-4 rounded-full mb-4">
-                <FileText className="w-8 h-8 text-gray-300" />
+            <div className="p-12 bg-card border border-border border-dashed rounded-xl flex flex-col items-center justify-center text-muted-foreground">
+              <div className="bg-muted p-4 rounded-full mb-4">
+                <FileText className="w-8 h-8 text-muted-foreground/60" />
               </div>
               <p>Kết quả từ AI sẽ hiển thị ở đây để bạn kiểm duyệt.</p>
             </div>
           )}
 
           {loading && (
-             <div className="p-12 bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center space-y-4">
+             <div className="p-12 bg-card border border-border rounded-xl flex flex-col items-center justify-center space-y-4">
                <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-               <p className="text-gray-500 font-medium">Model Gemini đang đọc và phân tích tài liệu...</p>
+               <p className="text-muted-foreground font-medium">Model Gemini đang đọc và phân tích tài liệu...</p>
              </div>
           )}
 
           {questions.length > 0 && (
-            <div className="bg-white border text-gray-900 border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+            <div className="bg-card border text-foreground border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
+              <div className="px-6 py-4 border-b border-border bg-muted flex justify-between items-center text-foreground">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
                   Kết Quả Kiểm Duyệt ({questions.length} câu)
@@ -531,20 +531,20 @@ export default function AIGeneratePage() {
 
               <div className="p-6 space-y-8 max-h-[70vh] overflow-y-auto">
                 {questions.map((q, qIndex) => (
-                  <div key={qIndex} className="p-4 border border-blue-100 rounded-lg bg-blue-50/50 space-y-4 relative group">
+                  <div key={qIndex} className="p-4 border border-blue-100 dark:border-blue-900/30 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 space-y-4 relative group">
                     <div className="flex items-start gap-4">
-                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-sm">
                         {qIndex + 1}
                       </span>
                       <div className="flex-1 space-y-2">
                         <textarea
-                          className="w-full text-base font-semibold bg-transparent border-0 border-b border-transparent hover:border-blue-300 focus:border-blue-500 focus:ring-0 p-0 resize-none overflow-hidden"
+                          className="w-full text-base font-semibold bg-transparent border-0 border-b border-transparent hover:border-blue-300 focus:border-blue-500 focus:ring-0 p-0 resize-none overflow-hidden text-foreground"
                           value={q.question_text}
                           onChange={(e) => handleQuestionChange(qIndex, 'question_text', e.target.value)}
                           rows={2}
                         />
 
-                        {}
+                        {/* Attachment Preview */}
                         <AttachmentPreview
                           url={q.attachment_url || ""}
                           onRemove={() => handleQuestionChange(qIndex, 'attachment_url', '')}
@@ -552,16 +552,16 @@ export default function AIGeneratePage() {
 
                         <div className="flex items-center gap-3 text-xs mt-2">
                           <span className={`px-2 py-0.5 rounded-full font-medium ${
-                            q.difficulty === 'EASY' || q.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                            q.difficulty === 'MEDIUM' || q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-red-100 text-red-700'
+                            q.difficulty === 'EASY' || q.difficulty === 'easy' ? 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400' :
+                            q.difficulty === 'MEDIUM' || q.difficulty === 'medium' ? 'bg-yellow-100 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400' :
+                            'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400'
                           }`}>
                             {q.difficulty.toUpperCase()}
                           </span>
 
-                          <label className={`flex items-center gap-1 cursor-pointer text-gray-500 hover:text-blue-600 transition-colors ${uploadingImageIndex === qIndex ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <label className={`flex items-center gap-1 cursor-pointer text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${uploadingImageIndex === qIndex ? 'opacity-50 pointer-events-none' : ''}`}>
                             {uploadingImageIndex === qIndex ? (
-                              < Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             ) : (
                               <ImageIcon className="w-3.5 h-3.5" />
                             )}
@@ -578,21 +578,22 @@ export default function AIGeneratePage() {
                       </div>
                     </div>
 
+                    {/* Choices Grid */}
                     <div className="ml-12 grid grid-cols-1 md:grid-cols-2 gap-3">
                       {q.choices?.map((opt, optIndex) => (
                         <div
                           key={optIndex}
                           className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
                             opt.is_correct
-                              ? 'border-green-500 bg-green-50'
-                              : 'border-gray-200 bg-white hover:border-gray-300'
+                              ? 'border-green-500 bg-green-50 dark:bg-green-950/20 text-foreground'
+                              : 'border-border bg-card dark:bg-slate-900/50 hover:border-gray-300 dark:hover:border-gray-700 text-foreground'
                           }`}
                           onClick={() => toggleCorrectAnswer(qIndex, optIndex)}
                         >
                           <div className={`w-4 h-4 flex-shrink-0 mr-3 flex items-center justify-center border ${
                             questionType === "Một đáp án đúng" ? "rounded-full" : "rounded-sm"
                           } ${
-                            opt.is_correct ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 bg-white'
+                            opt.is_correct ? 'border-green-500 bg-green-500 text-white' : 'border-border bg-card'
                           }`}>
                             {opt.is_correct && (
                               questionType === "Một đáp án đúng" ?
@@ -602,7 +603,7 @@ export default function AIGeneratePage() {
                           </div>
                           <input
                             type="text"
-                            className="w-full text-sm bg-transparent border-none focus:ring-0 p-0"
+                            className="w-full text-sm bg-transparent border-none focus:ring-0 p-0 text-foreground"
                             value={opt.content}
                             onChange={(e) => handleOptionChange(qIndex, optIndex, e.target.value)}
                             onClick={(e) => e.stopPropagation()}
@@ -611,10 +612,11 @@ export default function AIGeneratePage() {
                       ))}
                     </div>
 
-                    <div className="ml-12 p-3 bg-yellow-50 rounded-lg text-sm text-yellow-800 border border-yellow-100 flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    {/* Explanation */}
+                    <div className="ml-12 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg text-sm text-yellow-800 dark:text-yellow-300 border border-yellow-100 dark:border-yellow-900/30 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
                       <textarea
-                          className="w-full bg-transparent border-none focus:ring-0 p-0 resize-none text-yellow-800"
+                          className="w-full bg-transparent border-none focus:ring-0 p-0 resize-none text-yellow-800 dark:text-yellow-300"
                           value={q.explanation || "Không có giải thích"}
                           onChange={(e) => handleQuestionChange(qIndex, 'explanation', e.target.value)}
                           rows={2}
