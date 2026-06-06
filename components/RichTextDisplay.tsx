@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+// @ts-ignore
 import renderMathInElement from "katex/dist/contrib/auto-render.js";
 import "katex/dist/katex.min.css";
 

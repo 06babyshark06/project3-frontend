@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
-  Loader2, Eye, Trash2, MoreHorizontal, FileQuestion, Edit, Clock, ArrowLeft, PlusCircle
+  Loader2, Eye, Trash2, MoreHorizontal, FileQuestion, Edit, Clock, ArrowLeft
 } from "lucide-react";
 
 import {
@@ -81,12 +81,6 @@ export default function ManageAllExamsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Quản Lý Tất Cả Bài Thi</h1>
           <p className="text-sm text-muted-foreground">Kiểm soát ngân hàng đề thi trên hệ thống.</p>
         </div>
-
-        <Button asChild>
-          <Link href="/admin/exams/create">
-            <PlusCircle className="mr-2 h-4 w-4" /> Tạo bài thi mới
-          </Link>
-        </Button>
       </div>
 
       <Card>
@@ -149,7 +143,7 @@ export default function ManageAllExamsPage() {
                                   </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/admin/exams/edit/${exam.id}`} className="cursor-pointer">
+                                  <Link href={`/instructor/exams/edit/${exam.id}`} className="cursor-pointer">
                                     <Edit className="mr-2 h-4 w-4" /> Chỉnh sửa
                                   </Link>
                                 </DropdownMenuItem>
