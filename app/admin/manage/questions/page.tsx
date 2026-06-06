@@ -273,7 +273,7 @@ export default function AdminQuestionBankPage() {
 
         setIsBulkDeleting(true);
         try {
-            await Promise.all(selectedIds.map(id => api.delete(`/questions/${id}`)));
+            await api.delete("/questions", { data: { ids: selectedIds } });
 
             toast.success(`Đã xóa thành công ${selectedIds.length} câu hỏi!`);
             setSelectedIds([]);
