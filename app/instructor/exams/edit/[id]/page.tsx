@@ -208,8 +208,13 @@ export default function EditExamPage() {
             toast.success("Đã lưu thay đổi!");
             const res = await api.get(`/exams/${examId}`);
             setExam(res.data.data);
-        } catch (error) {
-            toast.error("Lưu thất bại");
+        } catch (error: any) {
+            const errMsg = error.response?.data?.error;
+            toast.error(
+                typeof errMsg === 'string'
+                    ? errMsg.replace(/^rpc error: code = \w+ desc = /, "")
+                    : (error.response?.data?.error?.message || "Lưu thất bại")
+            );
         } finally {
             setIsSaving(false);
         }
@@ -242,8 +247,13 @@ export default function EditExamPage() {
                 title, topic_id: Number(topicId), settings,
                 questions: newQuestions.map(q => ({ question_id: q.id, points: q.points }))
             });
-        } catch (e) {
-            toast.error("Lỗi cập nhật câu hỏi");
+        } catch (e: any) {
+            const errMsg = e.response?.data?.error;
+            toast.error(
+                typeof errMsg === 'string'
+                    ? errMsg.replace(/^rpc error: code = \w+ desc = /, "")
+                    : (e.response?.data?.error?.message || "Lỗi cập nhật câu hỏi")
+            );
         }
     };
 
@@ -279,8 +289,13 @@ export default function EditExamPage() {
                 questions: assignments
             });
             toast.success("Đã cập nhật thứ tự câu hỏi");
-        } catch (error) {
-            toast.error("Lỗi khi lưu thứ tự");
+        } catch (error: any) {
+            const errMsg = error.response?.data?.error;
+            toast.error(
+                typeof errMsg === 'string'
+                    ? errMsg.replace(/^rpc error: code = \w+ desc = /, "")
+                    : (error.response?.data?.error?.message || "Lỗi khi lưu thứ tự")
+            );
         }
     };
 
@@ -322,8 +337,13 @@ export default function EditExamPage() {
             setExam(updatedExam.data.data);
             setIsRandomDialogOpen(false);
             toast.success(config.replace ? `Đã làm mới đề thi với ${selected.length} câu hỏi` : `Đã thêm ${selected.length} câu hỏi vào đề`);
-        } catch (e) {
-            toast.error("Lỗi khi sinh câu hỏi");
+        } catch (e: any) {
+            const errMsg = e.response?.data?.error;
+            toast.error(
+                typeof errMsg === 'string'
+                    ? errMsg.replace(/^rpc error: code = \w+ desc = /, "")
+                    : (e.response?.data?.error?.message || "Lỗi khi sinh câu hỏi")
+            );
         }
     };
 

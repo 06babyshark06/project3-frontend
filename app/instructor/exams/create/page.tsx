@@ -194,7 +194,12 @@ export default function CreateExamPage() {
             toast.success("Tạo bài thi thành công!");
             router.push("/instructor/exams");
         } catch (error: any) {
-            toast.error(error.response?.data?.error?.message || "Lỗi khi tạo bài thi");
+            const errMsg = error.response?.data?.error;
+            toast.error(
+                typeof errMsg === 'string'
+                    ? errMsg.replace(/^rpc error: code = \w+ desc = /, "")
+                    : (error.response?.data?.error?.message || "Lỗi khi tạo bài thi")
+            );
         } finally {
             setIsSubmitting(false);
         }

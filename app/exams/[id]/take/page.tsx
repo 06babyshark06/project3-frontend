@@ -51,6 +51,7 @@ interface ExamSettings {
   start_time?: string;
   end_time?: string;
   requires_approval?: boolean;
+  is_dynamic?: boolean;
 }
 interface ExamData {
   id: number;
@@ -535,7 +536,24 @@ export default function ExamTakingPage() {
     );
   }
 
-  if (!exam.questions || exam.questions.length === 0) {
+  const isDynamic = !!exam.settings?.is_dynamic;
+
+  // Show loading state while dynamic exam is initializing/starting
+  if (isPasswordCorrect && isDynamic && submissionId === null) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background p-6 text-center space-y-4 flex-col">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-lg font-medium text-muted-foreground">Đang chuẩn bị đề thi...</p>
+      </div>
+    );
+  }
+
+  const hasNoQuestions = !exam.questions || exam.questions.length === 0;
+  const shouldShowEmptyWarning = hasNoQuestions && (
+    !isDynamic ? (isPasswordCorrect || !exam.settings?.password) : (submissionId !== null)
+  );
+
+  if (shouldShowEmptyWarning) {
     return (
       <div className="flex flex-col h-screen items-center justify-center bg-background p-6 text-center space-y-6">
         <div className="p-6 rounded-full bg-red-100 text-red-600"><AlertTriangle className="h-16 w-16" /></div>
@@ -553,11 +571,11 @@ export default function ExamTakingPage() {
   const currentQuestion = exam.questions[currentQuestionIndex];
   const answeredCount = exam.questions.filter(q => {
      if (q.question_type === "short_answer" || q.question_type === "essay") {
-         return !!userTextAnswers[q.id] && userTextAnswers[q.id].trim() !== "";
+          return !!userTextAnswers[q.id] && userTextAnswers[q.id].trim() !== "";
      }
      return userAnswers[q.id]?.length > 0;
   }).length;
-  const progress = (answeredCount / exam.questions.length) * 100;
+  const progress = exam.questions.length > 0 ? (answeredCount / exam.questions.length) * 100 : 0;
 
   return (
     <>

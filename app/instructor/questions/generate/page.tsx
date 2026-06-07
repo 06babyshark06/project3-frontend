@@ -271,7 +271,7 @@ export default function AIGeneratePage() {
     setError("");
 
     if (!selectedSection) {
-      setError("Vui lòng chọn Môn học và Chuyên đề để lưu câu hỏi.");
+      setError("Vui lòng chọn Chủ đề và Chương để lưu câu hỏi.");
       setSaving(false);
       return;
     }
@@ -372,14 +372,14 @@ export default function AIGeneratePage() {
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-foreground">Môn học (Topic)</label>
+                  <label className="block text-sm font-medium text-foreground">Chủ đề (Topic)</label>
                   <button type="button" onClick={() => setIsAddTopicDialogOpen(true)} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs flex items-center gap-1">
                     <Plus className="w-3 h-3"/> Thêm mới
                   </button>
                 </div>
                 <Select value={selectedTopic} onValueChange={setSelectedTopic}>
                   <SelectTrigger className="mt-1 w-full bg-background">
-                    <SelectValue placeholder="-- Chọn Môn học --" />
+                    <SelectValue placeholder="-- Chọn Chủ đề --" />
                   </SelectTrigger>
                   <SelectContent>
                     {topics.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}
@@ -389,14 +389,14 @@ export default function AIGeneratePage() {
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-foreground">Chuyên đề (Section)</label>
+                  <label className="block text-sm font-medium text-foreground">Chương (Section)</label>
                   <button type="button" onClick={() => setIsAddSectionDialogOpen(true)} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs flex items-center gap-1" disabled={!selectedTopic}>
                     <Plus className="w-3 h-3"/> Thêm mới
                   </button>
                 </div>
                 <Select value={selectedSection} onValueChange={setSelectedSection} disabled={!selectedTopic}>
                   <SelectTrigger className="mt-1 w-full bg-background">
-                    <SelectValue placeholder="-- Chọn Chuyên đề --" />
+                    <SelectValue placeholder="-- Chọn Chương --" />
                   </SelectTrigger>
                   <SelectContent>
                     {sections.map(s => <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>)}
