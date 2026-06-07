@@ -76,31 +76,34 @@ export function AddLessonDialog({ sectionId, onSuccess, lessonToEdit, open, onOp
       let contentUrl = lessonToEdit?.content_url || "";
 
       if (lessonType === "video") {
+        const isChangingTypeToVideo = lessonToEdit && lessonToEdit.lesson_type !== "video";
         if (!file) {
-          toast.error("Vui lòng chọn một file video.");
-          setIsLoading(false);
-          return;
-        }
+          if (!lessonToEdit || isChangingTypeToVideo) {
+            toast.error("Vui lòng chọn một file video.");
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          const uploadUrlResponse = await api.post("/lessons/upload-url", {
+            file_name: file.name,
+            content_type: file.type,
+            section_id: sectionId,
+          });
 
-        const uploadUrlResponse = await api.post("/lessons/upload-url", {
-          file_name: file.name,
-          content_type: file.type,
-          section_id: sectionId,
-        });
+          const { upload_url, final_url } = uploadUrlResponse.data.data;
+          contentUrl = final_url;
 
-        const { upload_url, final_url } = uploadUrlResponse.data.data;
-        contentUrl = final_url;
+          const uploadResponse = await fetch(upload_url, {
+            method: "PUT",
+            body: file,
+            headers: {
+              "Content-Type": file.type,
+            },
+          });
 
-        const uploadResponse = await fetch(upload_url, {
-          method: "PUT",
-          body: file,
-          headers: {
-            "Content-Type": file.type,
-          },
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error("Tải file lên R2 thất bại.");
+          if (!uploadResponse.ok) {
+            throw new Error("Tải file lên R2 thất bại.");
+          }
         }
       }
 
@@ -152,7 +155,9 @@ export function AddLessonDialog({ sectionId, onSuccess, lessonToEdit, open, onOp
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle className="text-2xl">Thêm Bài Học Mới</DialogTitle>
+            <DialogTitle className="text-2xl">
+              {lessonToEdit ? "Chỉnh Sửa Bài Học" : "Thêm Bài Học Mới"}
+            </DialogTitle>
             <DialogDescription>
               Điền thông tin cho bài học của bạn.
             </DialogDescription>
@@ -196,12 +201,17 @@ export function AddLessonDialog({ sectionId, onSuccess, lessonToEdit, open, onOp
             {lessonType === "video" && (
               <div className="space-y-2">
                 <Label htmlFor="file" className="text-lg font-medium">File video</Label>
+                {lessonToEdit && lessonToEdit.lesson_type === "video" && lessonToEdit.content_url && (
+                  <p className="text-sm text-muted-foreground truncate mb-1">
+                    Video hiện tại: <a href={lessonToEdit.content_url} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">{lessonToEdit.content_url.split('/').pop()}</a>
+                  </p>
+                )}
                 <Input
                   id="file"
                   type="file"
                   accept="video/*"
                   onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-                  required
+                  required={!lessonToEdit || lessonToEdit.lesson_type !== "video"}
                 />
               </div>
             )}
