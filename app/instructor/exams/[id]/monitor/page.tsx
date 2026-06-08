@@ -30,10 +30,12 @@ interface Violation {
   user_id: number;
   violation_type: string;
   violation_time: string;
+  user_full_name?: string;
 }
 
 interface StudentStatus {
   user_id: number;
+  user_full_name?: string;
   violation_count: number;
   last_violation: string | null;
   status: "safe" | "warning" | "danger";
@@ -72,6 +74,7 @@ export default function ExamMonitorPage() {
       if (!map[v.user_id]) {
         map[v.user_id] = {
           user_id: v.user_id,
+          user_full_name: v.user_full_name || "",
           violation_count: 0,
           last_violation: null,
           status: "safe",
@@ -80,6 +83,9 @@ export default function ExamMonitorPage() {
       }
 
       const student = map[v.user_id];
+      if (!student.user_full_name && v.user_full_name) {
+        student.user_full_name = v.user_full_name;
+      }
       student.violation_count++;
       student.details.push(v);
 
@@ -119,6 +125,7 @@ export default function ExamMonitorPage() {
             user_id: data.user_id,
             violation_type: data.violation_type,
             violation_time: data.timestamp,
+            user_full_name: data.user_full_name,
           };
 
           setViolations((prev) => {
@@ -128,7 +135,8 @@ export default function ExamMonitorPage() {
           });
           setLastUpdated(new Date());
 
-          toast.error(`⚠️ Thí sinh #${data.user_id} vừa vi phạm: ${data.violation_type}`, {
+          const name = data.user_full_name || `Thí sinh #${data.user_id}`;
+          toast.error(`⚠️ ${name} vừa vi phạm: ${translateViolation(data.violation_type)}`, {
             position: 'top-right',
             duration: 5000,
           });
@@ -203,7 +211,7 @@ export default function ExamMonitorPage() {
             <Table>
               <TableHeader className="bg-background sticky top-0 z-10">
                 <TableRow>
-                  <TableHead>User ID</TableHead>
+                  <TableHead>Thí sinh</TableHead>
                   <TableHead className="text-center">Số lần vi phạm</TableHead>
                   <TableHead>Vi phạm gần nhất</TableHead>
                   <TableHead>Mức độ</TableHead>
@@ -228,7 +236,10 @@ export default function ExamMonitorPage() {
                     .sort((a, b) => b.violation_count - a.violation_count)
                     .map((s) => (
                     <TableRow key={s.user_id} className={s.status === 'danger' ? "bg-red-50/50" : ""}>
-                      <TableCell className="font-medium">#{s.user_id}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="font-semibold">{s.user_full_name || "Chưa rõ tên"}</div>
+                        <div className="text-xs text-muted-foreground">ID: #{s.user_id}</div>
+                      </TableCell>
                       <TableCell className="text-center font-bold text-lg">
                         {s.violation_count}
                       </TableCell>
@@ -273,7 +284,9 @@ export default function ExamMonitorPage() {
                         {format(new Date(v.violation_time), "HH:mm:ss")}
                       </span>
                       <div>
-                        <span className="text-yellow-500 font-bold">User #{v.user_id}</span>
+                        <span className="text-yellow-500 font-bold">
+                          {v.user_full_name ? `${v.user_full_name} (#${v.user_id})` : `User #${v.user_id}`}
+                        </span>
                         <span className="text-zinc-300"> đã </span>
                         <span className="text-red-400 font-semibold">
                           {translateViolation(v.violation_type)}
@@ -294,7 +307,7 @@ export default function ExamMonitorPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Info className="h-5 w-5 text-blue-500" />
-              Chi tiết vi phạm - User #{selectedStudentId}
+              Chi tiết vi phạm - {selectedStudentId && studentMap[selectedStudentId]?.user_full_name ? `${studentMap[selectedStudentId].user_full_name} (#${selectedStudentId})` : `User #${selectedStudentId}`}
             </DialogTitle>
           </DialogHeader>
 
