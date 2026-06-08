@@ -5,11 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
-  ResponsiveContainer, Cell, PieChart, Pie, Legend
+  ResponsiveContainer, Cell, PieChart, Pie, Legend,
+  ScatterChart, Scatter, ZAxis, Brush
 } from "recharts";
 import {
   Loader2, ArrowLeft, Users, Trophy,
-  TrendingUp, TrendingDown, FileSpreadsheet, RefreshCcw, AlertCircle
+  TrendingUp, TrendingDown, FileSpreadsheet, RefreshCcw, AlertCircle,
+  BarChart3, CircleDot
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,15 +29,28 @@ interface ExamStats {
   score_distribution: Record<string, number>;
 }
 
+interface SubmissionSummary {
+  submission_id: number;
+  user_id: number;
+  student_name: string;
+  score: number;
+  submitted_at: string;
+  status: string;
+}
+
 export default function ExamStatsPage() {
   const params = useParams();
   const router = useRouter();
   const examId = params.id as string;
 
   const [stats, setStats] = useState<ExamStats | null>(null);
+  const [submissions, setSubmissions] = useState<SubmissionSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [chartType, setChartType] = useState<"bar" | "scatter">("bar");
+  const [xDomain, setXDomain] = useState<[number, number]>([0, 10]);
+  const [brushKey, setBrushKey] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
@@ -44,8 +59,12 @@ export default function ExamStatsPage() {
   const fetchStats = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get(`/exams/${examId}/stats`);
-      setStats(response.data.data);
+      const [statsRes, subsRes] = await Promise.all([
+        api.get(`/exams/${examId}/stats`),
+        api.get(`/exams/${examId}/submissions`, { params: { limit: 1000 } })
+      ]);
+      setStats(statsRes.data.data);
+      setSubmissions(subsRes.data.data.submissions || []);
     } catch (error) {
       console.error(error);
       toast.error("Không thể tải dữ liệu thống kê.");
@@ -113,10 +132,75 @@ export default function ExamStatsPage() {
     "0-1", "1-2", "2-3", "3-4", "4-5",
     "5-6", "6-7", "7-8", "8-9", "9-10"
   ];
+  const rangeDisplayMap: Record<string, string> = {
+    "0-1": "[0 - 1)",
+    "1-2": "[1 - 2)",
+    "2-3": "[2 - 3)",
+    "3-4": "[3 - 4)",
+    "4-5": "[4 - 5)",
+    "5-6": "[5 - 6)",
+    "6-7": "[6 - 7)",
+    "7-8": "[7 - 8)",
+    "8-9": "[8 - 9)",
+    "9-10": "[9 - 10]"
+  };
   const chartData = sortOrder.map(range => ({
-    range,
+    range: rangeDisplayMap[range] || range,
+    rangeKey: range,
     count: stats.score_distribution?.[range] || 0
   }));
+
+  // Process data for the Scatter chart (Stacked Dot Plot)
+  const validSubmissions = (submissions || [])
+    .filter(sub => sub.status === "submitted" || sub.status === "completed")
+    .map(sub => ({
+      ...sub,
+      score: typeof sub.score === "number" ? sub.score : 0
+    }))
+    .sort((a, b) => a.score - b.score);
+
+  const scoreCounts: Record<number, number> = {};
+  const scatterData = validSubmissions.map(sub => {
+    const scoreVal = Math.round(sub.score * 100) / 100;
+    if (scoreCounts[scoreVal] === undefined) {
+      scoreCounts[scoreVal] = 0;
+    }
+    scoreCounts[scoreVal] += 1;
+    return {
+      x: scoreVal,
+      y: scoreCounts[scoreVal],
+      student_name: sub.student_name || `Thí sinh #${sub.user_id}`,
+      user_id: sub.user_id,
+      submission_id: sub.submission_id,
+      score: sub.score
+    };
+  });
+
+  // Calculate start/end index for brush sync
+  let brushStartIndex = scatterData.length > 0 ? scatterData.findIndex(d => d.x >= xDomain[0]) : 0;
+  if (brushStartIndex === -1) brushStartIndex = 0;
+
+  const lastIndex = scatterData.length > 0 ? scatterData.length - 1 : 0;
+  let brushEndIndex = lastIndex;
+  if (scatterData.length > 0) {
+    for (let i = lastIndex; i >= 0; i--) {
+      if (scatterData[i].x <= xDomain[1]) {
+        brushEndIndex = i;
+        break;
+      }
+    }
+  }
+  if (brushEndIndex === -1) brushEndIndex = lastIndex;
+  if (brushStartIndex > brushEndIndex) {
+    const temp = brushStartIndex;
+    brushStartIndex = brushEndIndex;
+    brushEndIndex = temp;
+  }
+
+  const handlePresetClick = (min: number, max: number) => {
+    setXDomain([min, max]);
+    setBrushKey(prev => prev + 1);
+  };
 
   const passCount = Object.entries(stats.score_distribution || {})
     .filter(([range]) => {
@@ -223,38 +307,206 @@ export default function ExamStatsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {}
           <Card className="lg:col-span-2 shadow-sm">
-            <CardHeader>
-              <CardTitle>Phổ điểm chi tiết</CardTitle>
-              <CardDescription>Số lượng thí sinh theo các khoảng điểm</CardDescription>
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+              <div>
+                <CardTitle>Phổ điểm chi tiết</CardTitle>
+                <CardDescription>
+                  Số lượng thí sinh theo các khoảng điểm hoặc tọa độ điểm chi tiết.
+                  <span className="block text-xs mt-1 text-muted-foreground italic font-normal">
+                    * Ký hiệu: [a - b) nghĩa là điểm từ a đến dưới b (không bao gồm b); [9 - 10] nghĩa là từ 9 đến 10 (bao gồm cả 10).
+                  </span>
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-1.5 bg-muted p-1 rounded-lg self-start sm:self-center border border-border">
+                <Button
+                  variant={chartType === "bar" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 text-xs px-3 shadow-none"
+                  onClick={() => setChartType("bar")}
+                >
+                  <BarChart3 className="h-3.5 w-3.5 mr-1" />
+                  Biểu đồ cột
+                </Button>
+                <Button
+                  variant={chartType === "scatter" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 text-xs px-3 shadow-none"
+                  onClick={() => setChartType("scatter")}
+                >
+                  <CircleDot className="h-3.5 w-3.5 mr-1" />
+                  Tọa độ điểm
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis
-                    dataKey="range"
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fontSize: 12, fill: "#6b7280" }}
-                    dy={10}
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fontSize: 12, fill: "#6b7280" }}
-                    allowDecimals={false}
-                  />
-                  <RechartsTooltip
-                    cursor={{ fill: 'transparent' }}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="count" name="Số lượng" radius={[6, 6, 0, 0]} barSize={50}>
-                    {chartData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+            <CardContent className={chartType === "scatter" ? "h-[420px] flex flex-col justify-between" : "h-[350px]"}>
+              {chartType === "bar" ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="range"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 12, fill: "#6b7280" }}
+                      dy={10}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 12, fill: "#6b7280" }}
+                      allowDecimals={false}
+                    />
+                    <RechartsTooltip
+                      cursor={{ fill: 'transparent' }}
+                      content={({ active, payload }: any) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          let detailText = "";
+                          if (data.rangeKey === "9-10") {
+                            detailText = "Điểm từ 9.0 đến 10.0 (bao gồm cả 10.0)";
+                          } else {
+                            const [min, max] = data.rangeKey.split("-");
+                            detailText = `Điểm từ ${min}.0 đến dưới ${max}.0`;
+                          }
+                          return (
+                            <div className="bg-background p-3 rounded-lg border shadow-md">
+                              <p className="font-bold text-sm">{data.range}</p>
+                              <p className="text-sm text-muted-foreground">{detailText}</p>
+                              <p className="text-sm font-semibold text-primary mt-1">Số thí sinh: {data.count}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="count" name="Số lượng" radius={[6, 6, 0, 0]} barSize={50}>
+                      {chartData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col h-full justify-between">
+                  {/* Preset zoom buttons */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-4 bg-muted/40 p-2 rounded-lg border border-border">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-muted-foreground font-semibold px-1">Khoảng điểm nhanh:</span>
+                      <Button
+                        variant={xDomain[0] === 0 && xDomain[1] === 10 ? "secondary" : "outline"}
+                        size="sm"
+                        className="h-7 text-xs px-2.5 shadow-none"
+                        onClick={() => handlePresetClick(0, 10)}
+                      >
+                        Tất cả (0-10)
+                      </Button>
+                      <Button
+                        variant={xDomain[0] === 0 && xDomain[1] === 5 ? "secondary" : "outline"}
+                        size="sm"
+                        className="h-7 text-xs px-2.5 shadow-none"
+                        onClick={() => handlePresetClick(0, 5)}
+                      >
+                        Dưới trung bình (0-5)
+                      </Button>
+                      <Button
+                        variant={xDomain[0] === 5 && xDomain[1] === 8 ? "secondary" : "outline"}
+                        size="sm"
+                        className="h-7 text-xs px-2.5 shadow-none"
+                        onClick={() => handlePresetClick(5, 8)}
+                      >
+                        Trung bình - Khá (5-8)
+                      </Button>
+                      <Button
+                        variant={xDomain[0] === 8 && xDomain[1] === 10 ? "secondary" : "outline"}
+                        size="sm"
+                        className="h-7 text-xs px-2.5 shadow-none"
+                        onClick={() => handlePresetClick(8, 10)}
+                      >
+                        Giỏi - Xuất sắc (8-10)
+                      </Button>
+                    </div>
+                    <div className="text-xs text-muted-foreground pr-1 font-medium">
+                      Đang zoom: <span className="font-mono font-bold text-primary">{xDomain[0]} - {xDomain[1]} đ</span>
+                    </div>
+                  </div>
+
+                  {/* Scatter Chart */}
+                  <div className="flex-1 min-h-[290px]">
+                    {scatterData.length === 0 ? (
+                      <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                        Chưa có dữ liệu thí sinh nộp bài.
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ScatterChart margin={{ top: 10, right: 30, left: -20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                          <XAxis
+                            type="number"
+                            dataKey="x"
+                            name="Điểm"
+                            unit="đ"
+                            domain={xDomain}
+                            ticks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+                            tickLine={false}
+                            axisLine={false}
+                            tick={{ fontSize: 12, fill: "#6b7280" }}
+                          />
+                          <YAxis
+                            type="number"
+                            dataKey="y"
+                            name="Thứ tự xếp chồng"
+                            allowDecimals={false}
+                            tickLine={false}
+                            axisLine={false}
+                            tick={{ fontSize: 12, fill: "#6b7280" }}
+                          />
+                          <ZAxis type="number" range={[64, 64]} />
+                          <RechartsTooltip
+                            cursor={{ strokeDasharray: '3 3' }}
+                            content={({ active, payload }: any) => {
+                              if (active && payload && payload.length) {
+                                const data = payload[0].payload;
+                                return (
+                                  <div className="bg-background p-3 rounded-lg border shadow-md space-y-1 border-border">
+                                    <p className="font-bold text-sm text-primary">{data.student_name}</p>
+                                    <p className="text-xs text-muted-foreground font-mono">ID học sinh: #{data.user_id}</p>
+                                    <div className="h-px bg-border my-1" />
+                                    <p className="text-sm font-semibold text-foreground">
+                                      Điểm số: <span className="text-blue-600 font-bold">{data.score.toFixed(2)}</span>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground italic">
+                                      Thứ tự cùng mức điểm: {data.y}
+                                    </p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Scatter name="Thí sinh" data={scatterData} fill="#3b82f6" />
+                          <Brush
+                            key={`brush-${brushKey}`}
+                            dataKey="x"
+                            height={30}
+                            stroke="#3b82f6"
+                            fill="#f9fafb"
+                            tickFormatter={(v) => typeof v === 'number' ? v.toFixed(1) : v}
+                            startIndex={brushStartIndex}
+                            endIndex={brushEndIndex}
+                            onChange={(obj) => {
+                              if (obj && typeof obj.startIndex === 'number' && typeof obj.endIndex === 'number') {
+                                const startScore = scatterData[obj.startIndex]?.x ?? 0;
+                                const endScore = scatterData[obj.endIndex]?.x ?? 10;
+                                setXDomain([startScore, endScore]);
+                              }
+                            }}
+                          />
+                        </ScatterChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
