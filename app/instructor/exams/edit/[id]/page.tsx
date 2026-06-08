@@ -549,10 +549,19 @@ export default function EditExamPage() {
                                             <div>
                                                 <Label>Thời gian mở đề (Bắt đầu)</Label>
                                                 <Input
-
                                                     type="datetime-local"
-                                                    value={toLocalISOString(settings.start_time)}
-                                                    onChange={e => setSettings({ ...settings, start_time: e.target.value ? new Date(e.target.value).toISOString() : "" })}
+                                                    defaultValue={toLocalISOString(settings.start_time)}
+                                                    onChange={e => {
+                                                        const val = e.target.value;
+                                                        let utcString = "";
+                                                        if (val) {
+                                                            const date = new Date(val);
+                                                            if (!isNaN(date.getTime())) {
+                                                                utcString = date.toISOString();
+                                                            }
+                                                        }
+                                                        setSettings({ ...settings, start_time: utcString });
+                                                    }}
                                                 />
                                                 <p className="text-[10px] text-muted-foreground mt-1">Bỏ trống để mở ngay lập tức</p>
                                             </div>
@@ -560,8 +569,18 @@ export default function EditExamPage() {
                                                 <Label>Thời gian đóng đề (Kết thúc)</Label>
                                                 <Input
                                                     type="datetime-local"
-                                                    value={toLocalISOString(settings.end_time)}
-                                                    onChange={e => setSettings({ ...settings, end_time: e.target.value ? new Date(e.target.value).toISOString() : "" })}
+                                                    defaultValue={toLocalISOString(settings.end_time)}
+                                                    onChange={e => {
+                                                        const val = e.target.value;
+                                                        let utcString = "";
+                                                        if (val) {
+                                                            const date = new Date(val);
+                                                            if (!isNaN(date.getTime())) {
+                                                                utcString = date.toISOString();
+                                                            }
+                                                        }
+                                                        setSettings({ ...settings, end_time: utcString });
+                                                    }}
                                                 />
                                                 <p className="text-[10px] text-muted-foreground mt-1">Bỏ trống để không giới hạn</p>
                                             </div>

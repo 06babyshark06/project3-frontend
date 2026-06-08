@@ -292,16 +292,36 @@ export default function CreateExamPage() {
                                         <Label>Thời gian bắt đầu (Tùy chọn)</Label>
                                         <Input
                                             type="datetime-local"
-                                            value={toLocalISOString(startTime)}
-                                            onChange={e => setStartTime(e.target.value ? new Date(e.target.value).toISOString() : "")}
+                                            defaultValue={toLocalISOString(startTime)}
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                let utcString = "";
+                                                if (val) {
+                                                    const date = new Date(val);
+                                                    if (!isNaN(date.getTime())) {
+                                                        utcString = date.toISOString();
+                                                    }
+                                                }
+                                                setStartTime(utcString);
+                                            }}
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Thời gian kết thúc (Tùy chọn)</Label>
                                         <Input
                                             type="datetime-local"
-                                            value={toLocalISOString(endTime)}
-                                            onChange={e => setEndTime(e.target.value ? new Date(e.target.value).toISOString() : "")}
+                                            defaultValue={toLocalISOString(endTime)}
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                let utcString = "";
+                                                if (val) {
+                                                    const date = new Date(val);
+                                                    if (!isNaN(date.getTime())) {
+                                                        utcString = date.toISOString();
+                                                    }
+                                                }
+                                                setEndTime(utcString);
+                                            }}
                                         />
                                     </div>
                                 </div>
