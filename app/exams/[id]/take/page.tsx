@@ -8,7 +8,7 @@ import {
   Loader2, Clock, AlertTriangle, ChevronLeft, ChevronRight,
   Circle, CheckCircle2, Square, CheckSquare, Lock, Maximize,
   Image as ImageIcon, Calendar, Ban, UserPlus, Hourglass, Menu, Flag,
-  MessageSquare, FileSignature
+  MessageSquare, FileSignature, WifiOff, Cloud, CloudOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,6 +90,9 @@ export default function ExamTakingPage() {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "error" | "offline">("synced");
+  const syncedAnswers = useRef<{ userAnswers: Record<number, number[]>, userTextAnswers: Record<number, string> }>({ userAnswers: {}, userTextAnswers: {} });
   const [isAntiCheatWarningOpen, setIsAntiCheatWarningOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
@@ -98,6 +101,24 @@ export default function ExamTakingPage() {
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedAnswers = useRef<string>("");
   const hasStartedRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const updateOnlineStatus = () => {
+      const offline = !navigator.onLine;
+      setIsOffline(offline);
+      if (offline) {
+        setSyncStatus("offline");
+      }
+    };
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
+    updateOnlineStatus();
+    return () => {
+      window.removeEventListener("online", updateOnlineStatus);
+      window.removeEventListener("offline", updateOnlineStatus);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchExam = async () => {
@@ -209,18 +230,26 @@ export default function ExamTakingPage() {
       }
 
       if (current_answers) {
-        let formattedAnswers: Record<number, number[]> = {};
-        let formattedTextAnswers: Record<number, string> = {};
+        let backendAnswers: Record<number, number[]> = {};
+        let backendTextAnswers: Record<number, string> = {};
 
         current_answers.forEach((ans: any) => {
           const qId = Number(ans.question_id);
           if (ans.choice_ids && ans.choice_ids.length > 0) {
-            formattedAnswers[qId] = ans.choice_ids.map(Number);
+            backendAnswers[qId] = ans.choice_ids.map(Number);
           }
           if (ans.text_answer) {
-            formattedTextAnswers[qId] = ans.text_answer;
+            backendTextAnswers[qId] = ans.text_answer;
           }
         });
+
+        syncedAnswers.current = {
+          userAnswers: JSON.parse(JSON.stringify(backendAnswers)),
+          userTextAnswers: JSON.parse(JSON.stringify(backendTextAnswers))
+        };
+
+        let formattedAnswers: Record<number, number[]> = { ...backendAnswers };
+        let formattedTextAnswers: Record<number, string> = { ...backendTextAnswers };
 
         const localDraft = localStorage.getItem(`exam_draft_${examId}_${user?.id}`);
         if (localDraft) {
@@ -384,32 +413,118 @@ export default function ExamTakingPage() {
 
   useEffect(() => {
     if (!submissionId || isSubmitting) return;
+
     const saveAnswers = async () => {
-      const currentAnswersStr = JSON.stringify({ userAnswers, userTextAnswers });
-      if (currentAnswersStr === lastSavedAnswers.current) return;
+      if (isOffline) {
+        setSyncStatus("offline");
+        return;
+      }
+
+      // 1. Identify which choice answers have changed
+      const changedChoices: Record<number, number[]> = {};
+      Object.entries(userAnswers).forEach(([qIdStr, cIds]) => {
+        const qId = Number(qIdStr);
+        const syncedCIds = syncedAnswers.current.userAnswers[qId] || [];
+        const sortedCIds = [...cIds].sort();
+        const sortedSyncedCIds = [...syncedCIds].sort();
+        if (JSON.stringify(sortedCIds) !== JSON.stringify(sortedSyncedCIds)) {
+          changedChoices[qId] = cIds;
+        }
+      });
+
+      // Handle choices that have been deselected entirely
+      Object.entries(syncedAnswers.current.userAnswers).forEach(([qIdStr, cIds]) => {
+        const qId = Number(qIdStr);
+        if (!(qId in userAnswers) || userAnswers[qId].length === 0) {
+          if (cIds.length > 0) {
+            changedChoices[qId] = [];
+          }
+        }
+      });
+
+      // 2. Identify which text answers have changed
+      const changedTexts: Record<number, string> = {};
+      Object.entries(userTextAnswers).forEach(([qIdStr, text]) => {
+        const qId = Number(qIdStr);
+        const syncedText = syncedAnswers.current.userTextAnswers[qId] || "";
+        if (text !== syncedText) {
+          changedTexts[qId] = text;
+        }
+      });
+
+      // Handle text answers that have been cleared
+      Object.entries(syncedAnswers.current.userTextAnswers).forEach(([qIdStr, text]) => {
+        const qId = Number(qIdStr);
+        if (!(qId in userTextAnswers)) {
+          if (text !== "") {
+            changedTexts[qId] = "";
+          }
+        }
+      });
+
+      const totalChanges = Object.keys(changedChoices).length + Object.keys(changedTexts).length;
+      if (totalChanges === 0) {
+        setSyncStatus("synced");
+        return;
+      }
+
+      setSyncStatus("syncing");
+
       try {
-        const choicePromises = Object.entries(userAnswers).flatMap(([qId, cIds]) =>
-          cIds.map(cId =>
+        const promises: Promise<any>[] = [];
+
+        // Choice answers sync promises
+        Object.entries(changedChoices).forEach(([qIdStr, cIds]) => {
+          const qId = Number(qIdStr);
+          if (cIds.length === 0) {
+            promises.push(
+              api.post("/exams/save-answer", {
+                exam_id: Number(examId),
+                question_id: qId,
+                chosen_choice_id: 0,
+                submission_id: submissionId
+              }).then(() => {
+                syncedAnswers.current.userAnswers[qId] = [];
+              })
+            );
+          } else {
+            cIds.forEach(cId => {
+              promises.push(
+                api.post("/exams/save-answer", {
+                  exam_id: Number(examId),
+                  question_id: qId,
+                  chosen_choice_id: cId,
+                  submission_id: submissionId
+                }).then(() => {
+                  if (!syncedAnswers.current.userAnswers[qId]) {
+                    syncedAnswers.current.userAnswers[qId] = [];
+                  }
+                  if (!syncedAnswers.current.userAnswers[qId].includes(cId)) {
+                    syncedAnswers.current.userAnswers[qId].push(cId);
+                  }
+                })
+              );
+            });
+          }
+        });
+
+        // Text answers sync promises
+        Object.entries(changedTexts).forEach(([qIdStr, text]) => {
+          const qId = Number(qIdStr);
+          promises.push(
             api.post("/exams/save-answer", {
               exam_id: Number(examId),
-              question_id: Number(qId),
-              chosen_choice_id: cId,
+              question_id: qId,
+              text_answer: text,
               submission_id: submissionId
+            }).then(() => {
+              syncedAnswers.current.userTextAnswers[qId] = text;
             })
-          )
-        );
+          );
+        });
 
-        const textPromises = Object.entries(userTextAnswers).map(([qId, text]) =>
-          api.post("/exams/save-answer", {
-            exam_id: Number(examId),
-            question_id: Number(qId),
-            text_answer: text,
-            submission_id: submissionId
-          })
-        );
-
-        await Promise.all([...choicePromises, ...textPromises]);
-        lastSavedAnswers.current = currentAnswersStr;
+        await Promise.all(promises);
+        setSyncStatus("synced");
       } catch (err: any) {
         if (err.response?.data?.error?.includes("gian lận thi hộ")) {
           toast.error("Phát hiện tài khoản đang mở bài thi ở nơi khác!", { duration: 5000 });
@@ -417,11 +532,13 @@ export default function ExamTakingPage() {
           return;
         }
         console.error("Auto-save failed:", err);
+        setSyncStatus("error");
       }
     };
-    autoSaveTimerRef.current = setInterval(saveAnswers, 30000);
+
+    autoSaveTimerRef.current = setInterval(saveAnswers, 10000);
     return () => { if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current); };
-  }, [examId, userAnswers, submissionId, isSubmitting]);
+  }, [examId, userAnswers, userTextAnswers, submissionId, isSubmitting, isOffline]);
 
   const handleSelectAnswer = (question: Question, choiceId: number) => {
     if (isSubmitting) return;
@@ -457,6 +574,10 @@ export default function ExamTakingPage() {
 
   const handleSubmit = useCallback(async (autoSubmit = false) => {
     if (isSubmitting || !exam) return;
+    if (isOffline) {
+      toast.error("Không thể nộp bài khi đang ngoại tuyến! Vui lòng kiểm tra lại kết nối mạng.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const formattedAnswers: any[] = [];
@@ -479,6 +600,12 @@ export default function ExamTakingPage() {
           }
       });
       const response = await api.post("/exams/submit", { exam_id: Number(examId), submission_id: submissionId, answers: formattedAnswers });
+      
+      // Clean up local drafts and flags upon successful submission
+      localStorage.removeItem(`exam_draft_${examId}_${user?.id}`);
+      localStorage.removeItem(`exam_text_draft_${examId}_${user?.id}`);
+      localStorage.removeItem(`exam_flags_${examId}_${user?.id}`);
+
       if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
       router.replace(`/exams/result/${response.data.data.submission_id || submissionId}`);
     } catch (error: any) {
@@ -490,7 +617,7 @@ export default function ExamTakingPage() {
       setIsSubmitting(false);
       toast.error("Nộp bài thất bại, vui lòng thử lại!");
     }
-  }, [exam, userAnswers, userTextAnswers, isSubmitting, examId, submissionId, router]);
+  }, [exam, userAnswers, userTextAnswers, isSubmitting, examId, submissionId, router, isOffline, user]);
 
   if (isLoading) return <div className="flex h-screen w-full items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!exam) return null;
@@ -706,8 +833,46 @@ export default function ExamTakingPage() {
               <h1 className="text-lg md:text-xl font-bold truncate">{exam.title}</h1>
             </div>
 
-            <div className={`flex items-center gap-2 font-mono text-lg md:text-xl font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-md ${timeLeft < 300 ? 'bg-red-100 text-red-600' : 'bg-muted text-muted-foreground'}`}>
-              <Clock className="h-4 w-4 md:h-5 md:w-5" /><span>{formatTime(timeLeft)}</span>
+            <div className="flex items-center gap-3">
+              {/* Trạng thái đồng bộ trên Desktop */}
+              <div className="hidden sm:flex">
+                {syncStatus === "synced" && (
+                  <Badge variant="outline" className="border-green-500 text-green-600 bg-green-50/50 flex items-center gap-1.5 px-2.5 py-1">
+                    <Cloud className="h-3.5 w-3.5" />
+                    <span>Đã đồng bộ</span>
+                  </Badge>
+                )}
+                {syncStatus === "syncing" && (
+                  <Badge variant="outline" className="border-blue-500 text-blue-600 bg-blue-50/50 flex items-center gap-1.5 px-2.5 py-1">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Đang đồng bộ...</span>
+                  </Badge>
+                )}
+                {syncStatus === "error" && (
+                  <Badge variant="outline" className="border-yellow-500 text-yellow-600 bg-yellow-50/50 flex items-center gap-1.5 px-2.5 py-1" title="Kết nối máy chủ bị lỗi. Các thay đổi của bạn vẫn được lưu an toàn tại bộ nhớ trình duyệt.">
+                    <CloudOff className="h-3.5 w-3.5" />
+                    <span>Lỗi đồng bộ (Đã lưu máy)</span>
+                  </Badge>
+                )}
+                {syncStatus === "offline" && (
+                  <Badge variant="outline" className="border-red-500 text-red-600 bg-red-50/50 flex items-center gap-1.5 px-2.5 py-1" title="Không có kết nối mạng. Các thay đổi của bạn vẫn được lưu an toàn tại bộ nhớ trình duyệt.">
+                    <WifiOff className="h-3.5 w-3.5" />
+                    <span>Ngoại tuyến (Đã lưu máy)</span>
+                  </Badge>
+                )}
+              </div>
+
+              {/* Trạng thái đồng bộ trên Mobile (Dạng chấm màu) */}
+              <div className="sm:hidden flex items-center">
+                {syncStatus === "synced" && <span className="h-2.5 w-2.5 rounded-full bg-green-500" title="Đã đồng bộ" />}
+                {syncStatus === "syncing" && <span className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse" title="Đang đồng bộ" />}
+                {syncStatus === "error" && <span className="h-2.5 w-2.5 rounded-full bg-yellow-500" title="Lỗi đồng bộ" />}
+                {syncStatus === "offline" && <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-ping" title="Ngoại tuyến" />}
+              </div>
+
+              <div className={`flex items-center gap-2 font-mono text-lg md:text-xl font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-md ${timeLeft < 300 ? 'bg-red-100 text-red-600' : 'bg-muted text-muted-foreground'}`}>
+                <Clock className="h-4 w-4 md:h-5 md:w-5" /><span>{formatTime(timeLeft)}</span>
+              </div>
             </div>
           </header>
 

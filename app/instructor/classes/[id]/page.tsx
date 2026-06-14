@@ -79,7 +79,11 @@ export default function ClassDetailPage() {
         try {
             setLoadingGradebook(true);
             const res = await api.get(`/classes/${classId}/gradebook`);
-            setGradebook(res.data.data);
+            const data = res.data.data || {};
+            setGradebook({
+                exams: data.exams || [],
+                students: data.students || []
+            });
         } catch (error) {
             toast.error("Không thể tải bảng điểm");
         } finally {
@@ -146,15 +150,16 @@ export default function ClassDetailPage() {
     };
 
     const exportToCSV = () => {
-        if (!gradebook.students.length) return;
+        if (!gradebook?.students?.length) return;
 
-        let csv = "Họ và tên," + gradebook.exams.map(e => e.title).join(",") + "\n";
+        const exams = gradebook.exams || [];
+        let csv = "Họ và tên," + exams.map(e => e.title).join(",") + "\n";
 
         gradebook.students.forEach(s => {
             csv += s.full_name;
-            gradebook.exams.forEach(e => {
-                const score = s.scores[e.id];
-                csv += "," + (s.completed[e.id] ? score : "-");
+            exams.forEach(e => {
+                const score = s.scores?.[e.id];
+                csv += "," + (s.completed?.[e.id] ? score : "-");
             });
             csv += "\n";
         });
@@ -330,14 +335,14 @@ export default function ClassDetailPage() {
                                         <CardTitle>Bảng điểm tổng hợp</CardTitle>
                                         <CardDescription>Theo dõi kết quả học tập của cả lớp</CardDescription>
                                     </div>
-                                    <Button variant="outline" size="sm" onClick={exportToCSV} disabled={!gradebook.students.length}>
+                                    <Button variant="outline" size="sm" onClick={exportToCSV} disabled={!gradebook?.students?.length}>
                                         <Download className="mr-2 h-4 w-4" /> Xuất Excel (CSV)
                                     </Button>
                                 </CardHeader>
                                 <CardContent>
                                     {loadingGradebook ? (
                                         <div className="flex justify-center py-12"><Loader2 className="animate-spin" /></div>
-                                    ) : gradebook.exams.length === 0 ? (
+                                    ) : (gradebook?.exams || []).length === 0 ? (
                                         <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
                                             <TrendingUp className="h-10 w-10 mx-auto mb-3 opacity-20" />
                                             Chưa có bài thi nào được giao để thống kê điểm.
@@ -348,7 +353,7 @@ export default function ClassDetailPage() {
                                                 <TableHeader className="bg-muted/50">
                                                     <TableRow>
                                                         <TableHead className="w-[200px] font-bold sticky left-0 bg-muted/50 z-10">Học sinh</TableHead>
-                                                        {gradebook.exams.map(e => (
+                                                        {(gradebook?.exams || []).map(e => (
                                                             <TableHead key={e.id} className="text-center min-w-[120px] font-bold">
                                                                 <div className="line-clamp-1" title={e.title}>{e.title}</div>
                                                             </TableHead>
@@ -357,15 +362,15 @@ export default function ClassDetailPage() {
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {gradebook.students.map(s => {
+                                                    {(gradebook?.students || []).map(s => {
                                                         let total = 0;
                                                         let count = 0;
                                                         return (
                                                             <TableRow key={s.student_id}>
                                                                 <TableCell className="font-medium sticky left-0 bg-background z-10 border-r">{s.full_name}</TableCell>
-                                                                {gradebook.exams.map(e => {
-                                                                    const hasScore = s.completed[e.id];
-                                                                    const score = s.scores[e.id];
+                                                                {(gradebook?.exams || []).map(e => {
+                                                                    const hasScore = s.completed?.[e.id];
+                                                                    const score = s.scores?.[e.id];
                                                                     if (hasScore) {
                                                                         total += score;
                                                                         count++;
