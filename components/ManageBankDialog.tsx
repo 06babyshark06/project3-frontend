@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Loader2, Pencil, Trash2, Library, Book,
-  Search, Plus, ChevronRight, AlertTriangle
+  Search, Plus, ChevronRight, AlertTriangle, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AddTopicDialog } from "./AddTopicDialog";
 import { AddSectionDialog } from "./AddSectionDialog";
+import { RAGUploadDialog } from "./RAGUploadDialog";
 
 interface Topic {
   id: number;
@@ -79,6 +80,7 @@ export function ManageBankDialog({
   const [sectionToEdit, setSectionToEdit] = useState<Section | null>(null);
   const [topicToDelete, setTopicToDelete] = useState<Topic | null>(null);
   const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
+  const [ragSection, setRagSection] = useState<Section | null>(null);
 
   const fetchTopics = useCallback(async () => {
     try {
@@ -302,6 +304,15 @@ export function ManageBankDialog({
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                                title="Quản lý Tài liệu RAG"
+                                onClick={() => setRagSection(s)}
+                              >
+                                <Sparkles className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-8 w-8"
                                 onClick={() => setSectionToEdit(s)}
                               >
@@ -393,6 +404,13 @@ export function ManageBankDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <RAGUploadDialog
+        open={!!ragSection}
+        onOpenChange={(open) => !open && setRagSection(null)}
+        sectionId={ragSection ? ragSection.id : null}
+        sectionName={ragSection ? ragSection.name : ""}
+      />
     </>
   );
 }
