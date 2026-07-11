@@ -101,6 +101,23 @@ export default function ExamTakingPage() {
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedAnswers = useRef<string>("");
   const hasStartedRef = useRef(false);
+  const debounceTimeoutsRef = useRef<Record<number, NodeJS.Timeout>>({});
+  const userAnswersRef = useRef(userAnswers);
+  const userTextAnswersRef = useRef(userTextAnswers);
+
+  useEffect(() => {
+    userAnswersRef.current = userAnswers;
+  }, [userAnswers]);
+
+  useEffect(() => {
+    userTextAnswersRef.current = userTextAnswers;
+  }, [userTextAnswers]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimeoutsRef.current).forEach(timeout => clearTimeout(timeout));
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -420,9 +437,12 @@ export default function ExamTakingPage() {
         return;
       }
 
+      const currentAnswers = userAnswersRef.current;
+      const currentTextAnswers = userTextAnswersRef.current;
+
       // 1. Identify which choice answers have changed
       const changedChoices: Record<number, number[]> = {};
-      Object.entries(userAnswers).forEach(([qIdStr, cIds]) => {
+      Object.entries(currentAnswers).forEach(([qIdStr, cIds]) => {
         const qId = Number(qIdStr);
         const syncedCIds = syncedAnswers.current.userAnswers[qId] || [];
         const sortedCIds = [...cIds].sort();
@@ -435,7 +455,7 @@ export default function ExamTakingPage() {
       // Handle choices that have been deselected entirely
       Object.entries(syncedAnswers.current.userAnswers).forEach(([qIdStr, cIds]) => {
         const qId = Number(qIdStr);
-        if (!(qId in userAnswers) || userAnswers[qId].length === 0) {
+        if (!(qId in currentAnswers) || currentAnswers[qId].length === 0) {
           if (cIds.length > 0) {
             changedChoices[qId] = [];
           }
@@ -444,7 +464,7 @@ export default function ExamTakingPage() {
 
       // 2. Identify which text answers have changed
       const changedTexts: Record<number, string> = {};
-      Object.entries(userTextAnswers).forEach(([qIdStr, text]) => {
+      Object.entries(currentTextAnswers).forEach(([qIdStr, text]) => {
         const qId = Number(qIdStr);
         const syncedText = syncedAnswers.current.userTextAnswers[qId] || "";
         if (text !== syncedText) {
@@ -455,7 +475,7 @@ export default function ExamTakingPage() {
       // Handle text answers that have been cleared
       Object.entries(syncedAnswers.current.userTextAnswers).forEach(([qIdStr, text]) => {
         const qId = Number(qIdStr);
-        if (!(qId in userTextAnswers)) {
+        if (!(qId in currentTextAnswers)) {
           if (text !== "") {
             changedTexts[qId] = "";
           }
@@ -538,7 +558,7 @@ export default function ExamTakingPage() {
 
     autoSaveTimerRef.current = setInterval(saveAnswers, 10000);
     return () => { if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current); };
-  }, [examId, userAnswers, userTextAnswers, submissionId, isSubmitting, isOffline]);
+  }, [examId, submissionId, isSubmitting, isOffline]);
 
   const handleSelectAnswer = (question: Question, choiceId: number) => {
     if (isSubmitting) return;
@@ -562,6 +582,29 @@ export default function ExamTakingPage() {
       localStorage.setItem(`exam_text_draft_${examId}_${user?.id}`, JSON.stringify(next));
       return next;
     });
+
+    if (debounceTimeoutsRef.current[questionId]) {
+      clearTimeout(debounceTimeoutsRef.current[questionId]);
+    }
+
+    setSyncStatus("syncing");
+
+    debounceTimeoutsRef.current[questionId] = setTimeout(async () => {
+      if (isOffline || !submissionId) return;
+      try {
+        await api.post("/exams/save-answer", {
+          exam_id: Number(examId),
+          question_id: questionId,
+          text_answer: text,
+          submission_id: submissionId
+        });
+        syncedAnswers.current.userTextAnswers[questionId] = text;
+        setSyncStatus("synced");
+      } catch (err) {
+        console.error("Debounced save-answer failed:", err);
+        setSyncStatus("error");
+      }
+    }, 2000);
   };
 
   const toggleFlag = (questionId: number) => {

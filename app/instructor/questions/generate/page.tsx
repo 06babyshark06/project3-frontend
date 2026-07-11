@@ -62,6 +62,7 @@ export default function AIGeneratePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState<AIQuestion[]>([]);
+  const [extractedText, setExtractedText] = useState("");
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -187,6 +188,7 @@ export default function AIGeneratePage() {
       const data = await response.json();
       if (data.questions && Array.isArray(data.questions)) {
         setQuestions(data.questions);
+        setExtractedText(data.extracted_text || "");
         setEditingMode(true);
       } else {
         throw new Error("Dữ liệu trả về không hợp lệ");
@@ -292,7 +294,8 @@ export default function AIGeneratePage() {
               content: opt.content,
               is_correct: opt.is_correct
           }))
-        }))
+        })),
+        document_text: extractedText
       };
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/v1/questions/bulk`, {

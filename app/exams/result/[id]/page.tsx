@@ -153,7 +153,8 @@ export default function ExamResultPage() {
         correct_choice: (item.question_type === "short_answer") ? item.choices.map(c => c.content).join(" hoặc ") : (item.choices.find(c => c.is_correct)?.content || ""),
         user_choice: (item.question_type === "short_answer" || item.question_type === "essay") ? (item.text_answer || "Không chọn") : (item.choices.find(c => c.user_selected)?.content || "Không chọn"),
         history: currentHistory,
-        new_message: message
+        new_message: message,
+        question_id: qId
       };
 
       const response = await api.post("/ai/chat", payload);
